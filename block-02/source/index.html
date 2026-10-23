@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Portfolio nhóm 3 thành viên: con người, dự án và cách chúng tôi xây dựng phần mềm.">
+  <meta name="theme-color" content="#080f1c">
+  <title>TRIAD — Portfolio nhóm</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23122343'/%3E%3Cpath d='M7 9h18v4h-7v12h-4V13H7z' fill='%23d8f275'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="effects.css">
+  <script src="data.js" defer></script>
+  <script src="script.js" defer></script>
+  <script src="effects.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Đến nội dung chính</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#home" aria-label="Về đầu trang"><span class="brand-mark" aria-hidden="true">T</span><span data-team-name>TRIAD</span><span class="brand-label">PORTFOLIO</span></a>
+      <button class="menu-toggle" type="button" aria-controls="main-nav" aria-expanded="false"><span class="menu-lines" aria-hidden="true"></span><span>Menu</span></button>
+      <nav id="main-nav" class="main-nav" aria-label="Điều hướng chính"><a href="#about">Về nhóm</a><a href="#team">Thành viên</a><a href="#projects">Dự án</a><a href="#skills">Năng lực</a><a class="nav-contact" href="#contact">Liên hệ</a></nav>
+    </div>
+  </header>
+  <main id="main">
+    <section class="hero" id="home">
+      <div class="hero-ambient" aria-hidden="true"></div>
+      <canvas class="hero-canvas" aria-hidden="true"></canvas>
+      <div class="container hero-grid">
+        <div class="hero-copy"><p class="eyebrow"><span class="small-line"></span> NHÓM SINH VIÊN KỸ THUẬT PHẦN MỀM</p><h1>Ba góc nhìn.<br>Một tinh thần<br><span>kiến tạo.</span></h1><p class="hero-description">Chúng tôi cùng học, cùng giải quyết vấn đề và biến ý tưởng thành những sản phẩm phần mềm có ích.</p><div class="hero-actions"><a class="button button-lime" href="#projects">Khám phá dự án</a><a class="text-link" href="#team">Gặp gỡ thành viên <span class="link-line" aria-hidden="true"></span></a></div></div>
+        <div class="hero-side"><div class="hero-side-heading"><span>CON NGƯỜI & CHUYÊN MÔN</span><span>01—03</span></div><div class="hero-stack"><div class="discipline"><div class="layer-heading"><span class="discipline-number">01 / EXPERIENCE</span><span class="layer-symbol" aria-hidden="true">[ ]</span></div><div><h2>Trải nghiệm người dùng</h2><p>Giao diện rõ ràng, dễ sử dụng.</p></div><div class="layer-tags"><span>UI / UX</span><span>FRONTEND</span></div></div><div class="discipline"><div class="layer-heading"><span class="discipline-number">02 / ENGINEERING</span><span class="layer-symbol" aria-hidden="true">{ }</span></div><div><h2>Hệ thống & dữ liệu</h2><p>Nghiệp vụ chặt chẽ, dữ liệu nhất quán.</p></div><div class="layer-tags"><span>BACKEND</span><span>DATABASE</span></div></div><div class="discipline"><div class="layer-heading"><span class="discipline-number">03 / QUALITY</span><span class="layer-symbol" aria-hidden="true">&lt;/&gt;</span></div><div><h2>Chất lượng sản phẩm</h2><p>Kiểm tra kỹ, cải tiến qua từng phiên bản.</p></div><div class="layer-tags"><span>TESTING</span><span>INTEGRATION</span></div></div></div></div>
+      </div>
+      <div class="container hero-bottom"><span>THIẾT KẾ · PHÁT TRIỂN · KIỂM THỬ</span><a href="#about">Tìm hiểu câu chuyện của nhóm</a></div>
+    </section>
+    <section class="section about-section" id="about">
+      <div class="container about-grid"><div><p class="section-label">01 / VỀ NHÓM</p><h2 class="section-title">Phần mềm tốt bắt đầu<br>từ sự phối hợp tốt.</h2></div><div class="about-copy"><p class="lead">Chúng tôi là nhóm ba sinh viên theo đuổi Kỹ thuật phần mềm, cùng quan tâm đến cách công nghệ giải quyết những vấn đề trong học tập và cuộc sống.</p><p>Mỗi thành viên mang đến một thế mạnh riêng. Qua từng dự án, cả nhóm cùng phân tích yêu cầu, xây dựng giải pháp và kiểm tra sản phẩm để học từ những gì thực sự hoạt động.</p><div class="values"><div><span>01</span><h3>Làm việc có kế hoạch</h3><p>Chia nhỏ yêu cầu, xác định mục tiêu và theo dõi tiến độ.</p></div><div><span>02</span><h3>Học qua sản phẩm</h3><p>Thử nghiệm, nhận phản hồi và cải tiến qua mỗi vòng phát triển.</p></div></div></div></div>
+    </section>
+    <section class="section team-section" id="team"><div class="container"><div class="section-heading"><div><p class="section-label">02 / THÀNH VIÊN</p><h2 class="section-title">Những người cùng xây dựng.</h2></div><p class="section-description">Ba hồ sơ, ba thế mạnh.<br>Một mục tiêu chung.</p></div><div id="team-grid" class="team-grid"></div></div></section>
+    <section class="section projects-section" id="projects"><div class="container"><div class="section-heading"><div><p class="section-label">03 / DỰ ÁN</p><h2 class="section-title">Ý tưởng được đưa vào thực hành.</h2></div><p class="section-description">Khám phá bài toán, công nghệ<br>và đóng góp của từng thành viên.</p></div><div class="project-toolbar"><div class="filter-group" aria-label="Lọc dự án"><button class="filter-button active" type="button" data-filter="all" aria-pressed="true">Tất cả</button><button class="filter-button" type="button" data-filter="web" aria-pressed="false">Ứng dụng web</button><button class="filter-button" type="button" data-filter="system" aria-pressed="false">Hệ thống</button></div><p class="sample-note">Dự án mẫu · Nội dung minh họa</p></div><p id="filter-status" class="sr-only" aria-live="polite"></p><div id="project-grid" class="project-grid"></div></div></section>
+    <section class="section skills-section" id="skills"><div class="container skills-layout"><div><p class="section-label">04 / NĂNG LỰC</p><h2 class="section-title">Kết nối kỹ năng<br>với từng bài toán.</h2><p class="skills-intro">Từ giao diện đến dữ liệu, chúng tôi xây dựng sản phẩm theo từng phần và hiểu cách các phần hoạt động cùng nhau.</p></div><div id="skills-grid" class="skills-grid"></div></div></section>
+    <section class="section process-section"><div class="container"><div class="section-heading"><div><p class="section-label">05 / CÁCH LÀM VIỆC</p><h2 class="section-title">Một quy trình chung, rõ trách nhiệm.</h2></div></div><div class="process-grid"><article><span>01</span><h3>Hiểu bài toán</h3><p>Xác định người dùng, yêu cầu và phạm vi của phiên bản đầu tiên.</p></article><article><span>02</span><h3>Thiết kế giải pháp</h3><p>Phác thảo giao diện, dữ liệu và phân chia công việc cho từng người.</p></article><article><span>03</span><h3>Xây dựng sản phẩm</h3><p>Làm việc theo từng tính năng, trao đổi và rà soát mã nguồn.</p></article><article><span>04</span><h3>Kiểm tra & cải tiến</h3><p>Thử các luồng sử dụng, ghi nhận vấn đề và hoàn thiện tài liệu.</p></article></div></div></section>
+    <section class="contact-section" id="contact"><div class="container contact-grid"><div><p class="section-label">06 / LIÊN HỆ</p><h2>Cùng bắt đầu<br>một cuộc trò chuyện.</h2><p>Chúng tôi mong có cơ hội trao đổi về dự án, thực tập và những ý tưởng mới.</p></div><div class="contact-panel"><span class="contact-label">EMAIL CỦA NHÓM</span><div id="team-email"></div><div class="contact-divider"></div><p>Liên hệ từng thành viên</p><div id="contact-members" class="contact-members"></div></div></div></section>
+  </main>
+  <footer class="site-footer"><div class="container footer-inner"><a class="brand" href="#home"><span class="brand-mark" aria-hidden="true">T</span><span data-team-name>TRIAD</span></a><p>© <span id="current-year"></span> <span data-team-name>TRIAD</span>. Cùng học. Cùng xây dựng.</p><a href="#home">Về đầu trang</a></div></footer>
+  <dialog id="detail-dialog" class="detail-dialog" aria-labelledby="dialog-title"><div class="dialog-header"><span id="dialog-label" class="section-label"></span><button class="dialog-close" type="button" aria-label="Đóng chi tiết">×</button></div><div id="dialog-content"></div></dialog>
+  <noscript><div class="noscript-message">Hãy bật JavaScript để xem hồ sơ thành viên và danh sách dự án.</div></noscript>
+</body>
+</html>

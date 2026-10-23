@@ -1,4 +1,4 @@
-# Group 8 – Web Application Development
+# Group 8 - Web Application Development
 
 Repository lưu trữ các bài tập thực hành môn **Web Application Development** của nhóm 8.
 

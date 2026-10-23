@@ -1,0 +1,7 @@
+:8000 {
+    root * .
+    file_server
+    log {
+        output file caddy-access.log
+    }
+}
