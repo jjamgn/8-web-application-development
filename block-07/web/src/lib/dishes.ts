@@ -1,5 +1,6 @@
 import type { Dish } from '../types';
 import { ApiError, request } from './api';
+import { paginateLegacyDishes } from './legacyDishPage';
 
 export type SearchMode = 'auto' | 'basic' | 'advanced' | 'fulltext' | 'fuzzy';
 export type DishQuery = { mode: SearchMode; q: string; category: string; minPrice: string; maxPrice: string; available: string; sort: string; page: number; pageSize: number };
@@ -33,12 +34,14 @@ export async function fetchDishPage(query: DishQuery, signal: AbortSignal, resol
   const modes: SearchMode[] = resolvedMode ? [resolvedMode] : query.q.trim() ? ['fuzzy', nameMode, 'fulltext'] : [nameMode];
   let result: DishPage | undefined;
   for (const mode of modes) {
-    const data = await request<DishPage>(`/dishes?${queryParams({ ...query, mode })}`, { signal });
-    if (!data || !Array.isArray(data.items) || !data.items.every(d => Number.isInteger(d.id) && typeof d.name === 'string') || !Number.isSafeInteger(data.total) || data.total < 0 || !Number.isInteger(data.page) || data.page < 1 || data.pageSize !== query.pageSize || data.page !== query.page || data.items.length > data.pageSize) {
-      throw new ApiError('response', 'Dữ liệu phân trang chưa hợp lệ. Vui lòng thử lại.');
-    }
-    result = { ...data, searchMode: mode };
-    if (data.total > 0) break;
+  const response = await request<DishPage | Dish[]>(`/dishes?${queryParams({ ...query, mode })}`, { signal });
+  const data = Array.isArray(response) && response.every(d => d && Number.isInteger(d.id) && typeof d.name === 'string' && typeof d.price === 'number')
+    ? paginateLegacyDishes(response, query) : response as DishPage;
+  if (!data || !Array.isArray(data.items) || !data.items.every(d => Number.isInteger(d.id) && typeof d.name === 'string') || !Number.isSafeInteger(data.total) || data.total < 0 || !Number.isInteger(data.page) || data.page < 1 || data.pageSize !== query.pageSize || data.page !== query.page || data.items.length > data.pageSize) {
+    throw new ApiError('response', 'Dữ liệu phân trang chưa hợp lệ. Vui lòng thử lại.');
+  }
+  result = { ...data, searchMode: mode };
+  if (data.total > 0) break;
   }
   return result!;
 }
