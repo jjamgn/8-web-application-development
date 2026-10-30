@@ -29,15 +29,16 @@ export function queryParams(query: DishQuery, includePage = true): URLSearchPara
 }
 export async function fetchDishPage(query: DishQuery, signal: AbortSignal, resolvedMode?: SearchMode) {
   const hasFilters = ['category', 'minPrice', 'maxPrice', 'available'].some(key => query[key as keyof DishQuery] !== '');
-  const modes: SearchMode[] = resolvedMode ? [resolvedMode] : [hasFilters ? 'advanced' : 'basic', ...(query.q ? ['fulltext', 'fuzzy'] as const : [])];
+  const nameMode: SearchMode = hasFilters ? 'advanced' : 'basic';
+  const modes: SearchMode[] = resolvedMode ? [resolvedMode] : query.q.trim() ? ['fuzzy', nameMode, 'fulltext'] : [nameMode];
   let result: DishPage | undefined;
   for (const mode of modes) {
-  const data = await request<DishPage>(`/dishes?${queryParams({ ...query, mode })}`, { signal });
-  if (!data || !Array.isArray(data.items) || !data.items.every(d => Number.isInteger(d.id) && typeof d.name === 'string') || !Number.isSafeInteger(data.total) || data.total < 0 || !Number.isInteger(data.page) || data.page < 1 || data.pageSize !== query.pageSize || data.page !== query.page || data.items.length > data.pageSize) {
-    throw new ApiError('response', 'Dữ liệu phân trang chưa hợp lệ. Vui lòng thử lại.');
-  }
-  result = { ...data, searchMode: mode };
-  if (data.total > 0) break;
+    const data = await request<DishPage>(`/dishes?${queryParams({ ...query, mode })}`, { signal });
+    if (!data || !Array.isArray(data.items) || !data.items.every(d => Number.isInteger(d.id) && typeof d.name === 'string') || !Number.isSafeInteger(data.total) || data.total < 0 || !Number.isInteger(data.page) || data.page < 1 || data.pageSize !== query.pageSize || data.page !== query.page || data.items.length > data.pageSize) {
+      throw new ApiError('response', 'Dữ liệu phân trang chưa hợp lệ. Vui lòng thử lại.');
+    }
+    result = { ...data, searchMode: mode };
+    if (data.total > 0) break;
   }
   return result!;
 }
