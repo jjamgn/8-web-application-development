@@ -1,76 +1,35 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import PageState from '../components/PageState';
+import { PageNumbers } from '../components/DishPagination';
 import { useLoad } from '../hooks/useLoad';
 import type { Ingredient } from '../types';
-
-const normalizeName = (value: string) => value.toLocaleLowerCase('vi').normalize('NFD')
-  .replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').trim().replace(/\s+/g, ' ');
+import { useIngredientPage } from '../hooks/useIngredientPage';
 
 export default function AdminIngredientsPage() {
   const [params, setParams] = useSearchParams();
-  const q = (params.get('q') || '').slice(0, 120);
+  const q = (params.get('q') || '').slice(0, 160);
   const unit = params.get('unit') || '';
-  const [draft, setDraft] = useState({ q, unit });
-  const load = useLoad<Ingredient[]>('/ingredients', 'list');
-  useEffect(() => { setDraft({ q, unit }); }, [q, unit]);
-
-  const units = useMemo(() => load.data
-    ? [...new Set(load.data.map(item => item.unit))].sort((a, b) => a.localeCompare(b, 'vi')) : [], [load.data]);
-  const items = useMemo(() => {
-    const query = normalizeName(q);
-    return load.data?.filter(item => (!query || normalizeName(item.name).includes(query)) && (!unit || item.unit === unit)) || [];
-  }, [load.data, q, unit]);
-  const returnPath = `/admin/ingredients${params.size ? `?${params}` : ''}`;
-  const returnQuery = `?returnTo=${encodeURIComponent(returnPath)}`;
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    const next = new URLSearchParams();
-    if (draft.q.trim()) next.set('q', draft.q.trim());
-    if (draft.unit) next.set('unit', draft.unit);
-    setParams(next);
-    setDraft(current => ({ ...current, q: current.q.trim() }));
-  }
-  function reset() {
-    setDraft({ q: '', unit: '' });
-    setParams({});
-  }
-
-  return <>
-    <span className="eyebrow">BẾP NHÀ / QUẢN TRỊ</span>
-    <div className="admin-heading"><div><h1>Quản lý nguyên liệu</h1><p>Chăm chút từng chi tiết cho căn bếp của bạn.</p></div>
-      <Link className="button primary" to={`/admin/ingredients/new${returnQuery}`}>+ Thêm nguyên liệu</Link></div>
-    <form className="dish-filters ingredient-filters" onSubmit={submit} role="search" aria-label="Tìm kiếm và lọc nguyên liệu">
-      <div className="filter-search">
-        <label>Tìm theo tên nguyên liệu<input name="q" type="search" maxLength={120} value={draft.q}
-          placeholder="Nhập tên nguyên liệu..." onChange={event => setDraft(current => ({ ...current, q: event.target.value }))} /></label>
-        <label><span id="ingredient-unit-label">Đơn vị</span><select name="unit" aria-labelledby="ingredient-unit-label" value={draft.unit} onChange={event => setDraft(current => ({ ...current, unit: event.target.value }))}>
-          <option value="">Tất cả đơn vị</option>
-          {draft.unit && !units.includes(draft.unit) && <option value={draft.unit}>{draft.unit}</option>}
-          {units.map(value => <option key={value} value={value}>{value}</option>)}
-        </select></label>
-      </div>
-      <div className="filter-actions"><small>Tìm theo tên có dấu hoặc không dấu, kết hợp lọc đơn vị.</small>
-        <button className="button outline" type="button" onClick={reset}>Xóa điều kiện</button>
-        <button className="button primary" type="submit">Tìm nguyên liệu</button></div>
-    </form>
-    <section className="table-panel">
-      <div className="table-panel-heading"><h2>Danh sách nguyên liệu {load.status === 'success' && <span>{items.length}</span>}</h2></div>
-      {load.status === 'success' && <p className="ingredient-results result-count" role="status" aria-live="polite">{items.length} / {load.data.length} nguyên liệu</p>}
-      <PageState {...load} onRetry={load.reload} empty={load.status === 'success' && items.length === 0} />
-      {load.status === 'success' && items.length > 0 && <div className="table-scroll" tabIndex={0} role="region" aria-label="Danh sách nguyên liệu, có thể cuộn ngang" data-resource="ingredients">
-        <table><thead><tr><th scope="col">ID</th><th scope="col">Nguyên liệu</th><th scope="col">Đơn vị</th><th scope="col" className="align-right">Thao tác</th></tr></thead>
-          <tbody>{items.map(item => <tr key={item.id}>
-            <td className="muted">#{item.id}</td>
-            <td><div className="table-name"><span className="table-avatar" aria-hidden="true">{item.name.slice(0, 1)}</span><strong title={item.name}>{item.name}</strong></div></td>
-            <td>{item.unit}</td>
-            <td><div className="row-actions"><Link to={`/admin/ingredients/${item.id}/edit${returnQuery}`} aria-label={`Sửa ${item.name}`}>Sửa</Link>
-              <Link className="danger-link" to={`/admin/ingredients/${item.id}/delete${returnQuery}`} aria-label={`Xóa ${item.name}`}>Xóa</Link></div></td>
-          </tr>)}</tbody>
-        </table>
-      </div>}
-    </section>
-    <p className="admin-hint">Mọi thao tác xóa đều cần xác nhận</p>
-  </>;
+  const units = useLoad<Ingredient[]>('/ingredients', 'list');
+  const unitOptions = [...new Set([unit, ...(units.data || []).map(item => item.unit)].filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi'));
+  const [unitDraft, setUnitDraft] = useState(unit);
+  useEffect(() => setUnitDraft(unit), [unit]);
+  const rawPage = params.get('page') || '1';
+  const page = /^[1-9]\d*$/.test(rawPage) && Number(rawPage) <= 1000000 ? Number(rawPage) : 1;
+  const [search, setSearch] = useState(q);
+  const load = useIngredientPage(q, page, 12, 0, unit);
+  useEffect(() => setSearch(q), [q]);
+  function go(next: number, keyword = q, replace = false, nextUnit = unit) { setParams({ ...(nextUnit ? { unit: nextUnit } : {}), ...(keyword ? { q: keyword } : {}), page: String(next) }, { replace }); }
+  useEffect(() => {
+    if (load.status === 'success' && load.data && page > Math.max(1, Math.ceil(load.data.total / 12))) go(Math.max(1, Math.ceil(load.data.total / 12)), q, true);
+  }, [load.status, load.data?.total, page]);
+  function submit(event: FormEvent) { event.preventDefault(); const next = search.trim(); if (next === q && page === 1 && unitDraft === unit) load.reload(); else go(1, next, false, unitDraft); }
+  const returnQuery = `?returnTo=${encodeURIComponent(`/admin/ingredients?${new URLSearchParams({ ...(unit ? { unit } : {}), ...(q ? { q } : {}), page: String(page) })}`)}`;
+  return <><span className="eyebrow">BẾP NHÀ / QUẢN TRỊ</span><div className="admin-heading"><div><h1>Quản lý nguyên liệu</h1><p>Tìm nguyên liệu, kiểm tra đơn vị và chăm chút công thức.</p></div><Link className="button primary" to={`/admin/ingredients/new${returnQuery}`}>+ Thêm nguyên liệu</Link></div>
+    <form className="ingredient-admin-search" role="search" aria-label="Tìm nguyên liệu" onSubmit={submit}><label>Tìm nguyên liệu<input name="ingredientQuery" maxLength={160} value={search} onChange={e => setSearch(e.target.value)} placeholder="Tên nguyên liệu, có dấu hoặc không dấu…" /></label><label>Đơn vị<select name="unit" value={unitDraft} onChange={e => setUnitDraft(e.target.value)}><option value="">Tất cả đơn vị</option>{unitOptions.map(value => <option key={value}>{value}</option>)}</select></label><button className="button primary" type="submit">Tìm nguyên liệu</button><button className="button outline" type="button" onClick={() => { setSearch(''); setUnitDraft(''); go(1, '', false, ''); load.reload(); }}>Xóa tìm kiếm</button></form>
+    <section className="table-panel"><div className="table-panel-heading"><h2>Danh sách nguyên liệu {load.data && <span>{load.data.total}</span>}</h2></div>
+      <PageState {...load} loading="table" loadingCount={12} tableColumns={4} onRetry={load.reload} empty={load.status === 'success' && load.data?.items.length === 0} />
+      {load.status === 'success' && load.data && <><div className="table-scroll" tabIndex={0} role="region" aria-label="Danh sách nguyên liệu, có thể cuộn ngang" data-resource="ingredients"><table><thead><tr><th scope="col">ID</th><th scope="col">Nguyên liệu</th><th scope="col">Đơn vị</th><th scope="col" className="align-right">Thao tác</th></tr></thead><tbody>{load.data.items.map(item => <tr key={item.id}><td>#{item.id}</td><td><div className="table-name"><span className="table-avatar" aria-hidden="true">{item.name.slice(0, 1)}</span><strong>{item.name}</strong></div></td><td>{item.unit}</td><td><div className="row-actions"><Link to={`/admin/ingredients/${item.id}/edit${returnQuery}`} aria-label={`Sửa ${item.name}`}>Sửa</Link><Link className="danger-link" to={`/admin/ingredients/${item.id}/delete${returnQuery}`} aria-label={`Xóa ${item.name}`}>Xóa</Link></div></td></tr>)}</tbody></table></div>
+        <PageNumbers noun="nguyên liệu" page={page} total={load.data.total} pageSize={12} onPage={go} /></>}
+    </section></>;
 }

@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import DishImageInput, { validImageUrl, type ImageDraft } from '../components/DishImageInput';
+import IngredientPicker from '../components/IngredientPicker';
+import ChefPicker from '../components/ChefPicker';
+import { selectedIngredients, recipeError, recipeKey, recipePayload } from '../lib/ingredients';
 import { adminReturnPath, uploadDishImage } from '../lib/dishes';
 import PageState from '../components/PageState';
 import { categories, createDraft, imageSource, resources, toPayload, validateDraft } from '../config/resources';
@@ -13,7 +16,7 @@ export default function AdminFormPage({ resource, id }: { resource: Resource; id
   const returnPath = adminReturnPath(resource, params.get('returnTo'));
   const record = useLoad<Entity>(id ? `/${resource}/${id}` : null);
   const chefs = useLoad<Chef[]>(resource === 'dishes' ? '/chefs' : null, 'list');
-  if (id && record.status !== 'success') return <><Link className="back-link" to={returnPath}>← Danh sách {resources[resource].singular}</Link><PageState {...record} onRetry={record.reload} /></>;
+  if (id && record.status !== 'success') return <><Link className="back-link" to={returnPath}>← Danh sách {resources[resource].singular}</Link><PageState {...record} loading="form" onRetry={record.reload} /></>;
   return <Editor resource={resource} id={id} item={record.data ?? undefined} chefs={chefs} />;
 }
 
@@ -27,6 +30,8 @@ function Editor({ resource, id, item, chefs }: { resource: Resource; id?: string
   const [savingStage, setSavingStage] = useState('');
   const [initial] = useState(() => createDraft(resource, item));
   const [draft, setDraft] = useState(initial);
+  const [initialRecipe] = useState(() => selectedIngredients(resource === 'dishes' ? item as Dish : undefined));
+  const [recipe, setRecipe] = useState(initialRecipe);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [message, setMessage] = useState('');
   const [pending, setPending] = useState(false);
@@ -38,6 +43,7 @@ function Editor({ resource, id, item, chefs }: { resource: Resource; id?: string
   const missingChef = resource === 'dishes' && !!draft.chefId && chefs.status === 'success' && !chefOptions.some(chef => String(chef.id) === draft.chefId);
   const chefsUnavailable = resource === 'dishes' && (chefs.status !== 'success' || chefOptions.length === 0 || missingChef);
   const fieldNames = new Set(config.fields.map(field => field.name));
+  if (resource === 'dishes') fieldNames.add('ingredients');
   const extraErrors = Object.entries(errors).filter(([key]) => !fieldNames.has(key));
 
   function update(name: string, value: string | boolean) {
@@ -48,7 +54,8 @@ function Editor({ resource, id, item, chefs }: { resource: Resource; id?: string
   function focusError(fields: FieldErrors) {
     requestAnimationFrame(() => {
       const first = config.fields.find(field => fields[field.name]);
-      if (first) (formRef.current?.elements.namedItem(first.name) as HTMLElement | null)?.focus();
+      if (first) (formRef.current?.elements.namedItem(first.name === 'chefId' ? 'chefSearch' : first.name) as HTMLElement | null)?.focus();
+      else if (fields.ingredients) formRef.current?.querySelector<HTMLInputElement>('[data-ingredients] input[aria-invalid=true], [name=ingredientSearch]')?.focus();
     });
   }
   async function submit(event: FormEvent) {
@@ -58,13 +65,16 @@ function Editor({ resource, id, item, chefs }: { resource: Resource; id?: string
     if (resource === 'dishes') {
       if (image.mode === 'file' && !image.file) validation.imagePath = 'Vui lòng chọn ảnh từ máy.';
       if (image.mode === 'url' && !validImageUrl(image.url)) validation.imagePath = 'Vui lòng nhập link ảnh HTTPS hợp lệ.';
+      const invalidRecipe = recipeError(recipe);
+      if (invalidRecipe) validation.ingredients = invalidRecipe;
     }
     setErrors(validation);
     setMessage('');
     if (Object.keys(validation).length) { focusError(validation); return; }
     const all = toPayload(resource, draft);
     const original = toPayload(resource, initial);
-    const payload = id ? Object.fromEntries(Object.entries(all).filter(([key, value]) => value !== original[key])) : all;
+    const payload: Record<string, unknown> = id ? Object.fromEntries(Object.entries(all).filter(([key, value]) => value !== original[key])) : all;
+    if (resource === 'dishes' && (!id || recipeKey(recipe) !== recipeKey(initialRecipe))) payload.ingredients = recipePayload(recipe);
     if (id && Object.keys(payload).length === 0 && (resource !== 'dishes' || image.mode === 'keep')) { setMessage('Bạn chưa thay đổi thông tin nào.'); return; }
     inFlight.current = true;
     setPending(true);
@@ -94,14 +104,9 @@ function Editor({ resource, id, item, chefs }: { resource: Resource; id?: string
   return <><Link className="back-link" to={returnPath}>← Danh sách {config.singular}</Link><span className="eyebrow">BẾP NHÀ / {id ? 'CẬP NHẬT' : 'THÊM MỚI'}</span><h1>{id ? 'Sửa' : 'Thêm'} {config.singular}</h1><p className="muted">Những điều nhỏ làm nên một căn bếp chỉn chu.</p>
     <form className="edit-form" onSubmit={submit} noValidate ref={formRef} aria-busy={pending}>
       {message && <div className="alert" role="alert">{message}</div>}{extraErrors.map(([key, value]) => <div className="alert" role="alert" key={key}>{value}</div>)}
-      {resource === 'dishes' && <>
-        {(chefs.status === 'loading' || chefs.status === 'idle') && <p role="status" className="form-help">Đang tải danh sách đầu bếp…</p>}
-        {chefs.status === 'error' && <div className="alert" role="alert">Chưa tải được danh sách đầu bếp. <button type="button" className="text-button" onClick={chefs.reload}>Thử lại</button></div>}
-        {chefs.status === 'success' && chefOptions.length === 0 && <div className="alert" role="alert">Cần có đầu bếp trước khi thêm món. <Link className="text-link" to="/admin/chefs/new">Thêm đầu bếp</Link></div>}
-        {missingChef && <div className="alert" role="alert">Đầu bếp hiện tại không còn trong danh sách. Vui lòng chọn lại.</div>}
-      </>}
       <fieldset className="form-panel" disabled={pending}><legend className="visually-hidden">Thông tin {config.singular}</legend><span className="eyebrow">THÔNG TIN {config.label.toLocaleUpperCase('vi')}</span>
         {config.fields.map(field => {
+          if (resource === 'dishes' && field.name === 'chefId') return <ChefPicker key={field.name} value={String(draft.chefId)} chefs={chefOptions} loading={chefs.status === 'loading' || chefs.status === 'idle'} failed={chefs.status === 'error'} onRetry={chefs.reload} onChange={chefId => update('chefId', chefId)} error={errors.chefId} />;
           const inputId = `field-${field.name}`;
           const errorId = `${inputId}-error`;
           const shared = { id: inputId, name: field.name, 'aria-invalid': !!errors[field.name], 'aria-describedby': errors[field.name] ? errorId : undefined };
@@ -109,13 +114,13 @@ function Editor({ resource, id, item, chefs }: { resource: Resource; id?: string
           if (field.type === 'checkbox') input = <input {...shared} type="checkbox" checked={draft[field.name] === true} onChange={e => update(field.name, e.target.checked)} />;
           else if (field.type === 'textarea') input = <textarea {...shared} rows={5} required maxLength={field.maxLength} value={String(draft[field.name])} onChange={e => update(field.name, e.target.value)} />;
           else if (field.type === 'select') {
-            const values = field.name === 'chefId' ? chefOptions.map(chef => ({ value: String(chef.id), label: `${chef.name} — ${chef.specialty}` })) : categories.map(category => ({ value: category, label: category }));
+            const values = categories.map(category => ({ value: category, label: category }));
             const current = String(draft[field.name]);
-            input = <select {...shared} required disabled={field.name === 'chefId' && chefs.status !== 'success'} value={current} onChange={e => update(field.name, e.target.value)}><option value="">{field.name === 'chefId' ? 'Chọn đầu bếp' : 'Chọn danh mục'}</option>{current && !values.some(option => option.value === current) && <option value={current}>{field.name === 'chefId' ? `Đầu bếp #${current} (cần chọn lại)` : current}</option>}{values.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select>;
+            input = <select {...shared} required value={current} onChange={e => update(field.name, e.target.value)}><option value="">Chọn danh mục</option>{current && !values.some(option => option.value === current) && <option value={current}>{current}</option>}{values.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select>;
           } else input = <input {...shared} type={field.type} required maxLength={field.maxLength} min={field.type === 'number' ? 0 : undefined} max={field.type === 'number' ? 999999999 : undefined} step={field.type === 'number' ? 1 : undefined} value={String(draft[field.name])} onChange={e => update(field.name, e.target.value)} />;
           return <label key={field.name} htmlFor={inputId} className={field.type === 'checkbox' ? 'checkbox-label' : undefined}>{field.type === 'checkbox' && input}<span>{field.label}{field.type !== 'checkbox' && <b> *</b>}</span>{field.type !== 'checkbox' && input}{errors[field.name] && <small className="field-error" id={errorId}>{errors[field.name]}</small>}</label>;
         })}
-        {resource === 'dishes' && <DishImageInput value={image} onChange={next => { setImage(next); setErrors(current => { const copy = { ...current }; delete copy.imagePath; return copy; }); setMessage(''); }} currentImage={id ? imageSource((item as Dish)?.imageUrl, (item as Dish)?.imagePath) : undefined} error={errors.imagePath || errors.file} />}
+        {resource === 'dishes' && <><IngredientPicker value={recipe} onChange={next => { setRecipe(next); setErrors(current => { const copy = { ...current }; delete copy.ingredients; return copy; }); setMessage(''); }} error={errors.ingredients} /><DishImageInput value={image} onChange={next => { setImage(next); setErrors(current => { const copy = { ...current }; delete copy.imagePath; return copy; }); setMessage(''); }} currentImage={id ? imageSource((item as Dish)?.imageUrl, (item as Dish)?.imagePath) : undefined} error={errors.imagePath || errors.file} /></>}
       </fieldset><div className="form-actions"><Link className="button outline" to={returnPath}>Hủy</Link><button className="button primary" type="submit" disabled={pending || chefsUnavailable}>{pending ? savingStage || 'Đang lưu…' : id ? 'Lưu thay đổi' : `Thêm ${config.singular}`}</button></div>
     </form></>;
 }
