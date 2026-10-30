@@ -14,7 +14,7 @@ export default function Layout() {
   return <>
     <header className="site-header">
       <Link className="brand" to="/dishes" aria-label="Bếp Nhà — thực đơn"><span className="brand-mark">b.</span><span>Bếp Nhà<small>VIETNAMESE KITCHEN</small></span></Link>
-      <nav aria-label="Điều hướng chính"><NavLink to="/dishes">Thực đơn</NavLink><NavLink to="/explore">Khám phá món</NavLink><NavLink to="/admin/dishes" className={() => admin ? 'active' : ''}>Quản trị <span aria-hidden="true">↗</span></NavLink></nav>
+      <nav aria-label="Điều hướng chính"><NavLink to="/dishes">Thực đơn</NavLink><NavLink to="/explore">Khám phá món</NavLink><NavLink to="/admin/dishes" className={() => admin ? 'active' : ''}>Quản trị</NavLink></nav>
       <span className="header-note"><i /> Một chút thân quen, một chút mới</span>
     </header>
     {admin ? <div className="admin-layout"><aside className="admin-nav" aria-label="Quản trị tài nguyên"><div className="admin-nav-title">KHÔNG GIAN QUẢN TRỊ</div>

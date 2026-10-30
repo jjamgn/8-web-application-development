@@ -1,6 +1,7 @@
 import { Router, type Request } from 'express';
-import { createSchemas, patchSchemas, validId, type Kind } from '../validation.js';
+import { createSchemas, parseDishListQuery, patchSchemas, validId, type Kind } from '../validation.js';
 import * as service from '../services/resources.js';
+import { searchDishes } from '../services/dish-search.js';
 
 function idOf(req: Request) {
   const id = validId(String(req.params.id));
@@ -22,10 +23,17 @@ function input(kind: Kind, body: unknown, patch = false) {
 export function resourceRouter(kind: Kind) {
   const router = Router();
   router.get('/', async (req, res) => {
-    if (kind === 'dishes' && req.query.q !== undefined && (typeof req.query.q !== 'string' || req.query.q.length > 160)) {
-      throw new service.BusinessError('VALIDATION_FAILED', 'Từ khóa không hợp lệ.', { q: 'Từ khóa là chuỗi tối đa 160 ký tự.' });
+    if (kind === 'dishes') {
+      const parsed = parseDishListQuery(req.query);
+      if (!parsed.success) {
+        const fields: Record<string, string> = {};
+        for (const issue of parsed.error.issues) fields[String(issue.path[0] ?? 'query')] ??= issue.message;
+        throw new service.BusinessError('VALIDATION_FAILED', 'Tham số tìm kiếm không hợp lệ.', fields);
+      }
+      res.json({ ok: true, data: service.serialize(await searchDishes(parsed.data)), error: null });
+      return;
     }
-    res.json({ ok: true, data: service.serialize(await service.list(kind, typeof req.query.q === 'string' ? req.query.q.trim() : '')) });
+    res.json({ ok: true, data: service.serialize(await service.list(kind)) });
   });
   router.get('/:id', async (req, res) => {
     res.json({ ok: true, data: service.serialize(await service.record(kind, idOf(req))) });

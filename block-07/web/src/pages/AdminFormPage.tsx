@@ -9,9 +9,11 @@ import { ApiError, errorMessage, request } from '../lib/api';
 import type { Chef, Dish, Entity, FieldErrors, Resource } from '../types';
 
 export default function AdminFormPage({ resource, id }: { resource: Resource; id?: string }) {
+  const [params] = useSearchParams();
+  const returnPath = adminReturnPath(resource, params.get('returnTo'));
   const record = useLoad<Entity>(id ? `/${resource}/${id}` : null);
   const chefs = useLoad<Chef[]>(resource === 'dishes' ? '/chefs' : null, 'list');
-  if (id && record.status !== 'success') return <><Link className="back-link" to={`/admin/${resource}`}>← Danh sách {resources[resource].singular}</Link><PageState {...record} onRetry={record.reload} /></>;
+  if (id && record.status !== 'success') return <><Link className="back-link" to={returnPath}>← Danh sách {resources[resource].singular}</Link><PageState {...record} onRetry={record.reload} /></>;
   return <Editor resource={resource} id={id} item={record.data ?? undefined} chefs={chefs} />;
 }
 
@@ -114,6 +116,6 @@ function Editor({ resource, id, item, chefs }: { resource: Resource; id?: string
           return <label key={field.name} htmlFor={inputId} className={field.type === 'checkbox' ? 'checkbox-label' : undefined}>{field.type === 'checkbox' && input}<span>{field.label}{field.type !== 'checkbox' && <b> *</b>}</span>{field.type !== 'checkbox' && input}{errors[field.name] && <small className="field-error" id={errorId}>{errors[field.name]}</small>}</label>;
         })}
         {resource === 'dishes' && <DishImageInput value={image} onChange={next => { setImage(next); setErrors(current => { const copy = { ...current }; delete copy.imagePath; return copy; }); setMessage(''); }} currentImage={id ? imageSource((item as Dish)?.imageUrl, (item as Dish)?.imagePath) : undefined} error={errors.imagePath || errors.file} />}
-      </fieldset><div className="form-actions"><Link className="button outline" to={returnPath}>Hủy</Link><button className="button primary" type="submit" disabled={pending || chefsUnavailable}>{pending ? savingStage || 'Đang lưu…' : id ? 'Lưu thay đổi' : `Thêm ${config.singular}`} <span aria-hidden="true">→</span></button></div>
+      </fieldset><div className="form-actions"><Link className="button outline" to={returnPath}>Hủy</Link><button className="button primary" type="submit" disabled={pending || chefsUnavailable}>{pending ? savingStage || 'Đang lưu…' : id ? 'Lưu thay đổi' : `Thêm ${config.singular}`}</button></div>
     </form></>;
 }

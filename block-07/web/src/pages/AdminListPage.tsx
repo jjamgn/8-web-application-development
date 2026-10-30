@@ -1,4 +1,5 @@
 import AdminDishesPage from './AdminDishesPage';
+import AdminIngredientsPage from './AdminIngredientsPage';
 import { Link } from 'react-router-dom';
 import PageState from '../components/PageState';
 import { imageSource, money, resources } from '../config/resources';
@@ -6,7 +7,9 @@ import { useLoad } from '../hooks/useLoad';
 import type { Entity, Resource } from '../types';
 
 export default function AdminListPage({ resource }: { resource: Resource }) {
-  return resource === 'dishes' ? <AdminDishesPage /> : <LegacyAdminListPage resource={resource} />;
+  if (resource === 'dishes') return <AdminDishesPage />;
+  if (resource === 'ingredients') return <AdminIngredientsPage />;
+  return <LegacyAdminListPage resource={resource} />;
 }
 
 function LegacyAdminListPage({ resource }: { resource: Resource }) {

@@ -18,6 +18,6 @@ export function MoreDishes({ load, infinite = false }: { load: Load; infinite?: 
   }, [infinite, load.hasMore, load.loadingMore, load.moreError, load.page, load.key]);
   if (load.status !== 'success' || load.total === 0) return null;
   return <div className="more-dishes"><div ref={sentinel} aria-hidden="true" /><p role="status" aria-live="polite">Đã xem {load.items.length} / {load.total} món{!load.hasMore && ' · Bạn đã xem hết thực đơn này.'}</p>
-    {load.moreError && <p className="field-error" role="alert">{load.moreError}</p>}{load.hasMore && <button className="button outline" onClick={load.loadMore} disabled={load.loadingMore}>{load.loadingMore ? 'Đang tải món…' : load.moreError ? 'Thử tải lại' : infinite ? 'Xem tiếp món ăn ↓' : 'Tải thêm món ↓'}</button>}
+    {load.moreError && <p className="field-error" role="alert">{load.moreError}</p>}{load.hasMore && <button className="button outline" onClick={load.loadMore} disabled={load.loadingMore}>{load.loadingMore ? 'Đang tải món…' : load.moreError ? 'Thử tải lại' : infinite ? 'Xem tiếp món ăn' : 'Tải thêm món'}</button>}
     {infinite && <small>Cuộn để khám phá tiếp. Mở lại liên kết sẽ bắt đầu từ món đầu tiên.</small>}</div>;
 }

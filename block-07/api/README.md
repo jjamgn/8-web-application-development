@@ -1,4 +1,4 @@
-# Bếp Nhà — Block 06 backend
+# Bếp Nhà — Block 07 backend
 
 Backend độc lập, phát triển từ Block5: Express 5, TypeScript, Prisma 6, PostgreSQL/Supabase. Không cần thư mục Block5 để cài, chạy hoặc seed. Phạm vi API local theo tài liệu phân công; không có đăng nhập, session, CSRF, EJS hay upload multipart.
 
@@ -76,13 +76,21 @@ Mỗi `resource` là `dishes`, `chefs`, `ingredients` có đủ năm endpoint, t
 
 | Method | URL | `data` thành công |
 |---|---|---|
-| GET | `/api/{resource}` | Mảng |
+| GET | `/api/{resource}` | Object phân trang với dishes; mảng với chefs/ingredients |
 | GET | `/api/{resource}/:id` | Bản ghi |
 | POST | `/api/{resource}` | Bản ghi đã tạo |
 | PATCH | `/api/{resource}/:id` | Bản ghi đã sửa |
 | DELETE | `/api/{resource}/:id` | `null` |
 
-`GET /api/dishes?q=bún` tìm tên không phân biệt hoa thường; `q` tối đa 160 ký tự. Không phân trang/filter/sort trong contract này. Dish trả kèm `chef`, `ingredients[].ingredient`; `price` và `quantity` là number, `available` là boolean. Các ID là số nguyên dương trong miền PostgreSQL Int.
+`GET /api/dishes` nhận phần Search API từ nhánh `feature/search-api`. Kết quả món nằm tại `data.items`; `data` còn có `total`, `page`, `pageSize`. Danh sách đầu bếp và nguyên liệu vẫn trả mảng. Dish trả kèm `chef`, `ingredients[].ingredient`; `price` và `quantity` là number, `available` là boolean. Các ID là số nguyên dương trong miền PostgreSQL Int.
+
+### Tìm kiếm và phân trang món ăn
+
+Tham số hỗ trợ: `mode=basic|advanced|fulltext|fuzzy`, `q` tối đa 160 ký tự, `category`, `minPrice`, `maxPrice`, `available=true|false`, `sort=name_asc|name_desc|price_asc|price_desc`, `page` (mặc định 1), `pageSize` (mặc định 12, tối đa 100). Filter áp dụng trước phân trang; giá 0 và trạng thái false hợp lệ. Fulltext tìm trên tên và mô tả; fuzzy tìm tên gần giống, hai chế độ này yêu cầu `q`.
+
+Migration `202610300001_enable_pg_trgm` bổ sung extension PostgreSQL cho fuzzy search. Việc lấy code không tự chạy migration hoặc seed lại database. Khi chuẩn bị bật fuzzy trên database phát triển, áp dụng migration bằng `npm run db:migrate`.
+
+Ví dụ: `GET /api/dishes?mode=advanced&category=M%C3%B3n%20chay&minPrice=0&available=false&sort=price_asc&page=1&pageSize=12`.
 
 Thành công HTTP **200**:
 
