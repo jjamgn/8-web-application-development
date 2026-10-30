@@ -1,0 +1,142 @@
+[
+  {
+    "id": "89ec67c8-679d-41ce-9aa4-18496f0a6736",
+    "studentCode": "SV001",
+    "name": "Nguyễn Văn An",
+    "email": "an@example.com",
+    "className": "CNTT01"
+  },
+  {
+    "id": "43d6c04a-dc59-4898-ace3-cb678493ea02",
+    "studentCode": "SV002",
+    "name": "Trần Thị Bình",
+    "email": "binh@example.com",
+    "className": "CNTT02"
+  },
+  {
+    "id": "59c67236-1181-42d5-9b8a-bbaf71fb5487",
+    "studentCode": "SV003",
+    "name": "Lê Minh Khang",
+    "email": "khang@example.com",
+    "className": "CNTT01"
+  },
+  {
+    "id": "420185cf-c06f-46c5-81ba-8b9f730a3eb7",
+    "studentCode": "SV004",
+    "name": "Cao Hải Vy",
+    "email": "abc@gmail.com",
+    "className": "24c08"
+  },
+  {
+    "id": "25148c33-e243-4b02-9dcd-9adf2ed789b7",
+    "studentCode": "SV005",
+    "name": "Phạm Minh Đức",
+    "email": "sv005@example.com",
+    "className": "CNTT01"
+  },
+  {
+    "id": "8e7ca154-3437-4900-9d85-1bff441c7618",
+    "studentCode": "SV006",
+    "name": "Hoàng Thị Lan",
+    "email": "sv006@example.com",
+    "className": "CNTT02"
+  },
+  {
+    "id": "34d8cadf-b229-4a7f-a655-1a9c0902d5d8",
+    "studentCode": "SV007",
+    "name": "Vũ Quốc Huy",
+    "email": "sv007@example.com",
+    "className": "CNTT03"
+  },
+  {
+    "id": "3078e579-a384-47b5-9475-c94520da77d9",
+    "studentCode": "SV008",
+    "name": "Đặng Ngọc Mai",
+    "email": "sv008@example.com",
+    "className": "24C08"
+  },
+  {
+    "id": "b86abec3-d02a-4148-9747-020ead9b9922",
+    "studentCode": "SV009",
+    "name": "Bùi Thanh Tùng",
+    "email": "sv009@example.com",
+    "className": "CNTT01"
+  },
+  {
+    "id": "997a44e5-a47c-4474-b114-f6f383b3068c",
+    "studentCode": "SV010",
+    "name": "Đỗ Thu Hà",
+    "email": "sv010@example.com",
+    "className": "CNTT02"
+  },
+  {
+    "id": "9446e59c-5942-49e6-8795-ffd66317673d",
+    "studentCode": "SV011",
+    "name": "Ngô Gia Bảo",
+    "email": "sv011@example.com",
+    "className": "CNTT03"
+  },
+  {
+    "id": "8bc912a2-7e73-401d-b754-3cb1995f214c",
+    "studentCode": "SV012",
+    "name": "Dương Khánh Linh",
+    "email": "sv012@example.com",
+    "className": "24C08"
+  },
+  {
+    "id": "1ff1da7d-93bb-417b-8867-736918b1d58a",
+    "studentCode": "SV013",
+    "name": "Lý Hoàng Nam",
+    "email": "sv013@example.com",
+    "className": "CNTT01"
+  },
+  {
+    "id": "7806b5f4-4efd-4ec0-87f3-c57f60057fc4",
+    "studentCode": "SV014",
+    "name": "Phan Ngọc Anh",
+    "email": "sv014@example.com",
+    "className": "CNTT02"
+  },
+  {
+    "id": "38f8d7f3-dfb3-4cbe-ab12-ac280c5643f6",
+    "studentCode": "SV015",
+    "name": "Trịnh Đức Long",
+    "email": "sv015@example.com",
+    "className": "CNTT03"
+  },
+  {
+    "id": "00707db4-736e-4d32-8b87-3986240901eb",
+    "studentCode": "SV016",
+    "name": "Hồ Phương Thảo",
+    "email": "sv016@example.com",
+    "className": "24C08"
+  },
+  {
+    "id": "58e737c0-efcd-4087-b8e9-c0f1e729eaff",
+    "studentCode": "SV017",
+    "name": "Đinh Tuấn Kiệt",
+    "email": "sv017@example.com",
+    "className": "CNTT01"
+  },
+  {
+    "id": "be35b8ab-c145-4264-806f-4fd0abfcf4d8",
+    "studentCode": "SV018",
+    "name": "Mai Hải Yến",
+    "email": "sv018@example.com",
+    "className": "CNTT02"
+  },
+  {
+    "id": "62ba92a8-636d-4233-bf90-00a6ad3cc4c1",
+    "studentCode": "SV019",
+    "name": "Võ Minh Quân",
+    "email": "sv019@example.com",
+    "className": "CNTT03"
+  },
+  {
+    "id": "8051f577-1dfe-4f49-bb72-a0788f794493",
+    "studentCode": "SV020",
+    "name": "Trương Bảo Ngọc",
+    "email": "sv020@example.com",
+    "className": "24C08"
+  }
+]

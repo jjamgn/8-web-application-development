@@ -1,0 +1,62 @@
+<%- include('../partials/header') %>
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">QUẢN LÝ SINH VIÊN</p>
+    <h1>Danh sách sinh viên</h1>
+    <p class="subtitle">Thông tin của tất cả sinh viên, ở cùng một nơi.</p>
+  </div>
+  <a class="button button-primary" href="/students/new"><span aria-hidden="true">＋</span> Thêm sinh viên</a>
+</section>
+<% if (added) { %>
+  <div class="notice notice-success" role="status">Đã thêm sinh viên thành công.</div>
+<% } %>
+<section class="stats-grid" aria-label="Thống kê">
+  <div class="stat-card"><span class="stat-label">Tổng sinh viên</span><strong><%= totalStudents %></strong><span class="stat-note">Sinh viên trong toàn bộ danh sách</span></div>
+  <div class="stat-card"><span class="stat-label">Số lớp</span><strong><%= classes.length %></strong><span class="stat-note">Lớp có sinh viên tham gia</span></div>
+</section>
+<section class="panel">
+  <div class="panel-heading"><h2><%= selectedClass ? 'Sinh viên lớp ' + selectedClass : 'Tất cả sinh viên' %></h2><span class="count-badge"><%= students.length %> sinh viên</span></div>
+  <form method="get" action="/students" class="class-filter">
+    <div class="filter-field">
+      <label for="className">Lọc theo mã lớp</label>
+      <select id="className" name="className">
+        <option value="">Tất cả lớp</option>
+        <% if (selectedClass && !classes.includes(selectedClass)) { %>
+          <option value="<%= selectedClass %>" selected><%= selectedClass %> (chưa có sinh viên)</option>
+        <% } %>
+        <% classes.forEach(classCode => { %>
+          <option value="<%= classCode %>" <%= selectedClass === classCode ? 'selected' : '' %>><%= classCode %></option>
+        <% }) %>
+      </select>
+    </div>
+    <button class="button button-primary" type="submit">Lọc sinh viên</button>
+    <% if (selectedClass) { %><a class="button button-secondary" href="/students">Bỏ lọc</a><% } %>
+  </form>
+  <% if (!students.length) { %>
+    <% if (selectedClass) { %>
+      <div class="empty-state"><h3>Không có sinh viên trong lớp này</h3><p>Chưa tìm thấy sinh viên thuộc lớp <strong><%= selectedClass %></strong>.</p><a class="button button-secondary" href="/students">Xem tất cả sinh viên</a></div>
+    <% } else { %>
+    <div class="empty-state"><div class="empty-icon" aria-hidden="true">＋</div><h3>Danh sách đang trống</h3><p>Thêm sinh viên đầu tiên để bắt đầu quản lý.</p><a class="button button-primary" href="/students/new">Thêm sinh viên</a></div>
+    <% } %>
+  <% } else { %>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Bảng danh sách sinh viên">
+      <table>
+        <caption class="sr-only">Danh sách gồm <%= students.length %> sinh viên</caption>
+        <thead><tr><th scope="col" class="row-number">STT</th><th scope="col">Mã sinh viên</th><th scope="col">Họ và tên</th><th scope="col">Email</th><th scope="col">Lớp</th></tr></thead>
+        <tbody>
+        <% students.forEach((student, index) => { %>
+          <tr>
+            <td class="row-number"><%= String(index + 1).padStart(2, '0') %></td>
+            <td><span class="student-code"><%= student.studentCode %></span></td>
+            <td><div class="student-identity"><span class="avatar avatar-<%= index % 3 %>" aria-hidden="true"><%= student.name.trim().split(/\s+/).slice(-1)[0].charAt(0).toUpperCase() %></span><span class="student-name"><%= student.name %></span></div></td>
+            <td class="email-cell"><%= student.email %></td>
+            <td><span class="class-badge"><%= student.className %></span></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-footer">Hiển thị <%= students.length %> sinh viên</div>
+  <% } %>
+</section>
+<%- include('../partials/footer') %>

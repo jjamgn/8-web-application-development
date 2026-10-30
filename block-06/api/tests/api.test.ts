@@ -203,6 +203,12 @@ test('CORS preflight allows exact SPA origin, JSON and required methods only', a
   assert.match(r.headers['access-control-allow-methods'], /GET, POST, PATCH, DELETE, OPTIONS/);
   assert.equal(r.headers['access-control-allow-headers'], 'Content-Type');
   assert.match(r.headers.vary, /Origin/);
+  const loopback = 'http://127.0.0.1:5173';
+  const localPreflight = await request(app).options('/api/dishes/1').set('Origin', loopback).set('Access-Control-Request-Method', 'PATCH').set('Access-Control-Request-Headers', 'content-type');
+  assert.equal(localPreflight.status, 204);
+  assert.equal(localPreflight.headers['access-control-allow-origin'], loopback);
+  assert.equal((await request(app).get('/api/dishes').set('Origin', loopback)).headers['access-control-allow-origin'], loopback);
+  assert.equal((await request(app).get('/api/unknown').set('Origin', loopback)).headers['access-control-allow-origin'], loopback);
   for (const origin of ['http://localhost:5174', 'https://evil.test', 'http://localhost:5173.evil.test']) {
     assert.equal((await request(app).get('/api/dishes').set('Origin', origin)).headers['access-control-allow-origin'], undefined);
     assert.equal((await request(app).options('/api/dishes').set('Origin', origin)).headers['access-control-allow-origin'], undefined);
