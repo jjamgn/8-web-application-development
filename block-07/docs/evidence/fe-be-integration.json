@@ -1,0 +1,154 @@
+{
+  "source": "real browser -> local HTTP API -> Supabase PostgreSQL; no interception",
+  "baselineTotal": 1000,
+  "afterTotal": 1000,
+  "results": [
+    {
+      "name": "Supabase count and stable server pages; full result baseline for filter assertions",
+      "result": "PASS"
+    },
+    {
+      "name": "Basic/Advanced parity, server-wide AND filters, literal wildcard handling",
+      "result": "PASS"
+    },
+    {
+      "name": "PostgreSQL full-text and pg_trgm fuzzy return actual matches",
+      "result": "PASS"
+    },
+    {
+      "name": "Live Load More appends 12 to 24 unique dishes",
+      "result": "PASS"
+    },
+    {
+      "name": "Live numbered admin URL and reload preserve page and sort",
+      "result": "PASS"
+    },
+    {
+      "name": "Live infinite scroll appends without duplicate dish IDs",
+      "result": "PASS"
+    },
+    {
+      "name": "Create dish through UI with real file upload, price zero and available false",
+      "result": "PASS"
+    },
+    {
+      "name": "HTTPS image link survives UI save/reload; PATCH name preserves image; cancel delete is safe",
+      "result": "PASS"
+    },
+    {
+      "name": "Mobile live menu and admin have no horizontal document overflow",
+      "result": "PASS"
+    }
+  ],
+  "errors": [],
+  "network": [
+    {
+      "method": "GET",
+      "path": "/api/dishes?mode=basic&sort=name_asc&page=1&pageSize=12",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes?mode=basic&sort=name_asc&page=2&pageSize=12",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes?mode=advanced&minPrice=0&sort=price_asc&page=2&pageSize=12",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes?mode=advanced&minPrice=0&sort=price_asc&page=2&pageSize=12",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes?mode=basic&sort=name_asc&page=1&pageSize=12",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes?mode=basic&sort=name_asc&page=2&pageSize=12",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/chefs",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/uploads/dishes",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/dishes",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes/1007",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes/1007",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/chefs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes/1007",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/dishes/1007",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes/1007",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/chefs",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/dishes/1007",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes/1007",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes/1007",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes?mode=basic&sort=name_asc&page=1&pageSize=12",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes?mode=basic&sort=name_asc&page=1&pageSize=12",
+      "status": 200
+    }
+  ],
+  "removedOwnedIds": [
+    1007
+  ]
+}

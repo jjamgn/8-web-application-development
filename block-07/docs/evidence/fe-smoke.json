@@ -1,0 +1,195 @@
+{
+  "source": "intercepted fixtures, not Supabase evidence",
+  "results": [
+    {
+      "name": "Load More appends, retries the same page and stops at the end",
+      "result": "PASS"
+    },
+    {
+      "name": "Slow old page cannot mix into a new category",
+      "result": "PASS"
+    },
+    {
+      "name": "Page numbers survive URL/reload/back and reset on filter; false and zero are preserved",
+      "result": "PASS"
+    },
+    {
+      "name": "Infinite scroll automatically appends, does not repeat pages, reload starts at the first page",
+      "result": "PASS"
+    },
+    {
+      "name": "Search modes are hidden; automatic description and typo fallbacks keep pagination consistent",
+      "result": "PASS"
+    },
+    {
+      "name": "Image source and HTTP 422 field errors keep the form draft",
+      "result": "PASS"
+    },
+    {
+      "name": "Mobile layout fits viewport",
+      "result": "PASS"
+    }
+  ],
+  "runtimeErrors": [],
+  "network": [
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "2",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "3",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "3",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "4",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "2",
+      "pageSize": "12"
+    },
+    {
+      "mode": "advanced",
+      "category": "Món chay",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "2",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "2",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "2",
+      "pageSize": "12"
+    },
+    {
+      "mode": "advanced",
+      "minPrice": "0",
+      "available": "false",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "2",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "q": "huongvi",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    },
+    {
+      "mode": "fulltext",
+      "q": "huongvi",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    },
+    {
+      "mode": "fulltext",
+      "q": "huongvi",
+      "sort": "name_asc",
+      "page": "2",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "q": "monn",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    },
+    {
+      "mode": "fulltext",
+      "q": "monn",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    },
+    {
+      "mode": "fuzzy",
+      "q": "monn",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    },
+    {
+      "mode": "basic",
+      "sort": "name_asc",
+      "page": "1",
+      "pageSize": "12"
+    }
+  ]
+}
