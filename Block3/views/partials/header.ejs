@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> · StudentSpace</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/students" aria-label="StudentSpace - Danh sách sinh viên">
+        <span class="brand-icon" aria-hidden="true">S</span>
+        <span>Student<span class="brand-light">Space</span></span>
+      </a>
+      <nav aria-label="Điều hướng chính">
+        <a href="/students" class="nav-link <%= activePage === 'students' ? 'active' : '' %>" <% if (activePage === 'students') { %>aria-current="page"<% } %>>Danh sách</a>
+        <a href="/students/new" class="nav-link <%= activePage === 'new' ? 'active' : '' %>" <% if (activePage === 'new') { %>aria-current="page"<% } %>>Thêm sinh viên</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container">

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Workflow, kiến trúc, stack và quyết định xây dựng Student List CSR bằng React, của ứng dụng Student List React.">
+  <title>StudentSpace · Workflow CSR &amp; quyết định kỹ thuật</title>
+  <style>
+    :root{color-scheme:light;--ink:#183a32;--muted:#62766e;--green:#17654b;--line:#dce5de;--paper:#fff;--bg:#f4f6f1}
+    *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;font:15px/1.7 "Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+    a{color:var(--green);text-decoration:none}a:hover{text-decoration:underline}:focus-visible{outline:3px solid #328664;outline-offset:4px}
+    .wrap{max-width:1120px;width:calc(100% - 48px);margin:auto}header,footer{background:#fff}header{border-bottom:1px solid var(--line)}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 0}.brand{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:700}.mark{background:var(--green);color:#fff;width:32px;height:32px;display:grid;place-items:center;border-radius:9px 9px 9px 2px}.toplink{font-size:13px;font-weight:600}
+    main{padding:48px 0 56px}.eyebrow{font-size:11px;font-weight:750;letter-spacing:2px;color:var(--green);margin:0 0 12px}h1{font-size:clamp(30px,4.5vw,49px);line-height:1.16;letter-spacing:-1.5px;max-width:840px;margin:0 0 20px}.intro{max-width:800px;color:var(--muted);font-size:17px;margin:0}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}.chip{font:12px/1.5 Consolas,monospace;border:1px solid #cdded0;border-radius:20px;padding:5px 12px;background:#eaf1e6}.contents{display:flex;flex-wrap:wrap;gap:10px 24px;padding:20px 0;margin-top:32px;border-block:1px solid var(--line)}.contents a{font-size:13px;font-weight:600}
+    section{margin-top:42px}.heading{display:flex;align-items:baseline;gap:14px;margin-bottom:18px}.num{color:#779888;font:13px Consolas,monospace}h2{margin:0;font-size:25px;line-height:1.3;letter-spacing:-.5px}h3{font-size:16px;line-height:1.45;margin:0 0 9px}p{margin:0 0 12px}p:last-child{margin-bottom:0}code{font: .9em Consolas,monospace;background:#eff3ed;padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}
+    .card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:24px}.note{margin-top:24px;padding:18px 22px;border-left:3px solid #b47d3e;background:#faf3e8;border-radius:0 8px 8px 0;font-size:13px;color:#715632}.fine,.caption{font-size:13px;color:var(--muted)}.caption{margin-top:14px}
+    .architecture{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.layer{position:relative;padding:20px 16px}.layer:not(:last-child)::after{content:'→';position:absolute;right:-13px;top:26px;color:#7b9585;z-index:1}.label,.tag{display:block;color:var(--green);font:11px Consolas,monospace;margin-bottom:12px}.layer p,.decision p,.step p{font-size:13px;color:var(--muted)}
+    .split,.decisions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:18px}.dataflow{font:13px/1.9 Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+    [hidden]{display:none!important}.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}button{font:inherit;cursor:pointer}.tab{border:1px solid var(--line);border-radius:7px;padding:9px 16px;background:#fff;color:var(--muted);font-size:13px;font-weight:600}.tab[aria-selected=true]{color:#fff;background:var(--green);border-color:var(--green)}.panel{margin-top:18px}.panel>p{color:var(--muted)}
+    .flow{margin:20px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;counter-reset:step}.step{padding:20px;background:#fafbf8;border:1px solid var(--line);border-radius:9px;counter-increment:step}.step::before{content:counter(step,decimal-leading-zero);font:12px Consolas,monospace;color:var(--green);display:inline-block;margin-bottom:12px;padding:3px 8px;border-radius:4px;background:#e7efe3}.branch{margin-top:18px;padding:15px 18px;border-left:3px solid #b47d3e;background:#faf3e8;font-size:13px;color:#715632}
+    .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff}table{border-collapse:collapse;width:100%;text-align:left}th,td{padding:16px 20px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:11px;letter-spacing:1px;background:#eaf0e6;color:#47644f}td{font-size:13px}td:first-child{font-weight:600}tr:last-child td{border-bottom:0}.table-wrap table{min-width:580px}.list{margin:12px 0 0;padding-left:20px;font-size:13px;color:var(--muted)}.list li+li{margin-top:8px}footer{border-top:1px solid var(--line);padding:23px 0;font-size:12px;color:var(--muted)}footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .component-map{margin:24px 0}.component-map figcaption{margin-bottom:16px}.component-root{max-width:720px;margin:0 auto;padding:24px;border:2px solid var(--green);border-radius:12px;background:#eaf1e6;text-align:center}.component-branches{display:grid;grid-template-columns:1fr 1fr;gap:24px;position:relative;padding-top:24px}.component-branches::before{content:'';position:absolute;left:50%;top:0;height:24px;border-left:2px solid #9ab4a5}.component-branch{min-width:0;border-top:2px solid #9ab4a5;padding-top:14px}.branch-label{font-size:13px;color:var(--green);min-height:44px}.component-node{background:#fff;border:1px solid var(--line);border-radius:10px;padding:20px;margin-top:14px}.component-node p{font-size:13px}.component-child{border-left:3px solid #9ab4a5;background:#f4f6f1;padding:16px;margin-top:16px}.form-owner{border:2px solid var(--green)}
+    @media(max-width:600px){.component-branches{grid-template-columns:minmax(0,1fr);gap:18px}.component-root{padding:20px}.component-node{padding:16px}.branch-label{min-height:0}.component-branches::before{display:none}}
+    @media print{.component-root,.component-node{break-inside:avoid}.component-branches{gap:16px}}
+    @media(max-width:900px){.architecture{grid-template-columns:1fr}.layer:not(:last-child)::after{content:'↓';top:auto;bottom:-17px;left:50%;right:auto}.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:600px){.wrap{width:calc(100% - 32px)}main{padding-top:32px}.split,.decisions,.flow{grid-template-columns:minmax(0,1fr)}.card{padding:20px}.tab{flex-grow:1}.intro{font-size:15px}th,td{padding:12px}.heading{gap:10px}h2{font-size:22px}.topbar{align-items:flex-start}.toplink{text-align:right}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    @media print{body{background:#fff;font-size:12px}.wrap{width:100%}main{padding:20px 0}h1{font-size:30px}.tabs,.contents,.toplink{display:none!important}.panel[hidden]{display:block!important}.card,.step,tr{break-inside:avoid}section{margin-top:26px}.table-wrap{overflow:visible}.table-wrap table{min-width:0}.architecture{grid-template-columns:repeat(4,1fr)}.layer:not(:last-child)::after{content:'→';top:26px;right:-13px;left:auto;bottom:auto}}
+  </style>
+</head>
+<body>
+  <header><div class="wrap topbar"><div class="brand"><span class="mark" aria-hidden="true">S</span>StudentSpace</div><a class="toplink" href="workflow.html">Đối chiếu workflow SSR ↗</a></div></header>
+  <main class="wrap">
+    <p class="eyebrow">TÀI LIỆU KỸ THUẬT · STUDENT LIST CSR</p>
+    <h1>Từ một sự kiện<br>đến danh sách mới.</h1>
+    <p class="intro">Ứng dụng React hiển thị danh sách và thêm sinh viên trên cùng trang. Dữ liệu nằm trong state; khi state thay đổi, React tính lại giao diện và cập nhật DOM mà không tải lại tài liệu.</p>
+    <div class="chips" aria-label="Các công nghệ chính"><span class="chip">React</span><span class="chip">ReactDOM</span><span class="chip">JavaScript + JSX</span><span class="chip">Vite</span><span class="chip">CSR</span><span class="chip">JSON seed</span></div>
+
+    <nav class="contents" aria-label="Mục lục"><a href="#architecture">01 · Component &amp; state</a><a href="#workflow">02 · Workflow</a><a href="#build">03 · Quá trình build</a><a href="#decisions">04 · Quyết định</a><a href="#stack">05 · Stack</a><a href="#comparison">06 · SSR &amp; CSR</a></nav>
+
+    <section id="architecture">
+      <div class="heading"><span class="num">01</span><h2>Kiến trúc, component và state owner</h2></div>
+      <div class="architecture" aria-label="Seed JSON đến state StudentApp rồi component và DOM">
+        <div class="card layer"><span class="label">DỮ LIỆU BAN ĐẦU</span><h3>Seed JSON</h3><p>Khởi tạo danh sách từ dữ liệu mẫu của bản SSR. StudentApp sao chép từng bản ghi seed để khởi tạo state.</p></div>
+        <div class="card layer"><span class="label">STATE DÙNG CHUNG</span><h3>StudentApp</h3><p>Giữ danh sách hiện tại và xử lý yêu cầu thêm sinh viên từ form.</p></div>
+        <div class="card layer"><span class="label">GIAO DIỆN</span><h3>Các component con</h3><p>Stats, List và Filters hiển thị màn hình danh sách. Form giữ dữ liệu nhập và gọi callback của cha.</p></div>
+        <div class="card layer"><span class="label">TRÌNH DUYỆT</span><h3>React → DOM</h3><p>React render từ state và props, sau đó cập nhật các phần tử thực tế trên trang.</p></div>
+      </div>
+      
+      <figure class="component-map" aria-labelledby="component-title">
+        <figcaption id="component-title"><h3>Sơ đồ component</h3><p class="fine">Entry: <code>src/main.jsx</code> → <code>createRoot</code> → <code>StrictMode</code> → <code>StudentApp</code>.</p></figcaption>
+        <div class="component-root"><span class="tag">STATE OWNER · COMPONENT CHA</span><h3>StudentApp</h3><p><code>students</code> · <code>activeView</code> · <code>notice</code> · <code>selectedClass</code> · <code>query</code></p><p class="fine">Tính dữ liệu hiển thị, xử lý validation/thêm sinh viên và truyền props, callback xuống con.</p></div>
+        <div class="component-branches">
+          <div class="component-branch"><p class="branch-label">↓ Khi <code>activeView === 'list'</code></p>
+            <div class="component-node"><span class="tag">NHẬN PROPS · KHÔNG CÓ STATE RIÊNG</span><h3>StudentStats</h3><p><code>totalStudents</code>, <code>totalClasses</code></p><p class="fine">Thống kê toàn bộ danh sách, không phụ thuộc kết quả lọc.</p></div>
+            <div class="component-node"><span class="tag">NHẬN PROPS · KHÔNG CÓ STATE RIÊNG</span><h3>StudentList</h3><p><code>students={visibleStudents}</code><br><code>totalStudents</code>, <code>onClearFilters</code>, <code>children</code></p>
+              <div class="component-child"><p class="fine">↓ Nội dung được truyền qua <code>children</code></p><h3>StudentFilters</h3><p><code>classNames</code>, <code>selectedClass</code>, <code>query</code></p><p class="fine">Callback: <code>onClassChange</code>, <code>onQueryChange</code>, <code>onClear</code>. Không có state riêng; giá trị và callback được StudentApp truyền trực tiếp.</p></div>
+            </div>
+          </div>
+          <div class="component-branch"><p class="branch-label">↓ Khi <code>activeView !== 'list'</code> (giá trị dùng: <code>'new'</code>)</p>
+            <div class="component-node form-owner"><span class="tag">STATE OWNER · DỮ LIỆU CỤC BỘ</span><h3>StudentForm</h3><p>State: <code>values</code>, <code>errors</code></p><p class="fine">Props: <code>classNames</code>, <code>onAdd</code>, <code>onCancel</code>.</p><p class="fine">Giữ bản nháp bốn ô nhập và lỗi theo trường. Submit gọi <code>onAdd(values)</code> để StudentApp kiểm tra và cập nhật danh sách.</p></div>
+            
+          </div>
+        </div>
+        
+      </figure>
+      <h3 id="state-owners">State owner: component nào giữ dữ liệu nào?</h3>
+      <div class="table-wrap"><table aria-labelledby="state-owners"><thead><tr><th scope="col">Owner</th><th scope="col">State / khởi tạo</th><th scope="col">Vai trò và thời điểm cập nhật</th></tr></thead><tbody>
+        <tr><td>StudentApp</td><td><code>students</code> ← bản sao seed</td><td>Danh sách gốc. <code>handleAddStudent</code> nối sinh viên hợp lệ bằng mảng mới.</td></tr>
+        <tr><td>StudentApp</td><td><code>activeView = 'list'</code></td><td>Chọn danh sách hoặc form. <code>showView</code> đổi màn hình; thêm thành công đặt lại <code>'list'</code>.</td></tr>
+        <tr><td>StudentApp</td><td><code>notice = ''</code></td><td>Thông báo thành công. Đặt sau khi thêm; <code>showView</code> xóa thông báo khi điều hướng.</td></tr>
+        <tr><td>StudentApp</td><td><code>selectedClass = ''</code></td><td>Lớp đang lọc. StudentFilters gọi <code>onClassChange</code>; <code>clearFilters</code> đưa về rỗng.</td></tr>
+        <tr><td>StudentApp</td><td><code>query = ''</code></td><td>Từ khóa tìm theo mã, tên hoặc email. StudentFilters gọi <code>onQueryChange</code>; <code>clearFilters</code> đưa về rỗng.</td></tr>
+        <tr><td>StudentForm</td><td><code>values</code> ← bốn chuỗi rỗng</td><td>Bản nháp <code>studentCode</code>, <code>name</code>, <code>email</code>, <code>className</code>. <code>handleChange</code> cập nhật ô người dùng đang sửa.</td></tr>
+        <tr><td>StudentForm</td><td><code>errors = {}</code></td><td>Nhận lỗi từ kết quả <code>onAdd</code>. Khi sửa một ô, xóa lỗi của riêng ô đó; khi submit lỗi, focus ô sai đầu tiên.</td></tr>
+      </tbody></table></div>
+      <div class="split">
+        <div class="card"><h3>Dữ liệu tính từ state</h3><ul class="list"><li><code>classNames = getClassNames(students)</code>: danh sách lớp đã chuẩn hóa, loại trùng và sắp xếp.</li><li><code>visibleStudents = filterStudents(students, { className: selectedClass, query })</code>: kết quả kết hợp lọc lớp và tìm kiếm.</li><li><code>students.length</code> và <code>classNames.length</code>: tổng sinh viên và số lớp.</li></ul></div>
+        <div class="card"><h3>Ref phục vụ focus</h3><p class="fine"><code>heading</code> trong StudentApp trỏ tới tiêu đề; effect theo <code>activeView</code> đưa focus về tiêu đề và cuộn lên đầu trang.</p><p class="fine"><code>inputs</code> trong StudentForm chứa bốn ref để focus ô lỗi đầu tiên. Các ref không phải state và thay đổi ref không tự kích hoạt render.</p></div>
+      </div>
+      <div class="split">
+        <div class="card"><h3>Luồng thêm sinh viên</h3><pre class="dataflow">StudentForm.handleSubmit
+  → preventDefault() → onAdd(values)
+  → StudentApp.handleAddStudent
+  → validateStudent(input, students)
+  ├─ Lỗi: trả { ok: false, errors }
+  │       → Form cập nhật errors + focus
+  └─ Hợp lệ: tạo ID → cập nhật students
+          → clearFilters() → đặt notice
+          → activeView = 'list'
+          → Form unmount, List/Stats render</pre></div>
+        <div class="card"><h3>Luồng lọc và tìm kiếm</h3><pre class="dataflow">StudentFilters: chọn lớp / nhập từ khóa
+  → onClassChange / onQueryChange
+  → StudentApp cập nhật selectedClass / query
+  → tính lại visibleStudents
+  → StudentList nhận students mới qua props
+  → React cập nhật bảng</pre></div>
+      </div>
+    </section>
+
+    <section id="workflow">
+      <div class="heading"><span class="num">02</span><h2>Workflow theo từng thao tác</h2></div>
+      <div class="tabs" role="tablist" aria-label="Chọn workflow" hidden>
+        <button class="tab" id="tab-view" role="tab" aria-controls="flow-view" aria-selected="true" tabindex="0">Mở danh sách</button>
+        <button class="tab" id="tab-add" role="tab" aria-controls="flow-add" aria-selected="false" tabindex="-1">Thêm sinh viên</button>
+        <button class="tab" id="tab-refresh" role="tab" aria-controls="flow-refresh" aria-selected="false" tabindex="-1">Tải lại trang</button>
+      </div>
+      <div class="card panel" id="flow-view">
+        <h3>Mở ứng dụng và xem danh sách</h3><p>Việc tải tài nguyên diễn ra khi mở trang; danh sách được dựng bằng JavaScript trong trình duyệt.</p>
+        <ol class="flow"><li class="step"><h3>Tải HTML và tài nguyên</h3><p>Trình duyệt nhận trang chứa root cùng JavaScript/CSS của ứng dụng.</p></li><li class="step"><h3>Gắn React vào root</h3><p>ReactDOM gắn cây component vào DOM. Seed được dùng để khởi tạo state của StudentApp.</p></li><li class="step"><h3>Render danh sách</h3><p>StudentApp truyền danh sách qua props; StudentList mô tả các hàng và React cập nhật DOM.</p></li></ol>
+      </div>
+      <div class="card panel" id="flow-add">
+        <h3>Nhập đủ thông tin → thêm → danh sách cập nhật</h3><p>Form được xử lý bằng sự kiện submit, hỗ trợ cả nút gửi và phím Enter.</p>
+        <ol class="flow"><li class="step"><h3>Nhận sự kiện submit</h3><p>Người dùng nhập mã sinh viên, họ tên, email và lớp. Event handler nhận yêu cầu gửi form.</p></li><li class="step"><h3>Chặn gửi mặc định</h3><p><code>event.preventDefault()</code> chặn hành vi gửi/điều hướng mặc định. Lệnh này chưa thêm sinh viên.</p></li><li class="step"><h3>Đọc và kiểm tra dữ liệu</h3><p>StudentForm gọi onAdd(values). StudentApp chạy validateStudent(input, students): chuẩn hóa bốn trường, kiểm tra hợp lệ và mã sinh viên/email trùng.</p></li><li class="step"><h3>Tạo sinh viên có ID riêng</h3><p>Nếu hợp lệ, StudentApp tạo ID bằng <code>crypto.randomUUID()</code> và bản ghi gồm id, studentCode, name, email, className.</p></li><li class="step"><h3>Cập nhật state bằng mảng mới</h3><p>StudentApp cập nhật danh sách, chẳng hạn <code>setStudents(prev =&gt; [...prev, student])</code>.</p></li><li class="step"><h3>React cập nhật giao diện</h3><p>StudentApp xóa bộ lọc/từ khóa, đặt thông báo và chuyển về list. StudentForm unmount nên bản nháp mất; StudentList và StudentStats hiển thị dữ liệu mới.</p></li></ol>
+        <div class="table-wrap" style="margin-top:18px"><table><thead><tr><th scope="col">Thông tin</th><th scope="col">Trường dữ liệu</th><th scope="col">Cách cung cấp</th></tr></thead><tbody>
+          <tr><td>Mã sinh viên</td><td><code>studentCode</code></td><td>Người dùng nhập trong form.</td></tr>
+          <tr><td>Họ tên</td><td><code>name</code></td><td>Người dùng nhập trong form.</td></tr>
+          <tr><td>Email</td><td><code>email</code></td><td>Người dùng nhập trong form.</td></tr>
+          <tr><td>Lớp</td><td><code>className</code></td><td>Người dùng nhập trong form.</td></tr>
+          <tr><td>ID nội bộ</td><td><code>id</code></td><td>Ứng dụng tự tạo khi thêm thành công; dùng làm React key.</td></tr>
+        </tbody></table></div>
+        <div class="branch"><strong>Nhánh dữ liệu không hợp lệ:</strong> StudentApp trả { ok: false, errors }; StudentForm giữ nội dung nhập, cập nhật errors và focus ô sai đầu tiên. Danh sách không đổi.</div>
+      </div>
+      <div class="card panel" id="flow-refresh">
+        <h3>F5 → phiên chạy mới → khôi phục seed</h3><p>State giữ dữ liệu trong bộ nhớ của phiên ứng dụng hiện tại.</p>
+        <ol class="flow"><li class="step"><h3>Kết thúc phiên hiện tại</h3><p>Tải lại trang làm mất state trong bộ nhớ, bao gồm sinh viên vừa thêm.</p></li><li class="step"><h3>Khởi tạo lại ứng dụng</h3><p>JavaScript chạy lại; StudentApp khởi tạo danh sách từ seed.</p></li><li class="step"><h3>Hiển thị dữ liệu mẫu</h3><p>Trở về danh sách mẫu, theo kế hoạch là 20 sinh viên. Không có bước đọc lại dữ liệu đã thêm từ storage.</p></li></ol>
+        <div class="branch"><strong>Giới hạn có chủ đích:</strong> không API/database, không ghi JSON ở server, không localStorage. Bản CSR này không lưu lâu dài sinh viên mới.</div>
+      </div>
+    </section>
+
+    <section id="build">
+      <div class="heading"><span class="num">03</span><h2>Các bước xây dựng</h2></div>
+      <ol class="flow"><li class="step"><h3>Phân tích ứng dụng SSR</h3><p>Đọc Express/EJS, routes, service và seed JSON; xác định POST + redirect là luồng đang tải lại trang.</p></li><li class="step"><h3>Chốt React và thông tin sinh viên</h3><p>Bản hiện tại dùng đầy đủ id, studentCode, name, email, className. Form nhận bốn trường nghiệp vụ; ứng dụng tự tạo ID.</p></li><li class="step"><h3>Tạo frontend riêng</h3><p>Thiết lập React + Vite, HTML root, entry JSX và CSS. Tái sử dụng dữ liệu/bố cục từ SSR.</p></li><li class="step"><h3>Đưa dữ liệu vào state</h3><p>StudentApp khởi tạo seed; StudentList nhận props và render danh sách.</p></li><li class="step"><h3>Nối form với callback</h3><p>Xử lý submit, validation, ID mới và cập nhật state để React cập nhật danh sách.</p></li><li class="step"><h3>Kiểm chứng và hướng dẫn</h3><p>Kế hoạch yêu cầu build, kiểm tra nghiệp vụ và browser; README/verification được nêu là nơi ghi phạm vi và kết quả cuối.</p></li></ol>
+    </section>
+
+    <section id="decisions">
+      <div class="heading"><span class="num">04</span><h2>Những quyết định và lý do</h2></div>
+      <div class="decisions">
+        <article class="card decision"><span class="tag">D01 · CÁCH ĐỒNG BỘ GIAO DIỆN</span><h3>Dùng React thay cho thao tác DOM thủ công</h3><p>Vanilla JavaScript yêu cầu tự giữ mảng dữ liệu và DOM đồng bộ. React cho phép mô tả giao diện theo state, đồng thời chia List/Form thành component. Lựa chọn này phù hợp yêu cầu React hoặc framework component tương đương trong kế hoạch.</p></article>
+        <article class="card decision"><span class="tag">D02 · THÔNG TIN SINH VIÊN</span><h3>Dùng đầy đủ các trường như SSR</h3><p>Form nhận mã sinh viên, họ tên, email và lớp; bản ghi bổ sung ID do ứng dụng tự tạo. Cấu trúc dữ liệu thống nhất với SSR giúp đối chiếu seed, thông tin hiển thị và quy tắc kiểm tra đầu vào giữa hai phiên bản.</p></article>
+        <article class="card decision"><span class="tag">D03 · NGÔN NGỮ &amp; CÔNG CỤ</span><h3>JavaScript + JSX, React + Vite</h3><p>JavaScript phù hợp mức học hiện tại. JSX diễn tả giao diện bằng component. Vite xử lý module, JSX, dev server và build file tĩnh; plugin React hỗ trợ tích hợp và Fast Refresh.</p></article>
+        <article class="card decision"><span class="tag">D04 · QUYỀN SỞ HỮU DỮ LIỆU</span><h3>State dùng chung nằm ở StudentApp</h3><p>StudentApp giữ students, activeView, notice, selectedClass và query. StudentForm giữ values/errors cục bộ. classNames và visibleStudents được tính từ state gốc; các component hiển thị nhận props và gọi callback để yêu cầu thay đổi.</p></article>
+        <article class="card decision"><span class="tag">D05 · ĐỊNH DANH</span><h3>ID riêng, key ổn định</h3><p>Dùng API trình duyệt <code>crypto.randomUUID()</code> cho sinh viên mới, dùng ID làm React key thay vì vị trí trong mảng. Không cần thư viện UUID riêng theo kế hoạch.</p></article>
+        <article class="card decision"><span class="tag">D06 · LƯU TRỮ</span><h3>Seed + state trong bộ nhớ</h3><p>Phạm vi bài không cần API/database. Dữ liệu mới chỉ tồn tại trong phiên; F5 khôi phục seed. Đây là khác biệt quan trọng với SSR vốn ghi dữ liệu vào JSON trên server.</p></article>
+        <article class="card decision"><span class="tag">D07 · SỰ KIỆN &amp; ĐIỀU HƯỚNG</span><h3>Submit qua handler trên cùng trang</h3><p>Chặn gửi mặc định, rồi đọc/kiểm tra dữ liệu và cập nhật state. Kế hoạch chọn trạng thái giao diện trên một URL, không tái tạo routes SSR; thao tác thêm không cần chuỗi POST → redirect → GET.</p></article>
+        <article class="card decision"><span class="tag">D08 · TÁI SỬ DỤNG CÓ CHỌN LỌC</span><h3>Chuyển EJS sang JSX, tách logic client</h3><p>Tái sử dụng seed, CSS và ý tưởng validation. Không import service SSR chứa <code>node:fs</code>, <code>node:path</code>, <code>node:crypto</code> vào browser. Frontend được tách riêng, backend SSR giữ nguyên theo kế hoạch.</p></article>
+      </div>
+    </section>
+
+    <section id="stack">
+      <div class="heading"><span class="num">05</span><h2>Stack và vai trò</h2></div>
+      <div class="table-wrap"><table><thead><tr><th scope="col">Công nghệ</th><th scope="col">Vai trò</th><th scope="col">Vị trí sử dụng</th></tr></thead><tbody>
+        <tr><td>JavaScript + JSX</td><td>Logic xử lý sự kiện, dữ liệu và mô tả giao diện component.</td><td>Mã nguồn frontend; JSX được công cụ build chuyển đổi.</td></tr>
+        <tr><td>react</td><td>Component, props, state và render theo dữ liệu.</td><td>Chạy trong trình duyệt.</td></tr>
+        <tr><td>react-dom</td><td>Gắn cây React và cập nhật DOM trình duyệt.</td><td>Entry của ứng dụng và quá trình hiển thị.</td></tr>
+        <tr><td>vite · dev dependency</td><td>Dev server, xử lý module và build tài nguyên tĩnh.</td><td>Môi trường phát triển/build; không lưu sinh viên.</td></tr>
+        <tr><td>@vitejs/plugin-react · dev dependency</td><td>Tích hợp React với Vite và Fast Refresh.</td><td>Cấu hình công cụ phát triển/build.</td></tr>
+        <tr><td>HTML + CSS</td><td>HTML root, bố cục, bảng/form, responsive và hỗ trợ truy cập.</td><td>Tài nguyên giao diện.</td></tr>
+        <tr><td>JSON seed</td><td>Dữ liệu mẫu dùng khởi tạo state.</td><td>Được đóng gói/import vào frontend; không phải nơi lưu bản ghi mới.</td></tr>
+        <tr><td>Browser APIs</td><td><code>preventDefault()</code> chặn gửi mặc định; <code>crypto.randomUUID()</code> tạo ID.</td><td>Event handler và logic tạo sinh viên.</td></tr>
+        <tr><td>Node.js + npm</td><td>Chạy công cụ phát triển/build, cài dependencies; Node test runner được đề xuất cho logic nghiệp vụ.</td><td>Môi trường công cụ, không phải backend dữ liệu CSR.</td></tr>
+      </tbody></table></div>
+      
+    </section>
+
+    <section id="comparison">
+      <div class="heading"><span class="num">06</span><h2>Từ SSR sang CSR: thay đổi ở đâu?</h2></div>
+      <div class="table-wrap"><table><thead><tr><th scope="col">Khía cạnh</th><th scope="col">SSR · Express + EJS</th><th scope="col">CSR · React</th></tr></thead><tbody>
+        <tr><td>Dựng danh sách</td><td>GET → đọc JSON → EJS tạo HTML trên server.</td><td>Seed → state → component → React cập nhật DOM trong browser.</td></tr>
+        <tr><td>Thêm sinh viên</td><td>POST → service validation/ghi JSON → redirect 303 → GET.</td><td>Submit handler → validation → ID mới → cập nhật state.</td></tr>
+        <tr><td>Tải lại tài liệu</td><td>Luồng thêm trả về một tài liệu HTML mới.</td><td>Thao tác thêm cập nhật giao diện trên tài liệu hiện tại.</td></tr>
+        <tr><td>Lưu dữ liệu</td><td>Ghi lâu dài vào JSON phía server.</td><td>Giữ trong bộ nhớ; F5 trở lại seed.</td></tr>
+        <tr><td>Phạm vi dữ liệu</td><td>id, studentCode, name, email, className; có lọc lớp.</td><td>id, studentCode, name, email, className; form nhập bốn trường, ID tự tạo.</td></tr>
+      </tbody></table></div>
+    </section>
+
+  </main>
+  <footer><div class="wrap"><span>StudentSpace · Tài liệu workflow CSR</span></div></footer>
+  <script>
+    (() => {
+      const tablist = document.querySelector('[role="tablist"]');
+      const tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+      const panels = tabs.map(tab => document.getElementById(tab.getAttribute('aria-controls')));
+      function selectTab(index, focus = false) {
+        tabs.forEach((tab, i) => {
+          tab.setAttribute('aria-selected', String(i === index));
+          tab.tabIndex = i === index ? 0 : -1;
+          panels[i].hidden = i !== index;
+        });
+        if (focus) tabs[index].focus();
+      }
+      panels.forEach((panel, i) => {
+        panel.setAttribute('role', 'tabpanel');
+        panel.setAttribute('aria-labelledby', tabs[i].id);
+        panel.tabIndex = 0;
+      });
+      tabs.forEach((tab, i) => {
+        tab.addEventListener('click', () => selectTab(i));
+        tab.addEventListener('keydown', event => {
+          let next;
+          if (event.key === 'ArrowRight') next = (i + 1) % tabs.length;
+          if (event.key === 'ArrowLeft') next = (i - 1 + tabs.length) % tabs.length;
+          if (event.key === 'Home') next = 0;
+          if (event.key === 'End') next = tabs.length - 1;
+          if (next === undefined) return;
+          event.preventDefault();
+          selectTab(next, true);
+        });
+      });
+      selectTab(0);
+      tablist.hidden = false;
+    })();
+  </script>
+</body>
+</html>

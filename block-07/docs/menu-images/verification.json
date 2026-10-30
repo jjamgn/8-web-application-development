@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-10-30T03:14:38.892Z",
+  "count": 1000,
+  "uniqueNames": 1000,
+  "uniqueDescriptions": 1000,
+  "uniqueRecipes": 1000,
+  "variantCopies": 0,
+  "missingDescription": [],
+  "missingRecipeCount": 0,
+  "missingRecipe": [],
+  "missingChef": [],
+  "generatedImagePaths": 11,
+  "sourcedImagePaths": 989,
+  "verifiedUniqueImageFiles": 1000,
+  "invalidImages": [],
+  "categories": {
+    "Món chính": 251,
+    "Tráng miệng": 250,
+    "Món chay": 250,
+    "Khai vị": 249
+  }
+}

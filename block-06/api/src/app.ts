@@ -5,17 +5,27 @@ import { resourceRouter } from './routes/resources.js';
 import { BusinessError, databaseBusinessError } from './services/resources.js';
 
 export const app = express();
-const spaOrigin = process.env.SPA_ORIGIN || 'http://localhost:5173';
-const parsedOrigin = new URL(spaOrigin);
-if (!['http:', 'https:'].includes(parsedOrigin.protocol) || parsedOrigin.origin !== spaOrigin) {
-  throw new Error('SPA_ORIGIN phải là origin HTTP(S) chính xác, không chứa path hoặc dấu / cuối.');
+const spaOrigins = new Set<string>();
+for (const value of (process.env.SPA_ORIGIN || 'http://localhost:5173').split(',')) {
+  const origin = value.trim();
+  const parsedOrigin = new URL(origin);
+  if (!['http:', 'https:'].includes(parsedOrigin.protocol) || parsedOrigin.origin !== origin) {
+    throw new Error('SPA_ORIGIN phải gồm các origin HTTP(S) chính xác, cách nhau bằng dấu phẩy, không chứa path hoặc dấu / cuối.');
+  }
+  spaOrigins.add(origin);
+  // Vite can be opened using either loopback hostname on the configured port.
+  if (parsedOrigin.hostname === 'localhost' || parsedOrigin.hostname === '127.0.0.1') {
+    parsedOrigin.hostname = parsedOrigin.hostname === 'localhost' ? '127.0.0.1' : 'localhost';
+    spaOrigins.add(parsedOrigin.origin);
+  }
 }
 app.disable('x-powered-by');
 // CORS precedes parsers, routes and errors so the SPA can inspect error statuses.
 app.use((req, res, next) => {
   res.vary('Origin');
-  if (req.get('Origin') === spaOrigin) {
-    res.set('Access-Control-Allow-Origin', spaOrigin);
+  const origin = req.get('Origin');
+  if (origin && spaOrigins.has(origin)) {
+    res.set('Access-Control-Allow-Origin', origin);
     res.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type');
   }

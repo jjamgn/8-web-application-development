@@ -1,0 +1,36 @@
+{
+  "name": "bep-nha-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "build": "tsc --noEmit",
+    "test": "tsx --test tests/api.test.ts tests/menu-catalog.test.ts",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed:menu": "tsx prisma/seed-menu.ts",
+    "db:verify:menu": "tsx prisma/verify-menu.ts",
+    "db:images:source": "tsx prisma/source-menu-images.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "6.12.0",
+    "@supabase/supabase-js": "2.57.4",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^20.17.30",
+    "@types/supertest": "^6.0.3",
+    "prisma": "6.12.0",
+    "supertest": "^7.1.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}

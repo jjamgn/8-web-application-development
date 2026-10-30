@@ -1,0 +1,32 @@
+<%- include('../partials/header') %>
+<a href="/students" class="back-link">← Quay lại danh sách</a>
+<section class="page-heading form-heading"><div><p class="eyebrow">THÊM THÀNH VIÊN MỚI</p><h1>Thêm sinh viên</h1><p class="subtitle">Điền thông tin bên dưới để thêm sinh viên vào danh sách.</p></div></section>
+<div class="form-layout">
+  <section class="panel form-panel">
+    <div class="panel-heading"><h2>Thông tin sinh viên</h2><span class="required-note">* Bắt buộc</span></div>
+    <form method="post" action="/students" class="student-form">
+      <% if (Object.keys(errors).length) { %>
+        <div class="notice notice-error" role="alert">Chưa thể thêm sinh viên. Vui lòng kiểm tra các trường được đánh dấu bên dưới.</div>
+      <% } %>
+      <div class="form-grid">
+        <% const fields = [
+          { key: 'studentCode', label: 'Mã sinh viên', placeholder: 'VD: SV004', type: 'text', max: 30, hint: 'Mã duy nhất cho mỗi sinh viên.', autocomplete: 'off' },
+          { key: 'name', label: 'Họ và tên', placeholder: 'VD: Nguyễn Minh Anh', type: 'text', max: 100, hint: 'Nhập đầy đủ họ và tên.', autocomplete: 'name' },
+          { key: 'email', label: 'Email', placeholder: 'VD: minhanh@example.com', type: 'email', max: 254, hint: 'Mỗi sinh viên sử dụng một email riêng.', autocomplete: 'email' },
+          { key: 'className', label: 'Lớp', placeholder: 'VD: CNTT01', type: 'text', max: 50, hint: 'Lớp hiện tại của sinh viên.', autocomplete: 'off' }
+        ]; %>
+        <% fields.forEach(field => { %>
+          <div class="form-field">
+            <label for="<%= field.key %>"><%= field.label %> <span class="required">*</span></label>
+            <input id="<%= field.key %>" name="<%= field.key %>" type="<%= field.type %>" maxlength="<%= field.max %>" placeholder="<%= field.placeholder %>" value="<%= values[field.key] || '' %>" autocomplete="<%= field.autocomplete %>" required aria-invalid="<%= errors[field.key] ? 'true' : 'false' %>" aria-describedby="<%= field.key %>-hint<%= errors[field.key] ? ' ' + field.key + '-error' : '' %>" <% if (field.key === 'studentCode') { %>minlength="2" pattern="[A-Za-z0-9_-]{2,30}"<% } %>>
+            <p id="<%= field.key %>-hint" class="field-hint"><%= field.hint %></p>
+            <% if (errors[field.key]) { %><p id="<%= field.key %>-error" class="field-error"><%= errors[field.key] %></p><% } %>
+          </div>
+        <% }) %>
+      </div>
+      <div class="form-actions"><a class="button button-secondary" href="/students">Hủy</a><button class="button button-primary" type="submit">Thêm sinh viên <span aria-hidden="true">→</span></button></div>
+    </form>
+  </section>
+  <aside class="help-card"><span class="help-icon" aria-hidden="true">i</span><h2>Một vài lưu ý</h2><p>Thông tin đầy đủ giúp bạn quản lý danh sách dễ dàng hơn.</p><ul><li>Mã sinh viên và email không được trùng với sinh viên đã có.</li><li>Kiểm tra lại họ tên và lớp trước khi lưu.</li><li>Sinh viên mới sẽ xuất hiện ngay trong danh sách sau khi thêm thành công.</li></ul></aside>
+</div>
+<%- include('../partials/footer') %>
