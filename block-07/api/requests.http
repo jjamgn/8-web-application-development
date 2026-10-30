@@ -1,0 +1,110 @@
+# VS Code REST Client: chỉ chạy mutation trên database phát triển.
+@base = http://localhost:3000/api
+@origin = http://localhost:5173
+# Thay bằng ID thực tế từ response POST trước khi PATCH/DELETE.
+@dishId = 9
+@chefId = 4
+@ingredientId = 11
+
+### Basic search + page 1
+GET {{base}}/dishes?mode=basic&q=b%C3%BAn&page=1&pageSize=12&sort=name_asc
+Origin: {{origin}}
+
+### Advanced search + filters + sort
+GET {{base}}/dishes?mode=advanced&q=chicken&category=M%C3%B3n%20ch%C3%ADnh&minPrice=0&maxPrice=100000&available=false&sort=price_asc&page=1&pageSize=12
+Origin: {{origin}}
+
+### PostgreSQL full-text search: name and description
+GET {{base}}/dishes?mode=fulltext&q=rau%20n%E1%BA%A5m&page=1&pageSize=12
+Origin: {{origin}}
+
+### pg_trgm fuzzy search: similarity threshold 0.3
+GET {{base}}/dishes?mode=fuzzy&q=pho&page=1&pageSize=12
+Origin: {{origin}}
+
+### Chi tiết món và các quan hệ
+GET {{base}}/dishes/1
+
+### Tạo món giá 0, không bắt upload
+POST {{base}}/dishes
+Origin: {{origin}}
+Content-Type: application/json
+
+{"name":"Món kiểm thử","description":"Món kiểm thử Block6","price":0,"category":"Món chính","chefId":1,"available":false}
+
+### PATCH đúng một trường, giữ ảnh/chef/công thức
+PATCH {{base}}/dishes/{{dishId}}
+Content-Type: application/json
+
+{"name":"Món kiểm thử đã sửa"}
+
+### Xóa món độc lập
+DELETE {{base}}/dishes/{{dishId}}
+
+### Đầu bếp
+GET {{base}}/chefs
+
+### Chi tiết đầu bếp
+GET {{base}}/chefs/1
+
+### Tạo đầu bếp độc lập
+POST {{base}}/chefs
+Content-Type: application/json
+
+{"name":"Đầu bếp kiểm thử","specialty":"Món Việt","bio":"Block6"}
+
+### Sửa đầu bếp
+PATCH {{base}}/chefs/{{chefId}}
+Content-Type: application/json
+
+{"specialty":"Món chay"}
+
+### Xóa đầu bếp độc lập
+DELETE {{base}}/chefs/{{chefId}}
+
+### Nguyên liệu
+GET {{base}}/ingredients
+
+### Chi tiết nguyên liệu
+GET {{base}}/ingredients/1
+
+### Tạo nguyên liệu độc lập
+POST {{base}}/ingredients
+Content-Type: application/json
+
+{"name":"Nguyên liệu kiểm thử Block6","unit":"g"}
+
+### Sửa nguyên liệu
+PATCH {{base}}/ingredients/{{ingredientId}}
+Content-Type: application/json
+
+{"unit":"kg"}
+
+### Xóa nguyên liệu độc lập
+DELETE {{base}}/ingredients/{{ingredientId}}
+
+### Giá âm: 200 VALIDATION_FAILED với fields.price
+PATCH {{base}}/dishes/1
+Content-Type: application/json
+
+{"price":-1}
+
+### Không tìm thấy: 200 NOT_FOUND
+GET {{base}}/dishes/999999
+
+### URL sai: HTTP 404, JSON kỹ thuật
+GET {{base}}/unknown
+Origin: {{origin}}
+
+### JSON hỏng: HTTP 400, vẫn có CORS
+POST {{base}}/dishes
+Origin: {{origin}}
+Content-Type: application/json
+
+{
+
+### Preflight: HTTP 204, origin chính xác, PATCH và Content-Type
+OPTIONS {{base}}/dishes/1
+Origin: {{origin}}
+Access-Control-Request-Method: PATCH
+Access-Control-Request-Headers: content-type
