@@ -62,9 +62,9 @@ try {
     await page.screenshot({ path: path.join(output, 'live-infinite-scroll.png'), fullPage: true });
   });
   await check('Create dish through UI with real file upload, price zero and available false', async () => {
-    await goto('/admin/dishes/new'); await page.locator('[name=chefId] option').nth(1).waitFor({ state: 'attached' });
+    await goto('/admin/dishes/new'); await page.locator('[data-chef-id]').first().waitFor();
     await page.locator('[name=name]').fill(`${prefix} file`); await page.locator('textarea[name=description]').fill('Món kiểm thử Block 7; được dọn sau nghiệm thu.'); await page.locator('[name=price]').fill('0');
-    const chef = await page.locator('[name=chefId] option').nth(1).getAttribute('value'); await page.locator('[name=chefId]').selectOption(chef); await page.locator('[name=available]').uncheck();
+    await page.locator('[data-chef-id]').first().click(); await page.locator('[name=available]').uncheck();
     await page.locator('[name=imageSource][value=file]').check(); await page.locator('[name=imageFile]').setInputFiles(fileURLToPath(new URL('../public/images/tofu.png', import.meta.url)));
     const uploaded = page.waitForResponse(res => new URL(res.url()).pathname === '/api/uploads/dishes' && res.request().method() === 'POST');
     const posted = page.waitForResponse(res => new URL(res.url()).pathname === '/api/dishes' && res.request().method() === 'POST');

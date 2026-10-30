@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
 import type { useDishPagination } from '../hooks/useDishPagination';
 type Load = ReturnType<typeof useDishPagination>;
-export function PageNumbers({ page, total, pageSize, onPage }: { page: number; total: number; pageSize: number; onPage: (page: number) => void }) {
+export function PageNumbers({ page, total, pageSize, onPage, noun = 'món' }: { page: number; total: number; pageSize: number; onPage: (page: number) => void; noun?: string }) {
   const count = Math.ceil(total / pageSize);
   if (!count) return null;
   const pages = [...new Set([1, page - 1, page, page + 1, count].filter(n => n >= 1 && n <= count))].sort((a, b) => a - b);
-  return <nav className="page-numbers" aria-label="Phân trang món ăn"><span>Trang {page} / {count} · {total} món</span><div><button disabled={page <= 1} onClick={() => onPage(page - 1)} aria-label="Trang trước">←</button>{pages.map((n, i) => <span key={n}>{i > 0 && n - pages[i - 1] > 1 && <span className="page-gap">…</span>}<button aria-label={`Trang ${n}`} aria-current={n === page ? 'page' : undefined} onClick={() => onPage(n)}>{n}</button></span>)}<button disabled={page >= count} onClick={() => onPage(page + 1)} aria-label="Trang sau">→</button></div></nav>;
+  return <nav className="page-numbers" aria-label={`Phân trang ${noun}`}><span>Trang {page} / {count} · {total} {noun}</span><div><button type="button" disabled={page <= 1} onClick={() => onPage(page - 1)} aria-label="Trang trước">←</button>{pages.map((n, i) => <span key={n}>{i > 0 && n - pages[i - 1] > 1 && <span className="page-gap">…</span>}<button type="button" aria-label={`Trang ${n}`} aria-current={n === page ? 'page' : undefined} onClick={() => onPage(n)}>{n}</button></span>)}<button type="button" disabled={page >= count} onClick={() => onPage(page + 1)} aria-label="Trang sau">→</button></div></nav>;
 }
 export function MoreDishes({ load, infinite = false }: { load: Load; infinite?: boolean }) {
   const sentinel = useRef<HTMLDivElement>(null);
