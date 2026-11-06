@@ -1,0 +1,31 @@
+<%- include('partials/header') %>
+<main class="login-page">
+  <section class="login-card" aria-labelledby="registration-title">
+    <span class="eyebrow">CHÀO MỪNG ĐẾN BẾP NHÀ</span>
+    <h1 id="registration-title">Tạo tài khoản</h1>
+    <p>Đăng ký và xác minh email để bắt đầu.</p>
+    <% if(error){ %><div class="alert" role="alert"><%= error %></div><% } %>
+    <% if(!siteKey){ %><div class="alert" role="alert">Đăng ký đang tạm thời chưa sẵn sàng. Vui lòng thử lại sau.</div><% } %>
+    <form method="post" action="/auth/register">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <label>Email
+        <input type="email" name="email" autocomplete="email" value="<%= values.email || '' %>" required maxlength="254">
+        <% if(errors.email){ %><small role="alert"><%= errors.email.join(' ') %></small><% } %>
+      </label>
+      <label>Mật khẩu
+        <input type="password" name="password" autocomplete="new-password" required maxlength="72">
+        <small>Ít nhất 8 ký tự, không vượt quá 72 byte UTF-8.</small>
+        <% if(errors.password){ %><small role="alert"><%= errors.password.join(' ') %></small><% } %>
+      </label>
+      <label>Xác nhận mật khẩu
+        <input type="password" name="confirmPassword" autocomplete="new-password" required maxlength="72">
+        <% if(errors.confirmPassword){ %><small role="alert"><%= errors.confirmPassword.join(' ') %></small><% } %>
+      </label>
+      <% if(siteKey){ %><div class="cf-turnstile" data-sitekey="<%= siteKey %>"></div><% } %>
+      <button class="button primary" type="submit" <% if(!siteKey){ %>disabled<% } %>>Đăng ký và nhận mã →</button>
+    </form>
+    <a class="text-link" href="/auth/login">Đã có tài khoản? Đăng nhập →</a>
+  </section>
+</main>
+<% if(siteKey){ %><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><% } %>
+<%- include('partials/footer') %>

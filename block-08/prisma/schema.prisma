@@ -36,6 +36,8 @@ model EmailVerification {
   lastSentAt DateTime @default(now())
   /// Set when consumed; retain the record so the same OTP cannot be used again.
   usedAt     DateTime?
+  /// Five failed attempts lock verification and resending for fifteen minutes.
+  lockedUntil DateTime?
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
