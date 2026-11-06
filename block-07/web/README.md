@@ -7,7 +7,7 @@ Chạy `pnpm dev` (hoặc `.\pnpm.cmd dev` trên máy hiện tại), API công k
 - Thực đơn Load More, Khám phá Infinite Scroll, quản trị món/nguyên liệu Page Numbers.
 - Skeleton cho loading; ảnh thiếu dùng placeholder trung tính.
 - Form món tìm/chọn đầu bếp theo tên/chuyên môn không dấu; tìm/chọn nhiều nguyên liệu và nhập số lượng.
-- Search món ưu tiên fuzzy; URL/reload giữ điều kiện và trang số. Tải thêm giữ cùng search mode.
+- Search món ưu tiên khớp chuỗi và full-text; fuzzy chỉ là fallback khi không có kết quả. URL/reload giữ điều kiện và trang số. Tải thêm giữ cùng search mode.
 - Giữ lọc đơn vị nguyên liệu từ main.
 
 ## Hợp đồng tích hợp backend

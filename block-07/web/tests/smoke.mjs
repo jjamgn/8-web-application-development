@@ -176,17 +176,17 @@ try {
     await page.screenshot({ path: path.join(evidence, 'fixture-infinite-scroll.png'), fullPage: true });
     await page.reload(); await waitCount(12);
   });
-  await check('Fuzzy search is primary and stays consistent across pages/filters; fallbacks and modes remain automatic', async () => {
+  await check('Literal and full-text search take priority; fuzzy is a fallback and the selected mode stays consistent', async () => {
     await goto('/dishes?q=huongvi'); await waitCount(12);
     assert.equal(await page.locator('[name=mode]').count(), 0);
-    await page.getByText('Kết quả phù hợp với tên hoặc mô tả món ăn.', { exact: true }).waitFor();
+    await page.getByText('Kết quả phù hợp với tên, mô tả hoặc nguyên liệu, có dấu hoặc không dấu.', { exact: true }).waitFor();
     assert.equal(await page.locator('[name=sort]').isDisabled(), false);
     assert.equal(await page.locator('[name=sort]').inputValue(), 'name_asc');
     await page.getByRole('button', { name: 'Tải thêm món' }).click(); await waitCount(24);
-    assert.deepEqual(network.filter(n => n.q === 'huongvi').map(n => [n.mode, n.page]), [['fuzzy','1'],['basic','1'],['fulltext','1'],['fulltext','2']]);
+    assert.deepEqual(network.filter(n => n.q === 'huongvi').map(n => [n.mode, n.page]), [['basic','1'],['fulltext','1'],['fulltext','2']]);
     assert.equal(new URL(page.url().split('#')[1], base).searchParams.has('mode'), false);
     await goto('/dishes?q=monn'); await waitCount(12);
-    await page.getByText('Gợi ý những món có tên gần giống.', { exact: true }).waitFor();
+    await page.getByText('Gợi ý món có tên hoặc nguyên liệu gần giống, có dấu hoặc không dấu.', { exact: true }).waitFor();
     assert.equal(await page.locator('[name=sort]').isDisabled(), true);
     assert.equal(await page.locator('[name=sort]').inputValue(), 'relevance');
     assert.deepEqual(network.filter(n => n.q === 'monn').map(n => n.mode), ['basic', 'fulltext', 'fuzzy']);

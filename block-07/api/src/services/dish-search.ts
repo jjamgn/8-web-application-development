@@ -41,7 +41,7 @@ export async function searchDishes(query: DishListQuery) {
     if (query.mode === 'fulltext') {
       filters.push(Prisma.sql`"Dish"."searchVector" @@ plainto_tsquery('simple', public.search_unaccent(${query.q}))`);
     } else if (query.mode === 'fuzzy') {
-      filters.push(Prisma.sql`GREATEST(similarity(public.search_unaccent("Dish"."name"), public.search_unaccent(${query.q})), ${ingredientSimilarity(query.q)}) >= 0.3`);
+      filters.push(Prisma.sql`GREATEST(similarity(public.search_unaccent("Dish"."name"), public.search_unaccent(${query.q})), ${ingredientSimilarity(query.q)}) >= 0.4`);
     } else {
       const pattern = `%${escapeLike(query.q)}%`;
       filters.push(Prisma.sql`(
