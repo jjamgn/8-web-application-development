@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-10-23T03:00:53.820Z",
+  "mode": "Playwright browser route fixtures; not a real BE/DB verification",
+  "results": [
+    {
+      "name": "Unavailable API: technical error UI, no white screen",
+      "result": "PASS"
+    },
+    {
+      "name": "Public list/detail, search q, empty, reload and Back",
+      "result": "PASS"
+    },
+    {
+      "name": "All four admin routes + CRUD dishes, pending, cancel, no document reload",
+      "result": "PASS"
+    },
+    {
+      "name": "All four admin routes + CRUD chefs, pending, cancel, no document reload",
+      "result": "PASS"
+    },
+    {
+      "name": "All four admin routes + CRUD ingredients, pending, cancel, no document reload",
+      "result": "PASS"
+    },
+    {
+      "name": "Server validation field arrays, preserve draft, no-change PATCH, preserve relations",
+      "result": "PASS"
+    },
+    {
+      "name": "Empty chef list disables dish submit; form resets between resources",
+      "result": "PASS"
+    },
+    {
+      "name": "NOT_FOUND is distinct from HTTP/network/HTML/wrong data errors",
+      "result": "PASS"
+    },
+    {
+      "name": "Rapid ID navigation ignores old responses; invalid resource/id fallback",
+      "result": "PASS"
+    },
+    {
+      "name": "Desktop/mobile layout and hash-safe menu scroll",
+      "result": "PASS"
+    }
+  ],
+  "mutations": 11,
+  "runtimeErrors": []
+}

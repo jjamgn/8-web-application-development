@@ -1,0 +1,5 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Bếp Nhà — Thực đơn Việt theo mùa, nguyên liệu tươi và những món ăn được chăm chút."><title><%= title %></title><link rel="stylesheet" href="/styles.css"></head>
+<body class="<%= path.startsWith('/admin') ? 'admin-body' : '' %>">
+<header class="site-header"><a class="brand" href="/dishes"><span class="brand-mark">b.</span><span>Bếp Nhà<small>VIETNAMESE KITCHEN</small></span></a><nav aria-label="Điều hướng chính"><a href="/dishes" class="<%= !path.startsWith('/admin')?'active':'' %>">Thực đơn</a><a href="/dishes#our-story">Chuyện của bếp</a><a href="/admin/dishes" class="<%= path.startsWith('/admin')?'active':'' %>">Quản trị <span aria-hidden="true">↗</span></a></nav><span class="header-note"><i></i> Một chút thân quen, một chút mới</span></header>
+<% if(demo) { %><div class="demo-note">Bản xem thử · Dữ liệu mẫu · Kết nối Supabase để bật thêm, sửa và xóa.</div><% } %>

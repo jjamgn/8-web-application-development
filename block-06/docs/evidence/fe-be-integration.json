@@ -1,0 +1,258 @@
+{
+  "checkedAt": "2026-10-23T03:38:06.815Z",
+  "mode": "Live browser + Express HTTP API + PostgreSQL; no mocks/interception",
+  "frontend": "http://localhost:5173",
+  "api": "http://127.0.0.1:3000/api",
+  "prefix": "FE_BE_a3f8853f",
+  "baseline": {
+    "dishes": 6,
+    "chefs": 3,
+    "ingredients": 10
+  },
+  "after": {
+    "dishes": 7,
+    "chefs": 3,
+    "ingredients": 10
+  },
+  "results": [
+    {
+      "name": "Read real data and CORS for all three resources",
+      "result": "PASS"
+    },
+    {
+      "name": "Public menu/detail/search/reload with real records",
+      "result": "PASS"
+    },
+    {
+      "name": "Create/edit chef through FE, read back from DB",
+      "result": "PASS"
+    },
+    {
+      "name": "Create/edit ingredient through FE, read back from DB",
+      "result": "PASS"
+    },
+    {
+      "name": "Create/edit dish with price 0 and available false through FE",
+      "result": "PASS"
+    },
+    {
+      "name": "Real unique/FK validation keeps form and confirmation page",
+      "result": "PASS"
+    },
+    {
+      "name": "Real preflight and technical JSON errors keep CORS",
+      "result": "PASS"
+    },
+    {
+      "name": "All created records persist after a real BE process restart",
+      "result": "PASS"
+    },
+    {
+      "name": "Cancel/confirm deletes through FE, only own test records",
+      "result": "PASS"
+    },
+    {
+      "name": "Live desktop/mobile screens and no uncaught browser errors",
+      "result": "PASS"
+    }
+  ],
+  "uncaughtErrors": [],
+  "network": [
+    {
+      "method": "GET",
+      "path": "/api/dishes",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes/2",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes/2",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/chefs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/chefs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/chefs/6",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/chefs/6",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/chefs",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/ingredients",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/ingredients",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/ingredients/14",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/ingredients/14",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/ingredients",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/chefs",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/dishes",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/chefs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes/10",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/dishes/10",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/ingredients",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/chefs/6",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/chefs/6",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes/2147483647",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes/10",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes/10",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/dishes/10",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/chefs/6",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/chefs/6",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/chefs/6",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/chefs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/ingredients/14",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/ingredients",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/ingredients/14",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/ingredients/14",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/dishes",
+      "status": 200
+    }
+  ],
+  "failure": null,
+  "backendRestart": {
+    "verified": true,
+    "beforePid": 7308,
+    "afterPid": 6832
+  },
+  "cleanup": {
+    "scope": "Only records with this run prefix; other records preserved",
+    "verified": true,
+    "testRecordsRemaining": 0
+  }
+}

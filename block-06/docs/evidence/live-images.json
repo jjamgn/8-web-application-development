@@ -1,0 +1,90 @@
+{
+  "checkedAt": "2026-10-23T03:40:03.437Z",
+  "images": [
+    {
+      "route": "/dishes",
+      "images": [
+        {
+          "src": "http://localhost:5173/images/beef.png",
+          "width": 1536,
+          "height": 1024
+        },
+        {
+          "src": "http://localhost:5173/images/rolls.png",
+          "width": 1536,
+          "height": 1024
+        },
+        {
+          "src": "http://localhost:5173/images/fish.png",
+          "width": 1536,
+          "height": 1024
+        },
+        {
+          "src": "http://localhost:5173/images/dessert.png",
+          "width": 1536,
+          "height": 1024
+        },
+        {
+          "src": "http://localhost:5173/images/mushroom.png",
+          "width": 1536,
+          "height": 1024
+        },
+        {
+          "src": "http://localhost:5173/images/fresh-rolls.png",
+          "width": 1536,
+          "height": 1024
+        },
+        {
+          "src": "http://localhost:5173/images/mango.png",
+          "width": 1536,
+          "height": 1024
+        },
+        {
+          "src": "http://localhost:5173/images/beef.png",
+          "width": 1536,
+          "height": 1024
+        }
+      ]
+    },
+    {
+      "route": "/admin/dishes",
+      "images": [
+        {
+          "src": "http://localhost:5173/images/rolls.png",
+          "width": 1536,
+          "height": 1024
+        },
+        {
+          "src": "http://localhost:5173/images/fish.png",
+          "width": 1536,
+          "height": 1024
+        },
+        {
+          "src": "http://localhost:5173/images/dessert.png",
+          "width": 1536,
+          "height": 1024
+        },
+        {
+          "src": "http://localhost:5173/images/mushroom.png",
+          "width": 1536,
+          "height": 1024
+        },
+        {
+          "src": "http://localhost:5173/images/fresh-rolls.png",
+          "width": 1536,
+          "height": 1024
+        },
+        {
+          "src": "http://localhost:5173/images/mango.png",
+          "width": 1536,
+          "height": 1024
+        },
+        {
+          "src": "http://localhost:5173/images/beef.png",
+          "width": 1536,
+          "height": 1024
+        }
+      ]
+    }
+  ]
+}

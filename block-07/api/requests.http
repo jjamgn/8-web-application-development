@@ -92,7 +92,6 @@ POST {{base}}/dishes
 Origin: {{origin}}
 Content-Type: application/json
 
-{
 
 ### Preflight: HTTP 204, origin chính xác, PATCH và Content-Type
 OPTIONS {{base}}/dishes/1
