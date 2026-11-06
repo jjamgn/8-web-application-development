@@ -1,0 +1,20 @@
+<%- include('../partials/header') %>
+<main class="auth-page">
+  <%- include('_intro', { introTitle: 'Cùng giữ căn bếp luôn chỉn chu.', introCopy: 'Kiểm tra thông tin tài khoản và quyền truy cập của bạn tại Bếp Nhà. Quyền quản trị do người quản lý cấp.' }) %>
+  <section class="auth-card" aria-labelledby="auth-title">
+    <span class="eyebrow">THÔNG TIN TRUY CẬP</span>
+    <h1 id="auth-title">Tài khoản của bạn</h1>
+    <%- include('_messages') %>
+    <% if (currentUser) { %>
+      <p class="auth-lead">Chào <strong><%= currentUser.name %></strong>, đây là thông tin tài khoản Bếp Nhà của bạn.</p>
+      <dl class="auth-account-details"><div><dt>Họ và tên</dt><dd><%= currentUser.name %></dd></div><div><dt>Địa chỉ email</dt><dd><%= currentUser.email %></dd></div><div><dt>Trạng thái email</dt><dd><span class="status <%= currentUser.emailVerifiedAt ? '' : 'off' %>"><%= currentUser.emailVerifiedAt ? 'Đã xác minh' : 'Chưa xác minh' %></span></dd></div><div><dt>Quyền truy cập</dt><dd><span class="status <%= currentUser.role === 'admin' ? '' : 'off' %>"><%= currentUser.role === 'admin' ? 'Quyền quản trị' : 'Chờ cấp quyền quản trị' %></span></dd></div></dl>
+      <% if (currentUser.role === 'admin') { %>
+        <a class="button primary auth-submit" href="/admin/dishes">Về trang quản trị <span aria-hidden="true">→</span></a>
+      <% } else { %>
+        <p class="notice" role="status">Tài khoản đã xác minh nhưng chưa được cấp quyền quản trị. Vui lòng liên hệ người quản lý.</p>
+      <% } %>
+      <form method="post" action="/auth/logout"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="button outline auth-submit" type="submit">Đăng xuất</button></form>
+    <% } %>
+  </section>
+</main>
+<%- include('../partials/footer') %>

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Bếp Nhà — Thực đơn Việt theo mùa, nguyên liệu tươi và những món ăn được chăm chút."><title><%= title %></title><link rel="stylesheet" href="/styles.css"></head>
+<body class="<%= path.startsWith('/admin') ? 'admin-body' : '' %>">
+<% const signedInUser = typeof currentUser !== 'undefined' ? currentUser : null; %>
+<header class="site-header">
+  <a class="brand" href="/dishes"><span class="brand-mark">b.</span><span>Bếp Nhà<small>VIETNAMESE KITCHEN</small></span></a>
+  <nav aria-label="Điều hướng chính">
+    <a href="/dishes" class="<%= path.startsWith('/dishes') ? 'active' : '' %>">Thực đơn</a>
+    <a href="/dishes#our-story">Chuyện của bếp</a>
+    <a href="/admin/dishes" class="<%= path.startsWith('/admin') || path.startsWith('/auth') ? 'active' : '' %>">Quản trị <span aria-hidden="true">↗</span></a>
+    <% if (signedInUser && (path.startsWith('/admin') || path.startsWith('/auth'))) { %>
+      <a href="/auth/account" class="nav-auth-link <%= path === '/auth/account' ? 'active' : '' %>">Tài khoản</a>
+      <form class="header-logout" method="post" action="/auth/logout"><input type="hidden" name="_csrf" value="<%= csrf %>"><button type="submit">Đăng xuất</button></form>
+    <% } %>
+  </nav>
+  <span class="header-note"><i></i> Một chút thân quen, một chút mới</span>
+</header>
+<% if(demo) { %><div class="demo-note">Bản xem thử · Dữ liệu mẫu · Kết nối Supabase để bật thêm, sửa và xóa.</div><% } %>

@@ -1,0 +1,21 @@
+<%- include('../partials/header') %>
+<main class="auth-page">
+  <%- include('_intro', { introTitle: 'Mỗi món ngon bắt đầu từ sự chăm chút.', introCopy: 'Đăng nhập để quản lý thực đơn, đầu bếp và nguyên liệu. Cùng giữ cho căn bếp luôn ngăn nắp, chỉn chu.' }) %>
+  <section class="auth-card" aria-labelledby="auth-title">
+    <span class="eyebrow">MỪNG BẠN TRỞ LẠI</span>
+    <h1 id="auth-title">Đăng nhập quản trị</h1>
+    <p class="auth-lead">Sử dụng tài khoản đã kích hoạt và xác minh email. Quyền quản trị nhà hàng do người quản lý cấp.</p>
+    <%- include('_messages') %>
+    <form class="auth-form" method="post" action="/auth/login">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="auth-field"><label for="email">Địa chỉ email</label><input id="email" type="email" name="email" autocomplete="username" value="<%= values.email || '' %>" required maxlength="200" aria-invalid="<%= errors.email ? 'true' : 'false' %>" <%- errors.email ? 'aria-describedby="email-error"' : '' %>><%- include('_field-error', { field: 'email' }) %></div>
+      <div class="auth-field"><div class="auth-label-row"><label for="password">Mật khẩu</label></div><input id="password" type="password" name="password" autocomplete="current-password" required maxlength="72" aria-invalid="<%= errors.password ? 'true' : 'false' %>" <%- errors.password ? 'aria-describedby="password-error"' : '' %>><%- include('_field-error', { field: 'password' }) %></div>
+      <% if (typeof captchaRequired !== 'undefined' && captchaRequired) { %>
+        <p class="auth-field-help">Vui lòng nhập mã bảo vệ sau nhiều lần đăng nhập sai. Khi bị tạm khóa, bạn cần chờ 15 phút trước khi thử lại.</p>
+        <%- include('_captcha', { refreshPath: '/auth/login' }) %>
+      <% } %>
+      <button class="button primary auth-submit" type="submit">Vào trang quản trị <span aria-hidden="true">→</span></button>
+    </form>
+  </section>
+</main>
+<%- include('../partials/footer') %>

@@ -1,0 +1,8 @@
+<div class="auth-captcha">
+  <div class="auth-captcha-top"><span id="captcha-label">Mã bảo vệ</span><a href="<%= refreshPath %>">Đổi mã khác ↻</a></div>
+  <img src="/auth/captcha" alt="Mã bảo vệ gồm các ký tự cần nhập vào ô bên dưới" width="220" height="70">
+  <label class="auth-captcha-input" for="captcha">Nhập mã trong ảnh</label>
+  <input id="captcha" name="captcha" required autocomplete="off" maxlength="8" spellcheck="false" autocapitalize="none" aria-invalid="<%= errors.captcha ? 'true' : 'false' %>" aria-describedby="captcha-help<%= errors.captcha ? ' captcha-error' : '' %>">
+  <small class="auth-field-help" id="captcha-help">Không đọc rõ? Chọn “Đổi mã khác” để tải mã mới.</small>
+  <%- include('_field-error', { field: 'captcha' }) %>
+</div>
