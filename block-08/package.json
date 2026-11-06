@@ -1,5 +1,5 @@
 {
-  "name": "bep-nha-ssr",
+  "name": "bep-nha-ssr-block-08",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -7,14 +7,19 @@
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
     "build": "tsc --noEmit",
-    "test": "tsx --test tests/ssr.test.ts tests/mutations.test.ts tests/mailer.test.ts tests/captcha.test.ts tests/email-verification.test.ts tests/registration-validation.test.ts tests/registration.test.ts",
+    "test": "tsx --test tests/ssr.test.ts tests/mutations.test.ts tests/auth.test.ts tests/email.test.ts tests/captcha.test.ts tests/login.test.ts tests/session-store.test.ts tests/password-recovery.test.ts tests/account.test.ts tests/registration-captcha.test.ts tests/email-verification.test.ts tests/mailer.test.ts tests/registration-validation.test.ts tests/registration.test.ts",
+    "test:auth": "tsx --test tests/auth.test.ts",
+    "test:recovery": "tsx --test tests/auth.test.ts tests/password-recovery.test.ts tests/email.test.ts",
+    "test:account": "tsx --test tests/account.test.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "admin:setup": "node scripts/admin-setup.mjs",
+    "admin:promote": "node scripts/promote-admin.mjs",
     "config:check": "node scripts/check-config.mjs",
     "config:connect": "node scripts/check-config.mjs --connect",
+    "smtp:check": "node scripts/check-smtp.mjs",
     "test:visual": "node scripts/visual-check.mjs",
     "test:methods": "tsx tests/browser-methods.ts"
   },
@@ -31,6 +36,7 @@
     "method-override": "^3.0.0",
     "multer": "^2.0.2",
     "nodemailer": "^10.3.1",
+    "svg-captcha": "^1.4.0",
     "zod": "^3.24.4"
   },
   "devDependencies": {

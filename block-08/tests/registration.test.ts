@@ -42,7 +42,7 @@ function setup(t: TestContext, overrides: Partial<RegistrationRouterOptions> = {
     captcha: async value => { if (value !== data['cf-turnstile-response']) throw new CaptchaError('CAPTCHA_TOKEN_INVALID', 'Invalid test CAPTCHA.'); },
     ...overrides,
   }));
-  app.get('/_session', (req, res) => res.json({ pendingId: req.session.pendingRegistrationUserId, admin: req.session.admin, verified: req.session.registrationVerified, userId: (req.session as any).userId }));
+  app.get('/_session', (req, res) => res.json({ pendingId: req.session.pendingRegistrationUserId, admin: (req.session as typeof req.session & { admin?: boolean }).admin, verified: req.session.registrationVerified, userId: (req.session as any).userId }));
   return { app, fixture };
 }
 async function register(app: express.Express, values = data) {

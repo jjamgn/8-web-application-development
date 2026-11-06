@@ -32,7 +32,7 @@ async function main(){
   console.log('Đã chuẩn bị đủ 8 ảnh trên Storage. Đang ghi dữ liệu mẫu...');
   // The transaction is repeatable: existing demo IDs are kept untouched.
   await prisma.$transaction(async tx=>{
-    for(const c of chefs)await tx.chef.upsert({where:{id:c.id},update:{},create:c});
+    for(const c of chefs)await tx.chef.upsert({where:{id:c.id},update:{},create:{id:c.id,name:c.name,bio:c.bio,specialties:{create:{specialty:{connectOrCreate:{where:{name:c.specialty},create:{name:c.specialty}}}}}}});
     for(const i of ingredients)await tx.ingredient.upsert({where:{id:i.id},update:{},create:i});
     for(const d of dishes)await tx.dish.upsert({where:{id:d.id},update:{},create:{id:d.id,name:d.name,description:d.description,category:d.category,price:d.price,chefId:d.chefId,available:d.available,imagePath:paths.get(d.imagePath)!,ingredients:{create:d.ingredients.map(r=>({ingredientId:r.ingredientId,quantity:r.quantity}))}}});
     // Explicit seed IDs must advance each sequence before admin can insert new records.

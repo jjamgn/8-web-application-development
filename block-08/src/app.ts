@@ -2,32 +2,40 @@ import 'dotenv/config';
 import express, { type Request, type Response, type NextFunction } from 'express';
 import session from 'express-session';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import methodOverride from 'method-override';
 import multer from 'multer';
-import bcrypt from 'bcryptjs';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { fileURLToPath } from 'node:url';
 import { prisma, demo, imageUrl } from './db.js';
 import { dishes, chefs, ingredients, categories } from './data.js';
 import { schemas, validId } from './validation.js';
+import { createAuthRouter } from './auth/routes.js';
+import { PrismaSessionStore } from './auth/session-store.js';
+import { loadCurrentUser, requireAdmin } from './auth/access.js';
+import { SESSION_TTL_MS } from './auth/login.js';
 
-declare module 'express-session' { interface SessionData { admin?:boolean; csrf?:string; } }
+declare module 'express-session' { interface SessionData { csrf?:string; userId?:number; passwordVersion?:number; absoluteExpiresAt?:number; pendingEmail?:string; captcha?:{nonce:string;hash:string;expiresAt:number}; } }
 export const app=express();
 const root=fileURLToPath(new URL('../',import.meta.url));
-if(!demo && (!process.env.DATABASE_URL || !process.env.SESSION_SECRET || !process.env.ADMIN_PASSWORD_HASH)) throw new Error('Thiếu cấu hình database hoặc quản trị. Xem .env.example.');
+if(!demo && (!process.env.DATABASE_URL || !process.env.SESSION_SECRET)) throw new Error('Thiếu cấu hình database hoặc session. Xem .env.example.');
+if(!demo && (process.env.SESSION_SECRET!.length<32 || (process.env.AUTH_TOKEN_SECRET && process.env.AUTH_TOKEN_SECRET.length<32))) throw new Error('SESSION_SECRET và AUTH_TOKEN_SECRET (nếu có) cần ít nhất 32 ký tự.');
 if(process.env.NODE_ENV==='production' && demo) throw new Error('Không chạy DEMO_MODE trong production.');
 app.disable('x-powered-by');
+const proxyHops=Number(process.env.TRUST_PROXY_HOPS||'0');
+if(!Number.isInteger(proxyHops)||proxyHops<0||proxyHops>5)throw new Error('TRUST_PROXY_HOPS cần là số nguyên từ 0 đến 5.');
+if(proxyHops>0)app.set('trust proxy',proxyHops);
 app.set('view engine','ejs');
 app.set('views',`${root}/views`);
 app.use(helmet({contentSecurityPolicy:{directives:{'img-src':["'self'",'https:','data:'], 'style-src':["'self'",'https://fonts.googleapis.com'], 'font-src':["'self'",'https://fonts.gstatic.com'], 'script-src':["'self'"], 'connect-src':["'self'"], 'form-action':["'self'"]}}}));
 app.use(express.static(`${root}/public`));
 app.use(express.urlencoded({extended:false,limit:'100kb'}));
-app.use(session({secret:process.env.SESSION_SECRET||randomBytes(48).toString('hex'),resave:false,saveUninitialized:false,cookie:{httpOnly:true,sameSite:'lax',secure:process.env.NODE_ENV==='production',maxAge:2*60*60*1000}}));
+app.use(session({store:demo?new session.MemoryStore():new PrismaSessionStore(prisma),secret:process.env.SESSION_SECRET||randomBytes(48).toString('hex'),resave:false,saveUninitialized:false,rolling:false,cookie:{path:'/',httpOnly:true,sameSite:'lax',secure:process.env.NODE_ENV==='production',maxAge:SESSION_TTL_MS}}));
 app.use((req,res,next)=>{
+  req.session.absoluteExpiresAt ||= Date.now()+SESSION_TTL_MS;
+  req.session.cookie.expires=new Date(req.session.absoluteExpiresAt);
   req.session.csrf ||= randomBytes(32).toString('hex');
-  Object.assign(res.locals,{csrf:req.session.csrf,demo,admin:req.session.admin,categories,imageUrl,money:(v:unknown)=>new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND',maximumFractionDigits:0}).format(Number(v)),path:req.path,title:'Bếp Nhà',error:'',values:{},errors:{},notice:typeof req.query.notice==='string'?req.query.notice:''});
+  Object.assign(res.locals,{csrf:req.session.csrf,demo,admin:false,currentUser:null,categories,imageUrl,money:(v:unknown)=>new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND',maximumFractionDigits:0}).format(Number(v)),path:req.path,title:'Bếp Nhà',error:'',values:{},errors:{},notice:typeof req.query.notice==='string'?req.query.notice:''});
   next();
 });
 function csrf(req:Request,res:Response,next:NextFunction){
@@ -35,10 +43,14 @@ function csrf(req:Request,res:Response,next:NextFunction){
   if(typeof token!=='string'||!/^[a-f0-9]{64}$/.test(token)||!req.session.csrf||!timingSafeEqual(Buffer.from(token),Buffer.from(req.session.csrf))) return res.status(403).render('error',{title:'Phiên làm việc hết hạn',message:'Vui lòng tải lại trang và gửi biểu mẫu một lần nữa.'});
   next();
 }
-function adminOnly(req:Request,res:Response,next:NextFunction){if(demo||req.session.admin)return next();res.redirect(303,'/admin/login');}
+app.use(loadCurrentUser);
+app.use('/auth',createAuthRouter(demo,csrf));
 function writable(_req:Request,res:Response,next:NextFunction){if(demo)return res.status(503).render('error',{title:'Chế độ xem thử',message:'Thao tác ghi chưa bật. Hãy cấu hình Supabase và tài khoản quản trị trong .env, sau đó đặt DEMO_MODE=false.'});next();}
 const upload=multer({storage:multer.memoryStorage(),limits:{fileSize:5*1024*1024,files:1,fields:80}});
-const include={chef:true,ingredients:{include:{ingredient:true}}};
+const chefInclude={specialties:{include:{specialty:true}}};
+const include={chef:{include:chefInclude},ingredients:{include:{ingredient:true}}};
+function chefView(chef:any):any {return chef?{...chef,specialty:Array.isArray(chef.specialties)?chef.specialties.map((row:any)=>row.specialty.name).join(', '):chef.specialty||''}:null;}
+function dishView(dish:any):any {return dish?{...dish,chef:chefView(dish.chef)}:null;}
 type Kind='dishes'|'chefs'|'ingredients';
 const metadata={dishes:{label:'món ăn',title:'Món ăn'},chefs:{label:'đầu bếp',title:'Đầu bếp'},ingredients:{label:'nguyên liệu',title:'Nguyên liệu'}};
 function kindOf(req:Request):Kind|null { const k=String(req.params.kind);return Object.hasOwn(metadata,k)?k as Kind:null; }
@@ -46,11 +58,11 @@ function pageOf(v:unknown){const n=Number(v);return Number.isSafeInteger(n)&&n>0
 function queryString(req:Request){return (key:string,value:unknown)=>{const q=new URLSearchParams();for(const [k,v]of Object.entries(req.query))if(typeof v==='string')q.set(k,v);q.set(key,String(value));if(key!=='page')q.delete('page');return `${req.path}?${q}`;};}
 async function record(kind:Kind,id:number):Promise<any>{
   if(demo)return ({dishes,chefs,ingredients}[kind] as any[]).find(x=>x.id===id)||null;
-  if(kind==='dishes')return prisma.dish.findUnique({where:{id},include});
-  if(kind==='chefs')return prisma.chef.findUnique({where:{id},include:{_count:{select:{dishes:true}}}});
+  if(kind==='dishes')return dishView(await prisma.dish.findUnique({where:{id},include}));
+  if(kind==='chefs')return chefView(await prisma.chef.findUnique({where:{id},include:{...chefInclude,_count:{select:{dishes:true}}}}));
   return prisma.ingredient.findUnique({where:{id},include:{_count:{select:{dishes:true}}}});
 }
-async function choices(){return demo?{chefs,ingredients}:{chefs:await prisma.chef.findMany({orderBy:{name:'asc'}}),ingredients:await prisma.ingredient.findMany({orderBy:{name:'asc'}})};}
+async function choices(){return demo?{chefs,ingredients}:{chefs:(await prisma.chef.findMany({orderBy:{name:'asc'},include:chefInclude})).map(chefView),ingredients:await prisma.ingredient.findMany({orderBy:{name:'asc'}})};}
 function notFound(res:Response){return res.status(404).render('error',{title:'Không tìm thấy trang',message:'Món ăn hoặc trang bạn tìm không tồn tại. Hãy quay lại thực đơn để khám phá những hương vị khác.'});}
 async function listing(req:Request,kind:Kind,size:number){
   const q=typeof req.query.q==='string'?req.query.q.trim().slice(0,160):'';
@@ -69,7 +81,8 @@ async function listing(req:Request,kind:Kind,size:number){
     const model:any=kind==='dishes'?prisma.dish:kind==='chefs'?prisma.chef:prisma.ingredient;
     total=await model.count({where});page=Math.min(page,Math.max(1,Math.ceil(total/size)));
     const orderBy=sort==='name'?{name:'asc'}:kind==='dishes'&&sort.startsWith('price-')?{price:sort==='price-asc'?'asc':'desc'}:{id:'asc'};
-    items=await model.findMany({where,orderBy:[orderBy,{id:'asc'}],skip:(page-1)*size,take:size,...(kind==='dishes'?{include}:{})});
+    items=await model.findMany({where,orderBy:[orderBy,{id:'asc'}],skip:(page-1)*size,take:size,...(kind==='dishes'?{include}:kind==='chefs'?{include:chefInclude}:{})});
+    if(kind==='dishes')items=items.map(dishView);else if(kind==='chefs')items=items.map(chefView);
   }
   return {items,total,page,pages:Math.max(1,Math.ceil(total/size)),size,q,category,available,sort,link:queryString(req)};
 }
@@ -78,19 +91,15 @@ app.get('/dishes',async(req,res)=>res.render('menu',{title:'Thực đơn · Bế
 app.get(['/dishes/:id','/dish/:id'],async(req,res)=>{
   const id=validId(String(req.params.id));if(!id)return notFound(res);
   const dish=await record('dishes',id);if(!dish)return notFound(res);
-  const related=demo?dishes.filter(x=>x.id!==id&&x.category===dish.category).slice(0,3):await prisma.dish.findMany({where:{id:{not:id},category:dish.category},include,take:3});
+  const related=demo?dishes.filter(x=>x.id!==id&&x.category===dish.category).slice(0,3):(await prisma.dish.findMany({where:{id:{not:id},category:dish.category},include,take:3})).map(dishView);
   res.render('detail',{title:`${dish.name} · Bếp Nhà`,dish,related});
 });
-const loginLimit=rateLimit({windowMs:15*60*1000,limit:15,standardHeaders:'draft-7',legacyHeaders:false});
-app.get('/admin/login',(_req,res)=>res.render('login',{title:'Đăng nhập quản trị'}));
-app.post('/admin/login',loginLimit,csrf,async(req,res,next)=>{
-  if(demo)return res.redirect(303,'/admin/dishes');
-  const email=String(req.body.email||'');const password=String(req.body.password||'');
-  if(email!==process.env.ADMIN_EMAIL||!await bcrypt.compare(password,process.env.ADMIN_PASSWORD_HASH!))return res.status(400).render('login',{title:'Đăng nhập quản trị',error:'Email hoặc mật khẩu chưa đúng.',values:{email}});
-  req.session.regenerate(err=>{if(err)return next(err);req.session.admin=true;req.session.save(err=>err?next(err):res.redirect(303,'/admin/dishes'));});
-});
-app.post('/admin/logout',csrf,(req,res,next)=>req.session.destroy(err=>err?next(err):res.redirect(303,'/dishes')));
-app.use('/admin',adminOnly);
+// Old bookmarks remain valid; credentials only authenticate through the new
+// verified database-backed administrator flow.
+app.get('/admin/login',(_req,res)=>res.redirect(303,'/auth/login'));
+app.post('/admin/login',csrf,(_req,res)=>res.redirect(303,'/auth/login'));
+app.post('/admin/logout',csrf,(req,res,next)=>req.session.destroy(err=>{if(err)return next(err);res.clearCookie('connect.sid',{path:'/'});return res.redirect(303,'/dishes');}));
+app.use('/admin',requireAdmin);
 app.get('/admin',(_req,res)=>res.redirect('/admin/dishes'));
 app.get('/admin/:kind',async(req,res)=>{
   const kind=kindOf(req);if(!kind)return notFound(res);
@@ -150,6 +159,8 @@ async function save(req:Request,res:Response){
   values.ingredients=options.ingredients.filter((i:any)=>req.body[`qty_${i.id}`]!==undefined).map((i:any)=>({ingredientId:i.id,quantity:req.body[`qty_${i.id}`]}));
   const renderError=(error:string,errors:any={})=>res.status(400).render('form',{title:`${editing?'Sửa':'Thêm'} ${metadata[kind].label}`,kind,meta:metadata[kind],editing,values,error,errors,...options});
   if(!parsed.success)return renderError('Vui lòng kiểm tra các trường được đánh dấu.',parsed.error.flatten().fieldErrors);
+  const specialties=kind==='chefs'?[...new Set((parsed.data as any).specialty.split(/[,;]/).map((name:string)=>name.trim()).filter(Boolean))] as string[]:[];
+  if(kind==='chefs'&&(!specialties.length||specialties.some(name=>name.length>80)))return renderError('Mỗi chuyên môn tối đa 80 ký tự. Phân tách các chuyên môn bằng dấu phẩy.');
   let recipe:{ingredientId:number;quantity:number}[]=[];
   if(kind==='dishes'){
     if(!options.chefs.some((c:any)=>c.id===(parsed.data as any).chefId))return renderError('Đầu bếp không tồn tại.');
@@ -167,8 +178,13 @@ async function save(req:Request,res:Response){
       const data={...parsed.data,imagePath:uploaded||existing?.imagePath} as any;
       if(editing)await prisma.$transaction(async tx=>{await tx.dishIngredient.deleteMany({where:{dishId:id!}});await tx.dish.update({where:{id:id!},data:{...data,ingredients:{create:recipe}}});});
       else await prisma.dish.create({data:{...data,ingredients:{create:recipe}}});
+    }else if(kind==='chefs'){
+      const {specialty,...profile}=parsed.data as any;
+      const data={...profile,specialties:{create:specialties.map(name=>({specialty:{connectOrCreate:{where:{name},create:{name}}}}))}};
+      if(editing)await prisma.$transaction(async tx=>{await tx.chefSpecialty.deleteMany({where:{chefId:id!}});await tx.chef.update({where:{id:id!},data});});
+      else await prisma.chef.create({data});
     }else{
-      const model:any=kind==='chefs'?prisma.chef:prisma.ingredient;
+      const model:any=prisma.ingredient;
       if(editing)await model.update({where:{id},data:parsed.data});else await model.create({data:parsed.data});
     }
   }catch(e:any){
@@ -190,8 +206,18 @@ app.delete('/admin/:kind/:id',async(req,res)=>{
   res.redirect(303,`/admin/${kind}?notice=${encodeURIComponent('Đã xóa thành công.')}`);
 });
 app.use((_req,res)=>notFound(res));
-app.use((err:any,_req:Request,res:Response,_next:NextFunction)=>{
+app.use((err:any,req:Request,res:Response,_next:NextFunction)=>{
+  if(res.headersSent){res.end();return;}
   const bad=err instanceof multer.MulterError||err.status===400||err.status===413;
+  const title=bad?'Biểu mẫu không hợp lệ':'Chưa thể tải dữ liệu';
+  const message=bad?'File tối đa 5 MB; kiểm tra biểu mẫu và thử lại.':'Vui lòng kiểm tra cấu hình Supabase và kết nối mạng, sau đó thử lại.';
+  // Session/parser failures can happen before the normal locals middleware.
+  // Always give the error template a safe, unauthenticated rendering context.
+  Object.assign(res.locals,{path:req.path,demo,currentUser:null,admin:false,csrf:'',notice:''});
   // Never log database errors or connection strings.
-  res.status(bad?400:500).render('error',{title:bad?'Biểu mẫu không hợp lệ':'Chưa thể tải dữ liệu',message:bad?'File tối đa 5 MB; kiểm tra biểu mẫu và thử lại.':'Vui lòng kiểm tra cấu hình Supabase và kết nối mạng, sau đó thử lại.'});
+  res.status(bad?400:500).render('error',{title,message},(renderError:Error|null,html:string)=>{
+    // Even a broken error template must not reach Express's development stack
+    // page. Both fallback strings are fixed server text, never request input.
+    res.type('html').send(renderError?`<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>${title}</title></head><body><h1>${title}</h1><p>${message}</p><a href="/dishes">Trở về thực đơn</a></body></html>`:html);
+  });
 });

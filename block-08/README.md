@@ -1,238 +1,146 @@
-# Block 08 - Xác thực tài khoản trên SSR
+# Bếp Nhà — Restaurant SSR · Block 08
 
-> **Trạng thái:** Bản đề xuất để 3 thành viên thống nhất. Các mục `[ ]` chỉ được xem là đã chốt sau khi cả nhóm đồng ý.
+Ứng dụng thực đơn và quản trị bằng **Express 5 + EJS + TypeScript + Prisma 6 + Supabase PostgreSQL/Storage**. HTML được render trên server. Trang quản trị dùng JavaScript fetch để gửi PATCH/DELETE trực tiếp theo yêu cầu cập nhật; các trang và lỗi validation vẫn render bằng EJS trên server.
 
-## 1. Mục tiêu và nền tảng
+Block 08 kế thừa ứng dụng nhà hàng và bổ sung xác thực cho đội ngũ quản lý: đăng ký bằng mã mời và CAPTCHA ảnh, xác minh email bằng OTP, đăng nhập/đăng xuất và đặt lại mật khẩu qua email. Email gửi từ server bằng **Nodemailer SMTP**. Tài khoản mới luôn có `role=viewer`, `status=pending`; xác minh chỉ kích hoạt tài khoản, không cấp quyền quản trị. Người quản lý cấp `role=admin` riêng cho tài khoản đã xác minh. Ứng dụng không bổ sung luồng tài khoản khách hàng.
 
-- Phát triển tiếp ứng dụng nhà hàng từ `block-05` trong thư mục `block-08`; giữ `block-05` làm phiên bản bài cũ để có thể đối chiếu.
-- Tái sử dụng Express, EJS, TypeScript, Prisma/PostgreSQL và các màn hình CRUD hiện có.
-- Bổ sung đăng ký, CAPTCHA, xác minh email bằng OTP, đăng nhập, session lưu bền vững, chống brute force, đăng xuất, quên mật khẩu và reset token.
-- Không tính `DEMO_MODE` hoặc việc ẩn nút trên giao diện là cơ chế xác thực. Server phải kiểm tra mọi request được bảo vệ.
+Phần **Người 2 — Vy** gồm đăng nhập, session PostgreSQL, chống brute force và bảo vệ CRUD; hợp đồng module ở [docs/VY.md](docs/VY.md). Phần **Người 3 — Trang** gồm module quên/reset mật khẩu riêng, thu hồi mọi session sau reset, kiểm thử tích hợp và kịch bản demo ở [docs/TRANG.md](docs/TRANG.md). Các giá trị vận hành là mặc định triển khai để nhóm review, không thay xác nhận của ba thành viên trong tài liệu phân công.
 
-## 2. Phân công dự kiến
+## Chạy nhanh trên Windows
 
-| Thành viên | Phần việc chính | Công việc cụ thể | Điều kiện hoàn thành |
-|---|---|---|---|
-| **Người 1: Thuyết — Đăng ký và xác minh email** | Yêu cầu 01 | Làm form/route đăng ký; chuẩn hóa và kiểm tra email trùng; băm mật khẩu; CAPTCHA đăng ký; tạo tài khoản chưa xác minh; gửi OTP qua tiện ích email dùng chung; xác minh email và gửi lại OTP có giới hạn. Thiết kế bảng User và EmailVerification, đồng thời đẩy schema chung lên. | Đăng ký hợp lệ gửi email OTP; email trùng không tạo bản ghi thứ hai; OTP sai/hết hạn/dùng rồi bị từ chối; OTP chỉ dùng một lần; tài khoản chưa xác minh không đăng nhập được; đăng ký không tự cấp quyền quản trị. |
-| **Người 2: Vy — Đăng nhập, session và bảo vệ CRUD** | Yêu cầu 02 và 04 | Chuyển đăng nhập từ tài khoản cấu hình trong `.env` sang bảng user; kiểm tra trạng thái active; chống brute force; lưu session bền vững trong PostgreSQL; cấu hình cookie; logout; middleware bảo vệ `/admin` và các thao tác CRUD. | Đăng nhập hợp lệ dùng được các quyền đã thống nhất; đăng nhập sai đủ ngưỡng bị giới hạn; session còn hiệu lực sau khi restart server; logout hủy session ở server; gọi trực tiếp URL CRUD khi chưa đăng nhập vẫn bị chặn. |
-| **Người 3: Trang — Quên mật khẩu và kiểm thử tích hợp** | Yêu cầu 03 và tích hợp | Làm form quên mật khẩu, gửi link reset qua tiện ích email của Thuyết; form đặt mật khẩu mới; token có hạn và dùng một lần; vô hiệu session cũ sau reset; nối các router/trang và chuẩn bị kịch bản demo toàn hệ thống. | Link hợp lệ đổi được mật khẩu; token sai/hết hạn/đã dùng bị từ chối; session cũ không dùng được sau reset; phản hồi quên mật khẩu không tiết lộ email có tài khoản hay không. |
+Yêu cầu Node.js 20.14 trở lên. Các lệnh chạy tại thư mục dự án:
 
-### Quy ước để tránh conflict
-
-- Mỗi thành viên làm router/service và view riêng theo luồng; không cùng sửa một file route lớn.
-- **Thuyết (Người 1)** đẩy schema chung lên; Vy gửi yêu cầu model Session/LoginAttempt và Trang gửi yêu cầu model PasswordReset trước khi Thuyết tạo migration.
-- Thuyết phụ trách tiện ích email dùng chung; Trang gọi tiện ích này cho luồng reset.
-- **Trang (Người 3)** là đầu mối tích hợp; chỉ Trang mount các router vào `src/app.ts`. Thành viên khác gửi PR theo module của mình.
-- Dùng branch riêng và review trước khi merge theo workflow của repository. Khi đổi hợp đồng route hoặc schema, cập nhật README này trước khi code phụ thuộc vào thay đổi đó.
-
-## 3. Các quyết định chung
-
-| Chủ đề | Đề xuất để nhóm chốt | Xác nhận |
-|---|---|---|
-| **Nguồn yêu cầu** | PDF Block 08 là tiêu chí nghiệm thu; các quyết định vận hành trong bảng này theo thống nhất của nhóm. | [x] |
-| **Đường dẫn route** | Dùng `GET/POST /auth/register`, `GET/POST /auth/verify-email`, `POST /auth/verify-email/resend`, `GET/POST /auth/login`, `POST /auth/logout`, `POST /auth/forgot-password`, `GET/POST /auth/reset-password`. Form đăng ký nhận email/password/confirmPassword. Luồng OTP dùng pendingRegistrationUserId trong session, chưa cấp session đăng nhập. | [x] |
-| **Email và đăng nhập** | Chuẩn hóa email theo chính sách trim/lowercase và đặt unique. `emailVerifiedAt = null` nghĩa là chưa xác minh; chỉ cho đăng nhập khi đã xác minh. Đăng ký không tự cấp quyền quản trị. Để khớp PDF, role do server gán mặc định `viewer`; không nhận role từ form. Xác minh email không tự đăng nhập. | [x] |
-| **Bảng User và EmailVerification** | User có id/email/passwordHash/emailVerifiedAt/createdAt, role String mặc định viewer, status enum pending/active mặc định pending. Chưa xác minh thì status=pending và emailVerifiedAt=null; active thì emailVerifiedAt có giá trị. EmailVerification có userId/otpHash/expiresAt/attempts/lastSentAt, usedAt nullable và lockedUntil nullable. Xác minh thành công đánh dấu usedAt, giữ bản ghi. | [x] |
-| **OTP và reset token** | Chỉ lưu hash; có hạn dùng và dấu đã sử dụng. OTP gắn với tài khoản; reset token gắn với user. Không trả token trong response và không ghi vào log. Thời hạn, số lần thử và cooldown gửi lại cần chốt riêng bên dưới. | [x] |
-| **Tiện ích email** | Dùng Nodemailer qua Gmail SMTP cho một tiện ích gửi email chung cho OTP xác minh và link đặt lại mật khẩu. Thuyết phụ trách; Trang gọi cùng tiện ích đó cho luồng reset. Gmail dùng App Password theo lựa chọn đã xác nhận. | [x] |
-| **Session** | Session lưu phía server trong database và có liên kết `userId`; cookie chỉ mang mã session. Vy chỉ cho đăng nhập nếu email đã xác minh. Chốt chi tiết store/cookie theo cấu hình Block 08 khi triển khai. | [x] |
-| **CSRF** | Giữ cơ chế CSRF đang có trong Block 05 và áp dụng cho các form mới có thay đổi dữ liệu. | [x] |
-| **Quyền CRUD** | Việc tài khoản đã xác minh được phép xem/tạo/sửa/xóa đến đâu chưa được ảnh chốt; nhóm thống nhất riêng. Việc đăng ký không tự cấp quyền admin. | [ ] |
-| **Phạm vi route cần đăng nhập** | Chốt `/admin/*` và các route CRUD nào bắt buộc đăng nhập; xác định riêng trang thực đơn công khai `/dishes`, `/dish/:id` có giữ công khai hay không. Tài khoản chưa xác minh luôn bị chặn khỏi vùng cần đăng nhập. | [ ] |
-| **CAPTCHA và brute force** | Đã chọn Cloudflare Turnstile cho đăng ký. Thời điểm yêu cầu CAPTCHA ở luồng đăng nhập, cửa sổ đếm sai, ngưỡng khóa, thời gian chờ và giới hạn theo IP còn cần chốt. Giữ bộ đếm phía server; giải đúng CAPTCHA không xóa bộ đếm và CAPTCHA đúng không vượt qua thời gian khóa. | [ ] |
-| **Thời hạn và giới hạn OTP** | OTP 6 số, hạn 5 phút, tối đa 5 lần sai, gửi lại cách 60 giây và giữ attempts. Đủ 5 lần sai khóa 15 phút bằng lockedUntil; hết khóa, yêu cầu mã mới mở chu kỳ mới và reset attempts. Giới hạn 5 form đăng ký/15 phút/IP, 10 yêu cầu gửi lại/giờ/IP; bộ đếm IP trong tiến trình, cooldown/attempts/khóa tài khoản trong DB. SMTP lỗi giữ pending và vẫn áp dụng cooldown. | [x] |
-| **Reset token** | Chốt thời hạn token và giới hạn số yêu cầu forgot. GET chỉ hiện form; POST mới dùng token. Reset thành công không tự đăng nhập và phải làm session cũ mất hiệu lực. | [ ] |
-| **Email môi trường phát triển** | Chọn Gmail SMTP bằng App Password: `smtp.gmail.com:465`, `SMTP_SECURE=true`, `MAIL_FROM` dùng chính Gmail gửi. Người dùng tự điền tài khoản/App Password vào `.env`; địa chỉ nhận thư kiểm thử sẽ được cung cấp trước khi gửi thật. | [x] |
-| **Cookie/session policy** | Chốt thời hạn session, `HttpOnly`, `SameSite`, `Secure` khi production; đổi session ID lúc login; logout hủy session ở server rồi xóa cookie. Session phải còn hợp lệ sau khi server restart. | [ ] |
-| **Password hashing/admin bootstrap** | Đã chốt bcryptjs cho đăng ký, mật khẩu ít nhất 8 ký tự và không quá 72 byte UTF-8; OTP dùng HMAC-SHA256 với OTP_SECRET riêng trong .env. Admin bootstrap cần nhóm chốt riêng; không commit mật khẩu/secrets. | [ ] |
-
-## 4. Điều kiện nghiệm thu chung
-
-- Tài khoản `pending` không nhận session; OTP hợp lệ kích hoạt đúng tài khoản nhưng không tự đăng nhập.
-- Sai, hết hạn hoặc dùng lại OTP/reset token đều bị từ chối; OTP và reset token không xuất hiện dạng đọc được trong database, response hoặc log.
-- Email không tồn tại và email đã đăng ký nhận phản hồi quên mật khẩu giống nhau; đăng ký email trùng không tiết lộ trạng thái tài khoản.
-- CAPTCHA thiếu/sai khi được yêu cầu bị chặn ở server; đạt ngưỡng khóa thì CAPTCHA đúng cũng không cho đăng nhập.
-- Session tồn tại sau khi restart server; logout/reset làm session cũ mất hiệu lực.
-- Gọi trực tiếp route CRUD bằng request HTTP khi chưa đăng nhập vẫn bị chặn; không có GET nào làm thay đổi hoặc tiêu thụ dữ liệu.
-- Nhóm chuẩn bị ảnh giao diện, Network, cookie trong Application, request trực tiếp, bản ghi database đã che dữ liệu nhạy cảm và sơ đồ các luồng theo yêu cầu nộp.
-
-## 5. Ghi nhận thống nhất
-
-| Thành viên | Đã xem và đồng ý | Ghi chú |
-|---|---|---|
-| Thuyết — Người 1 | [ ] | |
-| Vy — Người 2 | [ ] | |
-| Trang — Người 3 | [ ] | |
-
-## 6. Cập nhật triển khai yêu cầu 1
-
-Các quyết định dưới đây được người phụ trách yêu cầu 1 xác nhận trong chat ngày 06/11/2026; không thay cho xác nhận của Vy hoặc Trang ở mục 5.
-
-- Dùng các mục `[x]` trong README làm chuẩn khi đồng bộ `skill.md` và schema. Các mục `[ ]` vẫn là đề xuất cần nhóm chốt.
-- Dùng lại Supabase/database của Block 05. Người dùng đã điền hai URL trong `.env`; kiểm tra kết nối và metadata ở chế độ chỉ đọc thành công, sau đó đã cho phép áp dụng đúng hai migration xác thực mới.
-- Giữ nguyên migration `202611060001_add_registration_models`; tạo migration bổ sung `202611060002_align_registration_contract` cho `role`, `status`, `usedAt`.
-- `role` tạm dùng String vì chưa chốt đầy đủ danh sách role; server gán `viewer` khi đăng ký. `status` dùng enum vì đã chốt hai giá trị `pending/active`.
-- Sau xác minh, cập nhật `status=active`, `emailVerifiedAt` và `usedAt` trong cùng transaction; không tự đăng nhập. Một user vẫn có tối đa một bản ghi xác minh, không phải bảng lịch sử mọi OTP.
-- Đã chọn Gmail App Password, Turnstile, chính sách OTP/khóa, bcryptjs và HMAC-SHA256. Đã chốt route GET/form/session đăng ký tạm và giới hạn IP như mục 3. Không tự quyết định quyền CRUD, admin bootstrap hoặc chính sách login/reset của các thành viên khác.
-- Đã có router, service và hai view đăng ký/xác minh trong source. Chưa mount vào app chính hoặc nghiệm thu toàn hệ thống thật; xem mục 11 để bàn giao cho Trang.
-- Đã xác nhận dùng Nodemailer qua Gmail SMTP; đã cài thư viện và type TypeScript, cập nhật lockfile. Đã đặt host/port/secure cho Gmail trong cấu hình mẫu và điền các giá trị đó vào những mục còn trống của `.env`, giữ nguyên credential người dùng. Người dùng đã điền tài khoản/App Password; kết nối TLS và xác thực Gmail SMTP thành công bằng `verify()`.
-- Đã tạo `.env` khung từ `.env.example`; `.gitignore` đã loại `.env`. Người dùng đã tự điền thông tin kết nối của Supabase Block 05. Việc chạy server với database thật vẫn cần đủ cấu hình quản trị hiện có.
-- Hợp đồng hàm đã xác nhận: `sendMail({ to, subject, text, html? }): Promise<void>`, báo lỗi nếu cấu hình không hợp lệ hoặc gửi thất bại; không tự retry hay tạo OTP.
-- Đã viết `src/services/mailer.ts` và 7 test email giả lập. Build và toàn bộ 21/21 test đạt tại mốc hoàn thành mailer. Sau khi người dùng đồng ý, đã gọi module để gửi đúng một email kiểm thử đến chính `SMTP_USER`, tiêu đề `[Block 08] Kiểm tra gửi email`; SMTP chấp nhận thành công, không tự retry. Người dùng đã xác nhận nhận được thư ngày 06/11/2026; hoàn tất kiểm tra gửi/nhận email thật.
-- Kiểm tra database chỉ đọc ban đầu thấy 7 migration cũ. Đã bổ sung 6 file lịch sử từ `block-07/api/prisma/migrations`, giữ nội dung và chọn kiểu xuống dòng để checksum khớp bản đã chạy. Migration khởi tạo hiện có khớp nội dung khi chuẩn hóa xuống dòng; không sửa migration đó.
-- Database đã có cấu trúc Block 07: `Chef.specialty` không còn, `Dish` có `searchVector`. Chưa sửa schema/CRUD theo cấu trúc này. `block-07/api/prisma/schema.prisma` còn conflict marker, không dùng trực tiếp làm schema chuẩn.
-- Người dùng đã chọn đồng bộ lịch sử và thêm xác thực trước; phần điều chỉnh CRUD chốt riêng. Đã áp dụng `202611060001_add_registration_models` và `202611060002_align_registration_contract` tại mốc database có 9 migration. Sau đó nhóm chạy thêm hai migration khác, được ghi nhận dưới đây.
-- Kiểm tra sau migration: đủ hai bảng xác thực, default `role=viewer`/`status=pending`, enum `pending/active`, `usedAt` nullable, unique email, xóa OTP theo user và RLS bật. Số bản ghi của 6 bảng CRUD trước/sau giữ nguyên: Chef 3, Ingredient 110, Dish 1000, DishIngredient 5310, Specialty 5, ChefSpecialty 5. Không reset database hoặc sửa nghiệp vụ CRUD.
-- Người dùng đã chọn Cloudflare Turnstile. Đã kiểm tra `.env` có Site key, Secret key và đủ hai hostname local, không hiển thị giá trị key; chưa kiểm chứng key/token với Cloudflare hoặc tạo giao diện Turnstile. Gmail đã xác thực, gửi một thư thử và người dùng xác nhận đã nhận thư.
-- Đã chốt hợp đồng `verifyCaptcha(token): Promise<void>`: gọi Cloudflare Siteverify, timeout toàn bộ quá trình 5 giây, không retry, báo lỗi khi token thiếu/sai/hết hạn, dịch vụ lỗi hoặc timeout. Chọn widget Managed cho môi trường local, hai hostname `localhost`, `127.0.0.1`; backend đối chiếu hostname qua `TURNSTILE_ALLOWED_HOSTNAMES`.
-- Đã viết `src/services/captcha.ts` và 10 test giả lập. Build và toàn bộ 31/31 test đạt; người dùng đã điền key nhưng chưa gọi Cloudflare bằng token thật hoặc gắn CAPTCHA vào form đăng ký. Phần tích hợp `src/app.ts` vẫn do Trang phụ trách.
-- Đã tạo OTP_SECRET ngẫu nhiên riêng trong .env, không hiển thị giá trị. Code OTP dùng HMAC gắn với user, lưu attempts/lockedUntil, thay mã khi gửi lại và cập nhật usedAt/active/emailVerifiedAt trong transaction; không tự đăng nhập.
-- Đã lấy đúng `202611060003_vy_sessions` và `202611060004_auth_flow_support` từ origin/master, đối chiếu checksum khớp Supabase. Việc tạm gác do chưa push 004 trước đó đã được giải quyết sau khi người dùng báo đã push.
-- Đã áp dụng riêng `202611060005_add_otp_lock`: lockedUntil nullable đã tồn tại, lịch sử database hiện có 12 migration thành công. Preflight xác nhận chỉ 005 còn chờ trước khi chạy; số bản ghi sáu bảng CRUD trước/sau giữ nguyên. Không sửa migration đã áp dụng hoặc reset database.
-- Người dùng đã đồng ý đồng bộ riêng schema xác thực từ master: User.name/passwordVersion/updatedAt, Session, LoginAttempt, PasswordResetToken, EmailVerification.sendWindowStartedAt/sendCount và index expiresAt; giữ lockedUntil và không thay phần CRUD tạm gác. Kiểm tra chỉ đọc: 34 cột của 5 model xác thực khớp type/nullability với Supabase, RLS đều bật.
-- Kiểm tra sau đồng bộ: Prisma validate/generate, TypeScript build và toàn bộ 61/61 test đạt. Chưa thực hiện vòng đăng ký–OTP thật, test concurrency PostgreSQL hoặc gắn router vào app chính.
-
-## 7. Chuẩn bị cấu hình cục bộ
-
-Điền thông tin trực tiếp trong `.env`, không đưa mật khẩu vào README hoặc chat:
-
-| Nhóm | Biến | Cách chuẩn bị |
-| --- | --- | --- |
-| Database | `DATABASE_URL`, `DIRECT_URL` | Đã điền, kiểm tra lịch sử và áp dụng 2 migration xác thực sau khi người dùng đồng ý |
-| App hiện có | `SESSION_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH` | Cần cho luồng quản trị cũ khi chạy `DEMO_MODE=false`; không dùng mật khẩu nguyên văn thay cho hash |
-| Email | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Đã chọn Gmail App Password; xem cấu hình và hướng dẫn bên dưới |
-| Storage của CRUD | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET` | Giữ theo project cũ khi chạy chức năng ảnh; không phải cấu hình gửi email |
-
-`SMTP_SECURE` nhận `true` hoặc `false`: cổng 465 thường dùng `true`; cổng 587 dùng `false` để bắt đầu kết nối rồi nâng cấp STARTTLS theo cấu hình nhà cung cấp. Tham khảo [Nodemailer SMTP](https://nodemailer.com/smtp).
-
-Đối với database khác, kiểm tra lịch sử trước khi chạy `npm run db:migrate`. Database Supabase hiện tại đã chạy đủ hai migration xác thực; không cần chạy lại để tạo bảng bằng SQL thủ công. Việc tạo bảng không có nghĩa là CRUD đã tương thích với thay đổi schema Block 07.
-
-Gmail hỗ trợ `smtp.gmail.com:465` với TLS ngay khi kết nối, hoặc cổng 587 với STARTTLS. Nhóm đã chọn cổng 465 và App Password. App Password yêu cầu xác minh 2 bước và tài khoản có quyền tạo App Password. Tham khảo [Google SMTP](https://developers.google.com/workspace/gmail/imap/imap-smtp), [Google App Passwords](https://support.google.com/accounts/answer/185833) và [Nodemailer Gmail](https://nodemailer.com/guides/using-gmail).
-
-Điền vào `.env` bằng thông tin riêng của người gửi:
-
-```dotenv
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=your-account@gmail.com
-SMTP_PASS=your-16-character-app-password
-MAIL_FROM=your-account@gmail.com
+```powershell
+npm install
+Copy-Item .env.example .env # Chỉ chạy nếu chưa có .env; không ghi đè cấu hình đã nhập.
+npm run db:generate
+npm run dev
 ```
 
-Các giá trị `your-...` chỉ là minh họa, không dùng được để gửi thư. Các bước điền Gmail:
+- Thực đơn: http://localhost:3000/dishes
+- Chi tiết: http://localhost:3000/dishes/1 (hỗ trợ cả /dish/1)
+- Quản trị: http://localhost:3000/admin/dishes
+- Đăng ký tài khoản đội ngũ bằng mã mời: http://localhost:3000/auth/register
+- Đăng nhập quản trị: http://localhost:3000/auth/login
+- Quên mật khẩu: http://localhost:3000/auth/forgot-password
 
-1. Đăng nhập tài khoản Gmail sẽ dùng để gửi OTP. Mở [Bảo mật tài khoản Google](https://myaccount.google.com/security) và bật **Xác minh 2 bước** nếu chưa bật.
-2. Mở [App Passwords / Mật khẩu ứng dụng](https://myaccount.google.com/apppasswords). Nếu được yêu cầu, đăng nhập lại; đặt tên ứng dụng như `Block 08` rồi tạo mật khẩu ứng dụng.
-3. Sao chép App Password 16 ký tự vừa tạo, bỏ khoảng cách phân nhóm nếu có. Đây là giá trị điền vào `SMTP_PASS`, không phải mật khẩu đăng nhập Gmail thông thường. Xem [hướng dẫn Google](https://support.google.com/accounts/answer/185833?hl=vi).
-4. Mở `.env` của block-08: `SMTP_USER` là địa chỉ Gmail gửi; `SMTP_PASS` là App Password; `MAIL_FROM` là cùng địa chỉ với `SMTP_USER`. Giữ `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_SECURE=true`; không thay các URL database đã điền.
-5. Lưu file, sau đó báo đã điền và cung cấp địa chỉ nhận mà người dùng cho phép gửi một email thử. Không đưa App Password vào chat hoặc README.
+Mặc định `DEMO_MODE=true`: thực đơn công khai dùng 8 món ăn, 3 đầu bếp, 10 nguyên liệu trong mã nguồn; các form xác thực vẫn hiển thị. `/admin` luôn yêu cầu đăng nhập và quyền admin, kể cả trong demo. POST đăng ký/đăng nhập hợp lệ CSRF trả **503**, không tạo tài khoản và không gửi email. Demo không lưu dữ liệu và không chứng minh session bền vững. 8 ảnh tự tạo bằng imagegen nằm trong `public/images`; ảnh mang tính minh họa.
 
-Nếu không có mục App Passwords, kiểm tra xác minh 2 bước và đúng tài khoản Google đang đăng nhập. Tài khoản trường/công ty, tài khoản chỉ dùng security key cho xác minh hai bước hoặc tài khoản bật Advanced Protection có thể không có tùy chọn này. Báo lại để thống nhất phương án; không đổi cách xác thực ngầm. Chưa gửi email kiểm thử khi chưa có địa chỉ nhận và yêu cầu gửi rõ ràng.
+## Kết nối Supabase thật
 
-## 8. Tiện ích email bàn giao cho Trang
+1. Mở project Supabase của bạn. Trong **Connect**, lấy chuỗi PostgreSQL. Điền `DATABASE_URL` cho runtime và `DIRECT_URL` cho migration trong `.env`. Đổi placeholder mật khẩu; ký tự đặc biệt trong mật khẩu phải URL encode. Nếu máy không có IPv6, dùng **Session pooler** tương thích IPv4 cho cả hai. Không dùng transaction pooler cho migration.
+2. Điền `SUPABASE_URL` và `SUPABASE_SERVICE_ROLE_KEY` từ cài đặt API của project. Đây phải là key có quyền quản trị Storage, chỉ dùng trên server. Không dùng anon key thay service role key. Không commit `.env`.
+3. Giữ `SUPABASE_STORAGE_BUCKET=dish-images`. Script seed tự tạo bucket public nếu chưa có và upload ảnh; nếu bucket có sẵn ở trạng thái private, script sẽ yêu cầu bạn cấu hình lại thay vì tự đổi quyền.
+4. Chạy `npm run admin:setup` để tạo `ADMIN_REGISTRATION_CODE` ngẫu nhiên và `SESSION_SECRET` trong `.env`. Mã mời chỉ hiển thị một lần trong terminal; lưu trong trình quản lý mật khẩu và chỉ chia sẻ với người được phép tạo tài khoản đội ngũ. Có thể tự cấu hình mã mời ngẫu nhiên tối thiểu **16 ký tự** và session secret tối thiểu **32 ký tự**. Script không tạo tài khoản hoặc cấp quyền admin.
+5. Áp dụng migration và dữ liệu mẫu:
 
-Trong module nằm ở `src/routes/`, gọi tiện ích dùng chung như sau:
-
-```typescript
-import { sendMail } from '../services/mailer.js';
-
-await sendMail({
-  to: recipientEmail,
-  subject: mailSubject,
-  text: plainTextBody,
-  html: htmlBody, // Có thể bỏ nếu chỉ gửi text.
-});
+```powershell
+npm run db:generate
+npm run db:migrate
+npm run db:seed
 ```
 
-- `to` là một địa chỉ email; `subject` và `text` bắt buộc, `html` tùy chọn. Mỗi lần gọi gửi cho một người nhận, phù hợp OTP và reset mật khẩu.
-- Người gửi lấy từ `MAIL_FROM`, không nhận từ form. Có thể dùng địa chỉ thuần hoặc dạng `Bếp Nhà <sender@example.com>`.
-- Hàm đọc và kiểm tra đủ 6 biến SMTP/email ở mục 7 khi gọi; `SMTP_PORT` là số nguyên 1–65535, `SMTP_SECURE` phải là chuỗi `true` hoặc `false`. `SMTP_USER` và `SMTP_PASS` cần được điền cho transport SMTP hiện tại.
-- Promise resolve nghĩa là SMTP đã chấp nhận email để chuyển tiếp; chưa bảo đảm email đã vào Inbox. Không trả OTP hoặc response của nhà cung cấp cho client.
-- Hàm không tự retry, không tạo OTP/reset token, không cập nhật tài khoản và không ghi log nội dung email hoặc lỗi gốc của nhà cung cấp.
-- Khi thất bại, hàm throw `MailError`. Caller xử lý theo `error.code`, không đánh dấu gửi thành công hoặc kích hoạt tài khoản khi Promise bị reject.
+6. Cấu hình SMTP và `APP_URL` theo phần bên dưới. Đặt `DEMO_MODE=false` rồi khởi động lại `npm run dev`. Mở `/auth/register`, nhập mã mời và đăng ký bằng email của thành viên đội ngũ; xác minh OTP nhận qua email. Đăng nhập ở `/auth/login`: viewer được chuyển đến `/auth/account` để chờ cấp quyền; admin được chuyển đến `/admin/dishes`. Đường dẫn `/admin/login` chuyển sang cùng trang đăng nhập này.
+7. Người quản lý chạy `npm run admin:promote -- --email admin@example.com` để cấp quyền cho tài khoản **đã tồn tại, active và đã xác minh email**. Lệnh không tạo user mới, không đổi mật khẩu và không bỏ qua xác minh. Dùng email thật đã đăng ký; không cấp quyền qua form hoặc tham số request.
 
-| Mã lỗi | Ý nghĩa |
+`npm run config:check` kiểm tra cấu hình database, Storage, quản trị, SMTP và URL ứng dụng mà không in bí mật. `npm run config:connect` kiểm tra PostgreSQL bằng `SELECT 1`, liệt kê bucket Storage và gọi SMTP `verify()` để kiểm tra kết nối/xác thực; lệnh này không ghi record, upload ảnh hoặc gửi email. Đây là kiểm tra cấu hình môi trường thật, kể cả khi đang bật demo.
+
+Không cần tạo bảng thủ công trong Supabase Table Editor. `prisma/schema.prisma` là nguồn định nghĩa model; migration SQL được sinh từ schema. Với thay đổi schema trong quá trình phát triển, tạo migration bằng `npx prisma migrate dev --name ten_thay_doi` trên database phát triển có hỗ trợ shadow database. Database dùng chung/triển khai áp dụng migration bằng `npm run db:migrate`. Có `npm run db:push` cho thử nghiệm nhanh, nhưng nên giữ migration làm lịch sử chính thức.
+
+Seed giữ nguyên các record ID mẫu đã tồn tại, không xóa dữ liệu quản trị; ảnh dưới prefix `seed/` chỉ được tải lên nếu chưa có. Dùng database phát triển riêng khi seed lần đầu để tránh trùng ID với dữ liệu có sẵn. Ảnh quản trị upload dùng tên ngẫu nhiên dưới `uploads/`. Khi sửa/xóa món, ảnh quản trị cũ được dọn theo khả năng; ảnh seed dùng chung không bị xóa. Nếu Storage lỗi trong bước dọn ảnh sau khi đã lưu database, dữ liệu món vẫn được giữ và có thể cần dọn object cũ thủ công.
+
+## Cấu hình email và xác thực quản trị viên
+
+Chẩn đoán riêng SMTP bằng `npm run smtp:check` trên máy của bạn. Lệnh dùng cấu hình local để kiểm tra kết nối/xác thực, không gửi email thử và chỉ in trạng thái/mã lỗi đã lọc; không in mật khẩu, key hoặc phản hồi thô của nhà cung cấp. Sau khi sửa `.env`, khởi động lại server. Với email đã đăng ký, dùng nút **Gửi lại mã xác minh**, không đăng ký lại để yêu cầu OTP mới.
+
+Trang quên mật khẩu: `/auth/forgot-password`. Để chạy riêng kiểm thử phần Trang, dùng `npm run test:recovery`. Reset thành công xóa mọi session của tài khoản trong cùng transaction đổi mật khẩu và yêu cầu đăng nhập lại; mở link bằng GET không tiêu thụ token.
+
+Điền các biến trong `.env` bằng thông tin nhà cung cấp SMTP. `SMTP_HOST` và `SMTP_FROM` phải có giá trị. `SMTP_PORT` mặc định **587**, `SMTP_SECURE=false` dùng kết nối SMTP được nâng cấp bằng STARTTLS; với cổng TLS trực tiếp (thường là 465), đặt `SMTP_SECURE=true`. `SMTP_REQUIRE_TLS` mặc định **true** và yêu cầu TLS. `SMTP_USER`/`SMTP_PASSWORD` phải được điền cùng nhau nếu máy chủ yêu cầu xác thực. Không tắt kiểm tra chứng chỉ TLS.
+
+`APP_URL` là origin tin cậy được cấu hình trên server để tạo link email, ví dụ `http://localhost:3000` khi phát triển hoặc `https://bepnha.example.vn` khi triển khai; không lấy origin từ header của request. Không thêm đường dẫn, query, fragment hoặc thông tin đăng nhập vào biến này. Production yêu cầu HTTPS. Chỉ khi thử với SMTP local ở `localhost`, `127.0.0.1` hoặc `::1` mới đặt rõ `SMTP_REQUIRE_TLS=false`; không dùng giá trị này với dịch vụ SMTP thật. Máy chủ SMTP local không yêu cầu AUTH có thể để trống cả user và password.
+
+`SESSION_SECRET` cần ít nhất **32 ký tự ngẫu nhiên**. Có thể điền `AUTH_TOKEN_SECRET` riêng, cũng ít nhất 32 ký tự; nếu để trống, ứng dụng dùng `SESSION_SECRET` làm khóa HMAC. Database lưu hash có khóa của OTP và reset token, không lưu giá trị gốc. Không đưa mật khẩu, OTP, reset token hoặc SMTP credentials vào log. Link đặt lại mật khẩu cũng là thông tin bí mật.
+
+`ADMIN_REGISTRATION_CODE` là mã mời bí mật phía server, tối thiểu **16 ký tự**. Form đăng ký gửi trường `invitationCode`; mã đúng chỉ cho phép tạo tài khoản `viewer/pending`, không cấp quyền admin. Mã mời không được đưa sẵn vào HTML, hiển thị lại sau lỗi hoặc ghi log. Tài khoản được lưu trong database; ứng dụng không đăng nhập bằng `ADMIN_EMAIL`/`ADMIN_PASSWORD_HASH` từ cấu hình cũ.
+
+Luồng hoạt động:
+
+1. Từ trang đăng nhập quản trị, mở `/auth/register`, nhập thông tin, mã mời và CAPTCHA. CAPTCHA là ảnh SVG 6 ký tự, có hiệu lực 5 phút và dùng một lần. Email được chuẩn hóa bằng cách bỏ khoảng trắng ngoài cùng và chuyển về chữ thường; email phải duy nhất. Mật khẩu tối thiểu 8 ký tự và tối đa **72 byte UTF-8** để phù hợp bcrypt; ký tự tiếng Việt/emoji có thể chiếm nhiều byte.
+2. Đăng ký mới tạo tài khoản `viewer/pending` chưa xác minh và gửi OTP **6 chữ số**. Email mới, email đã tồn tại và lỗi gửi SMTP đều nhận cùng phản hồi đăng ký **303** và thông báo có điều kiện; email trùng không tạo thêm user, đổi mật khẩu hoặc gửi thêm email. OTP hết hạn sau **10 phút**, tối đa **5 lần nhập sai cho tài khoản chưa xác minh**. Xác minh cập nhật `emailVerifiedAt`, chuyển `status=active` và đánh dấu mã đã dùng; không tự đăng nhập hoặc thay role.
+3. Gửi lại OTP ở `/auth/verify-email/resend` (alias `/auth/resend-otp`): cách lần gửi trước tối thiểu **60 giây**, tối đa **5 email mỗi giờ, tính cả email đầu tiên**. OTP mới thay thế mã cũ và **giữ nguyên số lần nhập sai**, kể cả sang cửa sổ gửi của giờ tiếp theo. Đủ 5 lần sai sẽ không gửi thêm OTP hoặc cho xác minh; người dùng cần liên hệ quản lý để được hỗ trợ, gửi lại/đăng ký trùng không mở lại lượt thử.
+4. Chỉ tài khoản `active`, đã xác minh và có mật khẩu đúng được tạo session. Đăng nhập đổi session ID, lưu `userId`/phiên bản mật khẩu ở server; cookie chỉ mang mã session. Admin chuyển đến `/admin/dishes`, viewer đến `/auth/account`. Guard đọc quyền hiện tại từ database, yêu cầu active, đã xác minh, `role=admin` và `passwordVersion` khớp; viewer gọi URL CRUD trực tiếp vẫn bị chặn. Đăng xuất POST kèm CSRF hủy session server rồi xóa cookie.
+5. `/auth/forgot-password` gửi link đặt lại mật khẩu qua cùng tiện ích email. Token ngẫu nhiên dài **64 ký tự hex**, hết hạn sau **30 phút**, chỉ dùng một lần và lưu riêng với OTP xác minh. Sau khi đổi mật khẩu, token bị vô hiệu hóa và `passwordVersion` tăng để các session cũ hết hiệu lực.
+
+Để thử toàn bộ luồng, cần `DEMO_MODE=false`, mã mời hợp lệ, database đã áp dụng migration và SMTP có thể gửi đến hộp thư bạn kiểm soát. Sau đăng ký, xác minh email rồi thử đăng nhập viewer; người quản lý cấp admin trước khi thử CRUD. Phần OTP/email thuộc Thuyết, reset và nghiệm thu tích hợp thuộc Trang. Trang thực đơn công khai chỉ có liên kết **Quản trị** để vào luồng này. Thay đổi `.env` cần khởi động lại server.
+
+## Session, cookie và chống brute force — phần Vy
+
+Ngoài demo, session và bộ đếm đăng nhập sai lưu trong PostgreSQL. Giữ `SESSION_SECRET` ổn định để cookie còn được xác thực sau restart. Session có thời hạn tuyệt đối **2 giờ**; cookie `HttpOnly`, `SameSite=Lax`, `Secure` khi production. Hoạt động thông thường không kéo dài quá thời điểm hết hạn ban đầu. Đăng nhập đổi SID; logout xóa bản ghi session. Reset mật khẩu phải tăng `passwordVersion` để mọi session cũ bị từ chối.
+
+Mặc định triển khai cần nhóm review: cửa sổ đếm **15 phút**; từ **3 lần sai** yêu cầu CAPTCHA; từ **5 lần sai theo tài khoản** hoặc **20 lần sai theo IP** tạm khóa **15 phút**. Bộ đếm được lưu phía server; CAPTCHA đúng không xóa bộ đếm và không vượt thời gian khóa. Giới hạn phụ **120 POST đăng nhập/IP/15 phút** không thay bộ đếm PostgreSQL. Không lưu email/IP dạng thô trong khóa chống brute force.
+
+`TRUST_PROXY_HOPS` là số hop proxy tin cậy, số nguyên từ **0 đến 5**, mặc định **0** khi truy cập trực tiếp. Chỉ bật trust proxy khi giá trị lớn hơn 0 và cấu hình theo hạ tầng HTTPS thực tế; cấu hình sai có thể làm sai nhận diện IP hoặc cookie Secure. Production cần HTTPS. Chỉ MemoryStore trong demo phục vụ xem giao diện; không dùng demo làm cơ chế cấp quyền hoặc bằng chứng session tồn tại sau restart.
+
+## Dữ liệu và route
+
+- `Dish`: tên, mô tả, giá Decimal VNĐ, danh mục, trạng thái, đường dẫn ảnh, đầu bếp.
+- `Chef`: tên, chuyên môn, giới thiệu.
+- `Ingredient`: tên duy nhất, đơn vị.
+- `DishIngredient`: quan hệ nhiều–nhiều và định lượng mỗi phần.
+- `User`: tài khoản đội ngũ gồm `id`, `name`, `email` duy nhất, `passwordHash`, `emailVerifiedAt` có thể null, `role` mặc định `viewer`, `status` mặc định `pending`, `passwordVersion`, `createdAt`.
+- `EmailVerification`: `userId` là khóa chính; `otpHash`, `expiresAt`, `attempts`, `lastSentAt`, `usedAt`, `sendWindowStartedAt`, `sendCount` quản lý OTP và giới hạn gửi.
+- `PasswordResetToken`: record token đặt lại mật khẩu riêng, lưu hash, thời hạn và trạng thái đã dùng.
+- `Session`: session phía server có mã session, dữ liệu, thời hạn và `userId` tùy chọn, lưu trong PostgreSQL.
+- `LoginAttempt`: bộ đếm đăng nhập sai và thời gian tạm khóa theo khóa HMAC tài khoản/IP, lưu trong PostgreSQL.
+
+Ảnh lưu trong Supabase Storage; PostgreSQL lưu đường dẫn object, không lưu binary ảnh. Mỗi món có URL riêng; trang chi tiết hiện đầu bếp và nguyên liệu.
+
+| Chức năng | Method và URL |
 | --- | --- |
-| `MAIL_CONFIG_INVALID` | Thiếu/sai cấu hình; thông báo chỉ nêu tên biến, không nêu giá trị bí mật |
-| `MAIL_MESSAGE_INVALID` | Địa chỉ nhận, tiêu đề hoặc nội dung không hợp lệ |
-| `MAIL_SEND_FAILED` | SMTP không chấp nhận người nhận hoặc gặp lỗi gửi; lỗi gốc được che |
+| Danh sách khách | GET `/dishes?q=&category=&available=&sort=&page=` |
+| Chi tiết | GET `/dishes/:id` |
+| Danh sách quản trị | GET `/admin/:kind?q=&category=&available=&page=` |
+| Form thêm | GET `/admin/:kind/new` |
+| Thêm | POST `/admin/:kind` |
+| Form sửa | GET `/admin/:kind/:id/edit` |
+| Sửa | PATCH `/admin/:kind/:id` |
+| Xác nhận xóa | GET `/admin/:kind/:id/delete` |
+| Xóa | DELETE `/admin/:kind/:id` |
+| Đăng ký tài khoản đội ngũ bằng mã mời | GET, POST `/auth/register` |
+| Ảnh CAPTCHA | GET `/auth/captcha` |
+| Xác minh email | GET, POST `/auth/verify-email` |
+| Gửi lại OTP | POST `/auth/verify-email/resend` (alias `/auth/resend-otp`) |
+| Đăng nhập quản trị | GET, POST `/auth/login` |
+| Đường dẫn đăng nhập quản trị cũ | GET `/admin/login` → `/auth/login` |
+| Đăng xuất quản trị | POST `/auth/logout` |
+| Tài khoản và quyền truy cập | GET `/auth/account` |
+| Đổi họ tên của chính mình | POST `/auth/account/profile` |
+| Đổi mật khẩu khi đã đăng nhập | POST `/auth/account/password` |
+| Quên mật khẩu | GET, POST `/auth/forgot-password` |
+| Đặt lại mật khẩu | GET, POST `/auth/reset-password` |
 
-Kiểm thử riêng bằng `npx tsx --test tests/mailer.test.ts`. Test dùng transport giả lập/JSON của Nodemailer, không gửi thư ra ngoài. Các router nghiệp vụ và phần mount trong `src/app.ts` chưa được triển khai ở bước này.
+`:kind` là `dishes`, `chefs`, `ingredients`. Khi bật JavaScript, form sửa/xóa gửi PATCH/DELETE trực tiếp, kèm CSRF token và dữ liệu multipart. Network hiển thị đúng PATCH/DELETE. Khi JavaScript bị tắt, form dự phòng gửi POST với hidden `_method=PATCH/DELETE`; chỉ POST được override. Việc dùng fetch là thay đổi so với tiêu chí không dùng AJAX trong slide ban đầu. GET tuyệt đối không thay đổi record. Thao tác thành công redirect **303**; dữ liệu không hợp lệ trả **400**, giữ lại trường nhập (trình duyệt yêu cầu chọn lại file ảnh); ID không hợp lệ/không tồn tại trả **404**. Search, filter, sort, phân trang đều chạy phía server và giữ điều kiện trên URL. Trang khách 6 món/trang, trang quản trị 8 record/trang.
 
-## 9. Tạo tài khoản và cấu hình Cloudflare Turnstile
+## Kiểm thử
 
-Người dùng đã chọn widget **Managed** với hai hostname local, theo quy trình [tạo tài khoản](https://developers.cloudflare.com/fundamentals/account/create-account/), [tạo widget](https://developers.cloudflare.com/turnstile/get-started/widget-management/dashboard/) và [phát triển local](https://developers.cloudflare.com/turnstile/troubleshooting/testing/):
+Trang `/auth/account` có biểu tượng cây bút ngay cạnh họ tên và dòng mật khẩu ẩn; bấm biểu tượng để mở hoặc đóng form chỉnh sửa tại chỗ. Đổi họ tên chỉ cập nhật trường name của user trong session; form không được đổi email, quyền hoặc tài khoản khác. Đổi mật khẩu yêu cầu mật khẩu hiện tại, mật khẩu mới khác mật khẩu cũ và xác nhận khớp (ít nhất 8 ký tự, tối đa 72 byte UTF-8). Thành công sẽ tăng passwordVersion, vô hiệu link reset cũ, xóa mọi session của tài khoản và yêu cầu đăng nhập lại; quyền hiện tại được giữ nguyên. Mọi POST có CSRF; đổi mật khẩu giới hạn 5 yêu cầu/tài khoản và 20 yêu cầu/IP mỗi 15 phút trong tiến trình Node. Không cần migration mới. Chạy riêng kiểm thử bằng `npm run test:account`.
 
-1. Mở [đăng ký Cloudflare](https://dash.cloudflare.com/sign-up), nhập email/mật khẩu và tạo tài khoản.
-2. Mở email Cloudflare gửi đến và xác minh địa chỉ email, sau đó đăng nhập dashboard.
-3. Tìm mục **Turnstile**, chọn **Add widget**.
-4. Đặt tên gợi nhớ, ví dụ `Block 08 Local`; thêm hostname `localhost` và `127.0.0.1`. Nhập từng hostname, không thêm `http://`, `:3000` hoặc đường dẫn.
-5. Chọn chế độ **Managed**, tạo widget và sao chép **Site key** cùng **Secret key** vào `.env` của block-08:
-
-```dotenv
-TURNSTILE_SITE_KEY=YOUR_SITE_KEY
-TURNSTILE_SECRET_KEY=YOUR_SECRET_KEY
-TURNSTILE_ALLOWED_HOSTNAMES=localhost,127.0.0.1
+```powershell
+npm run build
+npm test
 ```
 
-Thay hai giá trị `YOUR_...` bằng key thật. Site key dùng cho widget trên giao diện; Secret key chỉ ở server, không đưa vào chat, view, response hoặc log. Sau khi lưu, báo đã điền để kiểm tra cấu hình. Chưa đánh dấu hoàn thành CAPTCHA thật chỉ vì đã tạo widget.
+`npm test` chạy kiểm thử SSR, mutation và xác thực: form, session, trạng thái/role, guard CRUD, CSRF, validation, CAPTCHA, bộ đếm/khóa, OTP, giới hạn gửi/thử, reset token, vô hiệu hóa phiên cũ, method override, quan hệ dữ liệu, redirect, XSS và ID lỗi. Bộ test dùng Prisma stub trong bộ nhớ và email/Storage giả lập, **không kết nối hoặc ghi vào Supabase và không gửi email thật**. Có `npm run test:methods` cho PATCH/DELETE trên Chrome và `npm run test:visual` để kiểm tra giao diện khi server local đang chạy.
 
-Widget này dành cho local; khi có domain triển khai, thống nhất cập nhật hostname trên cả Cloudflare và backend. Không tự đổi sang cho phép mọi hostname hoặc đưa test key luôn thành công vào cấu hình thật.
+Đã kết nối PostgreSQL dùng chung với block-07, áp dụng migration bổ sung và kiểm tra session bằng database thật: store mới đọc được session đã lưu, logout xóa bản ghi; các trang đăng nhập/thực đơn/chi tiết trả 200 ở chế độ không demo. Dữ liệu nhà hàng và các trường tài khoản/OTP đã có được đối chiếu không đổi. Chưa thử mật khẩu tài khoản thật, upload hoặc gửi email. SMTP chưa được cấu hình; việc này thuộc phần Thuyết/Trang. `config:check` kiểm cả cấu hình email nên vẫn báo các mục SMTP còn thiếu; các mục này không chặn khởi động và đăng nhập bằng tài khoản đã kích hoạt. Không chạy seed hoặc migration trên database test tự động.
 
-## 10. Module CAPTCHA bàn giao để tích hợp
+Migration `202610300002_normalize_chef_specialties` được giữ nguyên từ lịch sử chung để database mới tạo đúng quan hệ và chuyển dữ liệu cũ trước khi bỏ cột scalar. Database dùng chung đã có chuyên môn đầu bếp trong `Specialty`/`ChefSpecialty`; code đọc/ghi theo quan hệ này thay vì cột `Chef.specialty` cũ. Không chạy seed hoặc reset để sửa khác biệt cấu trúc trên database nhóm. Hai migration đăng ký đã có của Thuyết được giữ nguyên; các bản migration local cũ chưa từng áp dụng được lưu trong `tmp/migrations-before-shared-db`.
 
-Trong router ở `src/routes/`:
+## Phạm vi triển khai
 
-```typescript
-import { verifyCaptcha } from '../services/captcha.js';
+Ứng dụng hiện cấu hình chạy cục bộ ở `127.0.0.1`; ngoài demo dùng PostgreSQL session store. Triển khai Internet cần HTTPS và cấu hình proxy đúng số hop. Public Storage cho phép xem ảnh, còn key quản trị và kết nối database chỉ ở server. Không đưa khóa bí mật ra EJS hoặc log. Migration bật RLS cho các bảng ứng dụng; browser không truy vấn trực tiếp bảng qua Supabase REST API. Backend cần database role có quyền phù hợp (chuỗi kết nối server của project).
 
-await verifyCaptcha(req.body?.['cf-turnstile-response']);
-// Chỉ tạo User và gửi OTP sau khi xác minh thành công.
-```
 
-Backend gửi POST tới `https://challenges.cloudflare.com/turnstile/v0/siteverify`; token và Secret key nằm trong body. Hàm kiểm tra token không rỗng, dài tối đa 2048 ký tự, response có `success=true` và hostname nằm trong danh sách cho phép. Chờ tối đa 5 giây kể cả tải response body, abort khi timeout; không retry và không trả dữ liệu provider cho client. Xem [Siteverify](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/).
+## Tích hợp với main
 
-`verifyCaptcha` chỉ kiểm tra Secret key và danh sách hostname khi được gọi; Site key dùng ở bước render widget. Lỗi throw dưới dạng `CaptchaError` với `code`:
-
-| Mã lỗi | Ý nghĩa |
-| --- | --- |
-| `CAPTCHA_CONFIG_INVALID` | Thiếu/sai Secret key hoặc cấu hình hostname |
-| `CAPTCHA_TOKEN_INVALID` | Thiếu/sai/hết hạn/đã dùng token hoặc hostname không được phép |
-| `CAPTCHA_UNAVAILABLE` | Lỗi HTTP, mạng hoặc response của Cloudflare không hợp lệ |
-| `CAPTCHA_TIMEOUT` | Quá 5 giây xác minh |
-
-Caller phải dừng đăng ký khi Promise reject và cho người dùng thực hiện lại CAPTCHA. Test tự động giả lập HTTP, không dùng key thật hoặc gọi mạng ngoài. Chạy riêng bằng `npx tsx --test tests/captcha.test.ts`.
-
-Hướng dẫn cho Trang khi tích hợp Helmet: thêm `https://challenges.cloudflare.com` vào `script-src` và `frame-src`, giữ các directive đang có, theo [CSP Turnstile](https://developers.cloudflare.com/turnstile/reference/content-security-policy/). Nạp script widget từ `https://challenges.cloudflare.com/turnstile/v0/api.js`; chỉ render Site key. Chưa chỉnh `src/app.ts` hoặc tạo view trong bước module này.
-
-## 11. Bàn giao module đăng ký và OTP
-
-Source đã có:
-
-- `src/routes/registration.ts`: factory `createRegistrationRouter({ csrf })`; các dependency khác có thể thay bằng adapter khi test.
-- `src/services/registration.ts`: tạo viewer/pending; email trùng trả kết quả nội bộ để tiếp tục luồng chung, không đổi passwordHash/role/status của tài khoản cũ.
-- `src/services/password.ts`, `src/validation/registration.ts`: mật khẩu ít nhất 8 ký tự Unicode, tối đa 72 byte UTF-8, không trim mật khẩu; bcrypt cost 12. Email trim/lowercase và tối đa 254 ký tự. Form không nhận role/status.
-- `src/services/otp.ts`, `src/services/email-verification.ts`: OTP ngẫu nhiên 6 số, HMAC-SHA256 gắn user; thời hạn 5 phút, tối đa 5 lần sai, cooldown 60 giây, khóa 15 phút. Chỉ bắt đầu lại attempts khi hết khóa và yêu cầu mã mới.
-- `views/register.ejs`, `views/verify-email.ejs`: dùng giao diện EJS/CSS có sẵn, chỉ đưa Site key ra trang; không đưa mật khẩu, OTP hoặc hash đã lưu vào HTML.
-
-`requestVerificationEmail(userId)` lưu challenge trước, gửi SMTP sau transaction; SMTP lỗi giữ pending và cooldown, không tự gửi lại. `verifyEmailCode(userId, code)` dùng cập nhật có điều kiện theo phiên bản challenge để mã cũ/request đồng thời không tiêu thụ lại OTP. Khi nhập sai, lỗi được throw sau commit để attempts và thời gian khóa không bị rollback; kích hoạt thành công cập nhật active/emailVerifiedAt/usedAt cùng transaction.
-
-HTTP response cho email trùng hoặc yêu cầu gửi lại dùng thông báo có điều kiện chung, không tiết lộ trạng thái tài khoản hay khẳng định thư đã gửi khi chưa thành công. Lỗi OTP trả thông báo chung; giới hạn theo IP trả 429. Giới hạn IP ở memory và sẽ reset khi tiến trình restart, còn attempts/cooldown/lockedUntil ở database.
-
-Session dùng `pendingRegistrationUserId`, `registrationVerified`, `registrationNotice`. Đây không phải trạng thái đăng nhập; không gán userId/admin/role đăng nhập. Xác minh thành công xóa pendingRegistrationUserId và chỉ dẫn về `/auth/login` để Vy xử lý đăng nhập.
-
-Sau khi cả schema/migration của nhóm được đồng bộ, Trang tích hợp trong `src/app.ts`:
-
-```typescript
-import { createRegistrationRouter } from './routes/registration.js';
-
-// Sau session + res.locals, trước handler 404; dùng helper csrf hiện có.
-app.use('/auth', createRegistrationRouter({ csrf }));
-```
-
-Áp dụng CSP ở mục 10. Schema xác thực chung đã đồng bộ, Prisma Client đã generate và migration 005 đã chạy; không thay file migration đã áp dụng. Khi chạy thật cần `DEMO_MODE=false` và đủ cấu hình server; module từ chối POST khi demo bật. Người 1 chưa sửa app.ts, header hoặc mount router thay Trang. Nếu nhánh tích hợp đã có handler đăng ký/OTP trùng đường dẫn, Trang thống nhất dùng một luồng, không mount hai handler cạnh tranh; giữ riêng login/logout/reset của các thành viên.
-
-Kiểm thử hiện có: validation/mật khẩu, CAPTCHA, service OTP và router qua HTTP với database/email/CAPTCHA giả lập. Adapter transaction trong test là in-memory, không chứng minh chạy đồng thời trên PostgreSQL nhiều tiến trình. Cần kiểm thử lại token Turnstile thật, vòng đời OTP trên PostgreSQL, browser/mobile và tương tác với session/login của Vy sau tích hợp. Gmail gửi/nhận thật đã kiểm tra riêng trước đó.
-
-Kết quả mới nhất: migration 004 đã đồng bộ đúng SQL gốc, 005 đã áp dụng, 34 cột xác thực khớp metadata, `npm run build` và 61/61 test đạt sau khi generate lại Client. Không đánh dấu nghiệm thu toàn hệ thống chỉ từ kết quả adapter; bước tiếp theo là tích hợp và kiểm thử luồng thật.
+Giữ nguyên các migration và module đăng ký/xác minh của Thuyết đã có trên main, bao gồm trường EmailVerification.lockedUntil. Router đăng ký đang chạy là src/auth/routes.ts (CAPTCHA SVG và mã mời); src/routes/registration.ts cùng src/services được giữ cho bàn giao và kiểm thử riêng, không mount trùng route. Bộ npm test chạy cả các test dịch vụ đăng ký đã có trên main và các test ứng dụng tích hợp. Giữ phiên bản Nodemailer mới của main.

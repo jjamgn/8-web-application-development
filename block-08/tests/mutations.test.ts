@@ -4,6 +4,7 @@ import request from 'supertest';
 import bcrypt from 'bcryptjs';
 import {createServer} from 'node:http';
 import { chefs,ingredients,dishes } from '../src/data.js';
+import {stubSession,stubLoginAttempts} from './helpers/prisma-session.js';
 process.env.DEMO_MODE='false';
 process.env.DATABASE_URL='postgresql://test:test@localhost:5432/test';
 process.env.SESSION_SECRET='test-session-secret-at-least-32-characters';
@@ -17,6 +18,9 @@ let calls:{kind:string;op:string;args:any}[]=[];
 const storageRequests:string[]=[];
 const fakeStorage=createServer((req,res)=>{storageRequests.push(`${req.method} ${req.url}`);req.resume();req.on('end',()=>{res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({Key:'dish-images/test.png',Id:'test-id'}));});});
 before(async()=>{
+  stubSession(p);stubLoginAttempts(p);
+  const administrator={id:1,name:'Quản trị viên kiểm thử',email:'admin@example.test',passwordHash:process.env.ADMIN_PASSWORD_HASH!,emailVerifiedAt:new Date(),passwordVersion:0,role:'admin',status:'active'};
+  p.user.findUnique=async(args:any)=>args.where.id===administrator.id||args.where.email===administrator.email?administrator:null;
   await new Promise<void>(resolve=>fakeStorage.listen(0,'127.0.0.1',resolve));
   const address=fakeStorage.address() as {port:number};process.env.SUPABASE_URL=`http://127.0.0.1:${address.port}`;process.env.SUPABASE_SERVICE_ROLE_KEY='test-server-only-key';
   for(const [kind,model]of [['chefs','chef'],['ingredients','ingredient'],['dishes','dish']]){
@@ -34,14 +38,25 @@ before(async()=>{
     };
   }
   p.dishIngredient.deleteMany=async(args:any)=>{calls.push({kind:'recipe',op:'deleteMany',args});return {count:1};};
+  p.chefSpecialty.deleteMany=async(args:any)=>{calls.push({kind:'chef-specialty',op:'deleteMany',args});return {count:1};};
   p.$transaction=async(fn:any)=>fn(p);
 });
 after(async()=>{await new Promise<void>(resolve=>fakeStorage.close(()=>resolve()));await prisma.$disconnect();});
 function token(html:string){return html.match(/name="_csrf" value="([a-f0-9]+)"/)![1];}
-async function login(){const agent=request.agent(app);const r=await agent.get('/admin/login');const logged=await agent.post('/admin/login').type('form').send({_csrf:token(r.text),email:'admin@example.test',password:'test-password'});assert.equal(logged.status,303);const list=await agent.get('/admin/chefs');return {agent,csrf:token(list.text)};}
+async function login(){const agent=request.agent(app);const r=await agent.get('/auth/login');const logged=await agent.post('/auth/login').type('form').send({_csrf:token(r.text),email:'admin@example.test',password:'test-password'});assert.equal(logged.status,303);assert.equal(logged.headers.location,'/admin/dishes');const list=await agent.get('/admin/chefs');return {agent,csrf:token(list.text)};}
 test('real admin routes require login and valid CSRF',async()=>{
-  assert.equal((await request(app).get('/admin/dishes')).status,303);
+  assert.equal((await request(app).get('/admin/dishes')).headers.location,'/auth/login');
   const {agent}=await login();assert.equal((await agent.post('/admin/chefs').type('form').send({name:'Bad',specialty:'Bad'})).status,403);
+});
+test('authenticated admin forms render method overrides, deletion confirmation and missing-record responses',async()=>{
+  const {agent}=await login();
+  for(const kind of ['dishes','chefs','ingredients']){
+    assert.equal((await agent.get(`/admin/${kind}`)).status,200);
+    const add=await agent.get(`/admin/${kind}/new`);assert.equal(add.status,200);assert.match(add.text,/method="post"/);
+    const edit=await agent.get(`/admin/${kind}/1/edit`);assert.equal(edit.status,200);assert.match(edit.text,/name="_method" value="PATCH"/);
+    const del=await agent.get(`/admin/${kind}/1/delete`);assert.equal(del.status,200);assert.match(del.text,/Xác nhận xóa/);assert.match(del.text,/name="_method" value="DELETE"/);
+  }
+  for(const path of ['/admin/chefs/no/edit','/admin/ingredients/999/delete','/admin/unknown'])assert.equal((await agent.get(path)).status,404,path);
 });
 test('all entities reject invalid input with HTTP 400 and preserve submitted values',async()=>{
   const {agent,csrf}=await login();
@@ -58,6 +73,20 @@ test('chef and ingredient CRUD whitelist fields, use override, redirect 303 and 
     const del=await agent.delete(`/admin/${kind}/${row.id}`).type('form').send({_csrf:csrf});assert.equal(del.status,303);assert.equal(state[kind].some((x:any)=>x.id===row.id),false);
   }
 });
+test('chef CRUD uses the shared specialty relation without writing a removed scalar column',async()=>{
+  const {agent,csrf}=await login();
+  const data={name:'Đầu bếp chuyên môn',specialty:'Món Việt, Món nướng',bio:'Giới thiệu'};
+  assert.equal((await agent.post('/admin/chefs').type('form').send({...data,_csrf:csrf})).status,303);
+  const row=state.chefs.at(-1);
+  const created=[...calls].reverse().find(call=>call.kind==='chefs'&&call.op==='create');
+  assert.equal(created?.args.data.specialty,undefined);
+  assert.equal(created?.args.data.specialties.create.length,2);
+  assert.equal((await agent.patch(`/admin/chefs/${row.id}`).type('form').send({...data,specialty:'Món Việt',_csrf:csrf})).status,303);
+  assert.ok(calls.some(call=>call.kind==='chef-specialty'&&call.args.where.chefId===row.id));
+  assert.equal((await agent.patch(`/admin/chefs/${row.id}`).type('form').send({...data,specialty:'x'.repeat(81),_csrf:csrf})).status,400);
+  assert.equal((await agent.delete(`/admin/chefs/${row.id}`).type('form').send({_csrf:csrf})).status,303);
+});
+
 test('multipart dish edits transact recipe changes, reject fake image, GET never mutates',async()=>{
   const {agent,csrf}=await login();
   const data={name:'Bún bò kiểm thử',description:'Mô tả hợp lệ',price:'125000',category:'Món chính',chefId:'1',available:'on',qty_1:'150',qty_2:'180'};

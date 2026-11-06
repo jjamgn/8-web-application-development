@@ -6,91 +6,26 @@ datasource db {
   url = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
-
-enum UserStatus {
-  pending
-  active
-}
-
-model User {
-  id                Int                @id @default(autoincrement())
-  name              String             @default("") @db.VarChar(120)
-  /// Normalize email before saving so the unique constraint also prevents case variants.
-  email             String             @unique @db.VarChar(254)
-  passwordHash      String             @db.VarChar(255)
-  /// Assigned by the server; registration must never accept a role from the form.
-  role              String             @default("viewer")
-  status            UserStatus         @default(pending)
-  /// Null until the email OTP has been verified successfully.
-  emailVerifiedAt   DateTime?
-  createdAt         DateTime           @default(now())
-  passwordVersion   Int                @default(0)
-  updatedAt         DateTime           @default(now()) @updatedAt
-  emailVerification EmailVerification?
-  passwordResetTokens PasswordResetToken[]
-  sessions          Session[]
-}
-
-model EmailVerification {
-  /// One current OTP per user; resending replaces the previous challenge.
-  userId     Int      @id
-  /// Store only a keyed digest or password hash, never the plaintext OTP.
-  otpHash    String   @db.VarChar(255)
-  expiresAt  DateTime
-  attempts   Int      @default(0)
-  lastSentAt DateTime @default(now())
-  /// Set when consumed; retain the record so the same OTP cannot be used again.
-  usedAt     DateTime?
-  /// Five failed attempts lock verification and resending for fifteen minutes.
-  lockedUntil DateTime?
-  sendWindowStartedAt DateTime @default(now())
-  sendCount  Int      @default(1)
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([expiresAt])
-}
-
-model Session {
-  sid       String   @id @db.VarChar(128)
-  sess      Json
-  userId    Int?
-  expiresAt DateTime
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([expiresAt])
-}
-
-model LoginAttempt {
-  key             String   @id @db.VarChar(80)
-  failures        Int      @default(0)
-  windowStartedAt DateTime
-  lockedUntil     DateTime?
-  updatedAt       DateTime @updatedAt
-
-  @@index([lockedUntil])
-}
-
-model PasswordResetToken {
-  id        String   @id @default(cuid())
-  userId    Int
-  tokenHash String   @unique @db.Char(64)
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
-  @@index([expiresAt])
-}
-
 model Chef {
   id Int @id @default(autoincrement())
   name String @db.VarChar(120)
-  specialty String @db.VarChar(200)
   bio String @default("")
   dishes Dish[]
+  specialties ChefSpecialty[]
   createdAt DateTime @default(now())
+}
+model Specialty {
+  id Int @id @default(autoincrement())
+  name String @unique @db.VarChar(80)
+  chefs ChefSpecialty[]
+}
+model ChefSpecialty {
+  chefId Int
+  specialtyId Int
+  chef Chef @relation(fields: [chefId], references: [id], onDelete: Cascade)
+  specialty Specialty @relation(fields: [specialtyId], references: [id], onDelete: Cascade)
+  @@id([chefId, specialtyId])
+  @@index([specialtyId])
 }
 model Ingredient {
   id Int @id @default(autoincrement())
@@ -122,4 +57,74 @@ model DishIngredient {
   dish Dish @relation(fields:[dishId],references:[id],onDelete:Cascade)
   ingredient Ingredient @relation(fields:[ingredientId],references:[id],onDelete:Restrict)
   @@id([dishId,ingredientId])
+}
+
+enum UserStatus {
+  pending
+  active
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  name            String    @default("") @db.VarChar(120)
+  email           String    @unique @db.VarChar(254)
+  passwordHash    String    @db.VarChar(255)
+  emailVerifiedAt DateTime?
+  role            String    @default("viewer")
+  status          UserStatus @default(pending)
+  passwordVersion Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+  emailVerification EmailVerification?
+  passwordResetTokens PasswordResetToken[]
+  sessions        Session[]
+}
+
+model Session {
+  sid       String   @id @db.VarChar(128)
+  sess      Json
+  userId    Int?
+  expiresAt DateTime
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model LoginAttempt {
+  key             String   @id @db.VarChar(80)
+  failures        Int      @default(0)
+  windowStartedAt DateTime
+  lockedUntil     DateTime?
+  updatedAt       DateTime @updatedAt
+
+  @@index([lockedUntil])
+}
+
+model EmailVerification {
+  userId              Int      @id
+  otpHash             String   @db.VarChar(255)
+  expiresAt           DateTime
+  attempts            Int      @default(0)
+  lastSentAt          DateTime @default(now())
+  usedAt              DateTime?
+  sendWindowStartedAt DateTime @default(now())
+  sendCount           Int      @default(1)
+  lockedUntil         DateTime?
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    Int
+  tokenHash String   @unique @db.Char(64)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([expiresAt])
 }
