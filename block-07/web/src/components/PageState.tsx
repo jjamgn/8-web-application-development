@@ -2,9 +2,19 @@ import { Link } from 'react-router-dom';
 import { ApiError, errorMessage } from '../lib/api';
 import Skeleton, { type SkeletonVariant } from './Skeleton';
 
-interface Props { status?: string; error?: unknown; empty?: boolean; onRetry?: () => void; loading?: SkeletonVariant; loadingCount?: number; tableColumns?: number }
-export default function PageState({ status, error, empty, onRetry, loading = 'content', loadingCount, tableColumns }: Props) {
-  if (status === 'loading' || status === 'idle') return <Skeleton variant={loading} count={loadingCount} columns={tableColumns} />;
+interface Props {
+  status?: string;
+  error?: unknown;
+  empty?: boolean;
+  onRetry?: () => void;
+  loadingVariant?: SkeletonVariant;
+  loadingLabel?: string;
+  columns?: number;
+}
+export default function PageState({ status, error, empty, onRetry, loadingVariant = 'table', loadingLabel = 'Đang tải dữ liệu…', columns }: Props) {
+  if (status === 'loading' || status === 'idle') {
+    return <Skeleton variant={loadingVariant} label={loadingLabel} columns={columns} />;
+  }
   if (status === 'error') {
     const notFound = error instanceof ApiError && error.code === 'NOT_FOUND';
     return <div className="page-state" role="alert"><span className="state-symbol" aria-hidden="true">{notFound ? '⌕' : '!'}</span>

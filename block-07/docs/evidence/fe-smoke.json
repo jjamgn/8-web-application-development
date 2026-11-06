@@ -26,6 +26,14 @@
       "result": "PASS"
     },
     {
+      "name": "Ingredient name/unit filters support Vietnamese without accents and survive reload/edit/back",
+      "result": "PASS"
+    },
+    {
+      "name": "Ingredient filters retain error/retry and empty states; mobile fits viewport",
+      "result": "PASS"
+    },
+    {
       "name": "Mobile layout fits viewport",
       "result": "PASS"
     }

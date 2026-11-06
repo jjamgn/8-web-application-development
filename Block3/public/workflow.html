@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StudentSpace · Workflow & quyết định kỹ thuật</title>
+  <style>
+    :root { color-scheme: light; --ink: #183a32; --muted: #62766e; --green: #17654b; --line: #dce5de; --paper: #fff; --bg: #f4f6f1; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+    body { margin: 0; font: 15px/1.7 "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--ink); }
+    a { color: var(--green); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    :focus-visible { outline: 3px solid #328664; outline-offset: 4px; }
+    .wrap { max-width: 1120px; width: calc(100% - 48px); margin: auto; }
+    header { background: var(--paper); border-bottom: 1px solid var(--line); }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 0; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 700; }
+    .mark { background: var(--green); color: white; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px 9px 9px 2px; }
+    .toplink { font-size: 13px; font-weight: 600; }
+    main { padding: 48px 0 56px; }
+    .eyebrow { font-size: 11px; font-weight: 750; letter-spacing: 2px; color: var(--green); margin: 0 0 12px; }
+    h1 { font-size: clamp(30px, 4.5vw, 49px); line-height: 1.16; letter-spacing: -1.6px; max-width: 780px; margin: 0 0 20px; }
+    .intro { max-width: 720px; color: var(--muted); font-size: 17px; margin: 0; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+    .chip { font: 12px/1.5 Consolas, monospace; border: 1px solid #cdded0; border-radius: 20px; padding: 5px 12px; background: #eaf1e6; }
+    .contents { display: flex; flex-wrap: wrap; gap: 10px 26px; padding: 20px 0; margin: 32px 0 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .contents a { font-size: 13px; font-weight: 600; }
+    section { margin-top: 42px; }
+    .section-heading { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+    .section-num { color: #779888; font: 13px Consolas, monospace; }
+    h2 { margin: 0; font-size: 25px; line-height: 1.3; letter-spacing: -.5px; }
+    h3 { font-size: 16px; line-height: 1.45; margin: 0 0 9px; }
+    p { margin: 0 0 12px; }
+    p:last-child { margin-bottom: 0; }
+    code { font-family: Consolas, monospace; font-size: .9em; background: #eff3ed; padding: 2px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+    .card { border: 1px solid var(--line); border-radius: 12px; background: var(--paper); padding: 24px; }
+    .architecture { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+    .layer { position: relative; padding: 20px 14px; }
+    .layer:not(:last-child)::after { content: '→'; position: absolute; right: -13px; top: 25px; color: #7b9585; z-index: 1; }
+    .layer .label { color: var(--muted); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 8px; }
+    .layer p { font-size: 12px; color: var(--muted); }
+    .layer h3 { font-size: 15px; }
+    .caption { color: var(--muted); font-size: 13px; margin-top: 14px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .tabs[hidden], [hidden] { display: none !important; }
+    button { font: inherit; cursor: pointer; }
+    .tab { border: 1px solid var(--line); border-radius: 7px; padding: 9px 16px; background: #fff; color: var(--muted); font-size: 13px; font-weight: 600; }
+    .tab[aria-selected="true"] { color: white; background: var(--green); border-color: var(--green); }
+    .workflow-panel { margin-top: 18px; }
+    .workflow-panel > p { color: var(--muted); }
+    .flow { margin: 20px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; counter-reset: step; }
+    .step { padding: 20px; background: #fafbf8; border: 1px solid var(--line); border-radius: 9px; counter-increment: step; }
+    .step::before { content: counter(step, decimal-leading-zero); font: 12px Consolas, monospace; color: var(--green); display: inline-block; margin-bottom: 12px; padding: 3px 8px; border-radius: 4px; background: #e7efe3; }
+    .step p { font-size: 13px; color: var(--muted); }
+    .branch { margin-top: 18px; padding: 15px 18px; border-left: 3px solid #c28646; background: #faf3e8; border-radius: 0 7px 7px 0; font-size: 13px; color: #715632; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: white; }
+    table { border-collapse: collapse; width: 100%; text-align: left; }
+    th, td { padding: 16px 20px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; background: #eaf0e6; color: #47644f; }
+    td { font-size: 13px; }
+    td:first-child { font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    .decision-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .decision .tag { font: 11px Consolas, monospace; color: var(--green); display: block; margin-bottom: 12px; }
+    .decision p { font-size: 13px; color: var(--muted); }
+    .decision strong { color: var(--ink); }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    pre { margin: 0; font: 12px/1.85 Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .data pre { color: #325f4a; }
+    .fine { font-size: 13px; color: var(--muted); }
+    .list { margin: 12px 0 0; padding-left: 20px; font-size: 13px; color: var(--muted); }
+    .list li + li { margin-top: 8px; }
+    .evidence { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; }
+    .test-count { font-size: 44px; font-weight: 700; line-height: 1; color: var(--green); }
+    .evidence p { font-size: 13px; color: var(--muted); }
+    footer { border-top: 1px solid var(--line); padding: 23px 0; font-size: 12px; color: var(--muted); background: #fff; }
+    footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    @media (max-width: 900px) {
+      .architecture { grid-template-columns: 1fr; gap: 12px; }
+      .layer { padding: 16px 20px; }
+      .layer:not(:last-child)::after { content: '↓'; top: auto; bottom: -17px; left: 50%; right: auto; }
+      .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 600px) {
+      .wrap { width: calc(100% - 32px); } main { padding-top: 32px; }
+      .decision-grid, .split, .flow { grid-template-columns: minmax(0, 1fr); }
+      .card { padding: 20px; } .tab { flex-grow: 1; }
+      .intro { font-size: 15px; } th, td { padding: 12px; }
+      .section-heading { gap: 10px; } h2 { font-size: 22px; }
+    }
+    @media print {
+      body { background: #fff; font-size: 12px; } .wrap { width: 100%; }
+      main { padding: 20px 0; } h1 { font-size: 30px; }
+      .tabs, .contents, .toplink { display: none !important; }
+      .workflow-panel[hidden] { display: block !important; }
+      .card, .step, tr { break-inside: avoid; } section { margin-top: 26px; }
+      .architecture { grid-template-columns: repeat(5, 1fr); }
+      .layer:not(:last-child)::after { content: '→'; top: 25px; right: -13px; left: auto; bottom: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header><div class="wrap topbar"><div class="brand"><span class="mark" aria-hidden="true">S</span>StudentSpace</div><a class="toplink" href="http://localhost:3000/students">Mở ứng dụng ↗</a></div></header>
+  <main class="wrap">
+    <p class="eyebrow">TÀI LIỆU KỸ THUẬT · PHIÊN BẢN DEMO</p>
+    <h1>Từ một request<br>đến danh sách sinh viên.</h1>
+    <p class="intro">Workflow, stack và những quyết định đã đưa ra khi xây dựng ứng dụng quản lý sinh viên bằng Express + EJS, với dữ liệu lưu trong file JSON.</p>
+    <div class="chips" aria-label="Các công nghệ chính"><span class="chip">Node.js</span><span class="chip">Express 5</span><span class="chip">EJS 3</span><span class="chip">SSR</span><span class="chip">fs/promises</span><span class="chip">JSON</span></div>
+    <nav class="contents" aria-label="Mục lục"><a href="#architecture">01 · Kiến trúc</a><a href="#workflow">02 · Workflow</a><a href="#stack">03 · Stack</a><a href="#decisions">04 · Quyết định</a></nav>
+
+    <section id="architecture">
+      <div class="section-heading"><span class="section-num">01</span><h2>Kiến trúc ứng dụng</h2></div>
+      <div class="architecture" aria-label="Request đi từ trình duyệt qua route và controller đến service rồi file JSON">
+        <div class="card layer"><span class="label">Người dùng</span><h3>Trình duyệt</h3><p>Gửi GET hoặc form POST. Nhận HTML để hiển thị.</p></div>
+        <div class="card layer"><span class="label">Định tuyến</span><h3>Express routes</h3><p>Ghép method + URL với handler tương ứng.</p></div>
+        <div class="card layer"><span class="label">Handler</span><h3>Controller</h3><p>Nhận req, gọi store, lọc lớp, render hoặc redirect.</p></div>
+        <div class="card layer"><span class="label">Dữ liệu</span><h3>Student service</h3><p>Validation, kiểm tra trùng và hàng đợi đọc/ghi.</p></div>
+        <div class="card layer"><span class="label">Lưu trữ</span><h3>students.json</h3><p>Mảng các bản ghi sinh viên lưu trên ổ đĩa.</p></div>
+      </div>
+      <p class="caption">Chiều trả về: JSON → service → controller → <code>res.render()</code> + template EJS → HTML → trình duyệt. EJS chạy trên server.</p>
+    </section>
+
+    <section id="workflow">
+      <div class="section-heading"><span class="section-num">02</span><h2>Workflow theo từng thao tác</h2></div>
+      <div class="tabs" role="tablist" aria-label="Chọn workflow" hidden>
+        <button class="tab" id="tab-start" role="tab" aria-controls="flow-start" aria-selected="true" tabindex="0">Khởi động</button>
+        <button class="tab" id="tab-list" role="tab" aria-controls="flow-list" aria-selected="false" tabindex="-1">Danh sách & lọc lớp</button>
+        <button class="tab" id="tab-add" role="tab" aria-controls="flow-add" aria-selected="false" tabindex="-1">Thêm sinh viên</button>
+      </div>
+      <div class="card workflow-panel" id="flow-start">
+        <h3>Khởi động server</h3><p>Chạy <code>npm start</code> → thực thi <code>server.js</code>.</p>
+        <ol class="flow">
+          <li class="step"><h3>Chọn cổng</h3><p>Lấy biến môi trường <code>PORT</code>, mặc định 3000. Kiểm tra số nguyên từ 1–65535.</p></li>
+          <li class="step"><h3>Tạo ứng dụng</h3><p><code>createApp()</code> cấu hình Express, EJS, static files, form parser, routes và middleware lỗi.</p></li>
+          <li class="step"><h3>Kiểm tra dữ liệu</h3><p><code>store.initialize()</code> đọc JSON, kiểm tra cấu trúc và bản ghi trùng. Nếu file chưa tồn tại, tạo mảng rỗng.</p></li>
+          <li class="step"><h3>Mở cổng</h3><p>Chỉ gọi <code>app.listen()</code> sau khi dữ liệu đã được kiểm tra thành công.</p></li>
+        </ol>
+        <div class="branch"><strong>Nếu dữ liệu hỏng:</strong> ghi lỗi tại terminal và không khởi động server. File hiện có được giữ nguyên.</div>
+      </div>
+      <div class="card workflow-panel" id="flow-list">
+        <h3>Xem danh sách / lấy sinh viên theo mã lớp</h3><p>Ví dụ: <code>GET /students?className=24C08</code>.</p>
+        <ol class="flow">
+          <li class="step"><h3>Gửi yêu cầu GET</h3><p>Mở danh sách hoặc chọn mã lớp trong form. Mã lớp được gửi qua query string.</p></li>
+          <li class="step"><h3>Route gọi handler</h3><p><code>routes/students.js</code> chuyển yêu cầu đến <code>controller.index(req, res)</code>.</p></li>
+          <li class="step"><h3>Đọc danh sách</h3><p><code>await store.list()</code> chờ lượt trong hàng đợi và đọc toàn bộ file bằng <code>fs.readFile()</code>.</p></li>
+          <li class="step"><h3>Lọc ở server</h3><p>Trim và chuyển mã lớp sang chữ hoa, rồi so sánh chính xác. Không có mã lớp thì lấy toàn bộ.</p></li>
+          <li class="step"><h3>Render template</h3><p>Truyền danh sách đã lọc, lớp được chọn, các lớp và tổng số vào <code>views/students/index.ejs</code>.</p></li>
+          <li class="step"><h3>Trả HTML</h3><p>Trình duyệt hiển thị bảng và số kết quả. Thống kê tổng sinh viên/số lớp vẫn tính trên toàn bộ dữ liệu.</p></li>
+        </ol>
+        <div class="branch"><strong>Không tìm thấy:</strong> trả trang HTML với thông báo lớp chưa có sinh viên và nút xem tất cả. Mã lớp trong query được escape khi hiển thị.</div>
+      </div>
+      <div class="card workflow-panel" id="flow-add">
+        <h3>Thêm sinh viên mới</h3><p><code>GET /students/new</code> render form → người dùng điền dữ liệu → <code>POST /students</code>.</p>
+        <ol class="flow">
+          <li class="step"><h3>Nhận form</h3><p><code>express.urlencoded()</code> đọc form vào <code>req.body</code>, với giới hạn payload 10 KB.</p></li>
+          <li class="step"><h3>Vào hàng đợi</h3><p>Handler <code>create</code> gọi <code>store.add()</code>. Toàn bộ chuỗi đọc–kiểm tra–thêm–ghi chạy trong cùng một lượt.</p></li>
+          <li class="step"><h3>Kiểm tra thông tin</h3><p>Trim các trường, mã sinh viên viết hoa, email viết thường. Kiểm tra bắt buộc, độ dài, định dạng và trùng mã/email.</p></li>
+          <li class="step"><h3>Tạo bản ghi</h3><p>Dùng <code>crypto.randomUUID()</code> cho ID nội bộ; thêm sinh viên vào mảng vừa đọc.</p></li>
+          <li class="step"><h3>Lưu JSON</h3><p>Ghi JSON hoàn chỉnh vào file tạm cùng thư mục, rồi <code>rename()</code> thay file chính và dọn file tạm.</p></li>
+          <li class="step"><h3>Chuyển về danh sách</h3><p>Trả redirect <code>303</code> đến <code>/students?added=1</code>. Trình duyệt gửi GET và hiện thông báo thành công.</p></li>
+        </ol>
+        <div class="branch"><strong>Thông tin sai hoặc trùng:</strong> trả <code>422</code>, render lại form, giữ các giá trị đã nhập và hiển thị lỗi theo trường. Lỗi đọc/ghi chuyển sang middleware, trả trang lỗi <code>500</code>.</div>
+      </div>
+    </section>
+
+    <section id="stack">
+      <div class="section-heading"><span class="section-num">03</span><h2>Stack đang sử dụng</h2></div>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Bảng công nghệ">
+        <table><thead><tr><th scope="col">Thành phần</th><th scope="col">Công nghệ</th><th scope="col">Vai trò trong dự án</th></tr></thead><tbody>
+          <tr><td>Runtime</td><td>Node.js ≥ 20</td><td>Chạy JavaScript phía server; cung cấp fs, crypto, path và công cụ test.</td></tr>
+          <tr><td>Web framework</td><td>Express 5 · <code>^5.2.1</code></td><td>Routes, middleware, form parser, static files và HTTP response.</td></tr>
+          <tr><td>Template engine</td><td>EJS 3 · <code>^3.1.10</code></td><td>Ghép dữ liệu với template để tạo HTML trên server.</td></tr>
+          <tr><td>Đọc/ghi file</td><td><code>node:fs/promises</code> + async/await</td><td>Chờ I/O bất đồng bộ; hàng đợi Promise điều phối thao tác dữ liệu.</td></tr>
+          <tr><td>Lưu trữ</td><td>File JSON</td><td><code>data/students.json</code> lưu danh sách lâu dài, không cần database.</td></tr>
+          <tr><td>Giao diện</td><td>HTML + CSS thuần</td><td>EJS sinh HTML; CSS responsive. Chức năng sinh viên dùng form HTML, không cần JS ở trình duyệt.</td></tr>
+          <tr><td>Modules & dependency</td><td>CommonJS + npm</td><td><code>require()</code>/<code>module.exports</code>; package.json và package-lock.json quản lý dependencies.</td></tr>
+          <tr><td>Kiểm thử</td><td><code>node:test</code>, <code>node:assert</code>, fetch</td><td>Test store và HTTP trên server dùng cổng tạm; dữ liệu test nằm trong thư mục tạm.</td></tr>
+        </tbody></table>
+      </div>
+      <p class="caption">Các dải phiên bản Express/EJS lấy từ package.json. JavaScript trên trang tài liệu này chỉ dùng để chuyển tab workflow.</p>
+    </section>
+
+    <section id="decisions">
+      <div class="section-heading"><span class="section-num">04</span><h2>Những quyết định kỹ thuật</h2></div>
+      <div class="decision-grid">
+        <article class="card decision"><span class="tag">D01 · RENDERING</span><h3>Chọn SSR bằng Express + EJS</h3><p><strong>Lý do:</strong> yêu cầu gồm danh sách, lọc lớp và thêm sinh viên; HTML form và render server đáp ứng trực tiếp.</p><p><strong>Đánh đổi:</strong> mỗi lần lọc/gửi form sẽ tải trang; không có cập nhật bảng tức thời kiểu SPA.</p></article>
+        <article class="card decision"><span class="tag">D02 · STRUCTURE</span><h3>Tách routes, controller, service và views</h3><p><strong>Lý do:</strong> route định tuyến; controller điều phối; service quản lý dữ liệu; EJS hiển thị. Dễ đọc và test từng phần.</p><p><strong>Cách triển khai:</strong> đây là cấu trúc phân lớp gọn, theo tinh thần MVC; không có thư viện ORM hoặc model database riêng.</p></article>
+        <article class="card decision"><span class="tag">D03 · STORAGE</span><h3>Lưu sinh viên trong file JSON</h3><p><strong>Lý do:</strong> theo yêu cầu ban đầu; dễ xem và chỉnh dữ liệu mẫu, không cần cài database.</p><p><strong>Đánh đổi:</strong> đọc cả mảng và ghi lại toàn bộ khi thêm; phù hợp dữ liệu nhỏ. Khi quy mô tăng, chuyển sang cơ sở dữ liệu.</p></article>
+        <article class="card decision"><span class="tag">D04 · ASYNC I/O</span><h3>Chọn fs/promises + async/await</h3><p><strong>Lý do:</strong> trong lúc chờ đọc/ghi ổ đĩa, Node.js có thể xử lý công việc khác; code vẫn theo thứ tự dễ đọc.</p><p><strong>Giới hạn:</strong> JSON.parse/stringify vẫn chạy đồng bộ. Async/await tự nó không ngăn hai request ghi đè nhau.</p></article>
+        <article class="card decision"><span class="tag">D05 · CONCURRENCY</span><h3>Đưa thao tác store vào hàng đợi Promise</h3><p><strong>Lý do:</strong> giữ đọc–kiểm tra trùng–thêm–ghi trong một lượt; request sau đọc được dữ liệu request trước vừa lưu.</p><p><strong>Đánh đổi:</strong> thao tác store thực hiện tuần tự, gồm cả đọc danh sách. Hàng đợi chỉ có hiệu lực trong một tiến trình/store.</p></article>
+        <article class="card decision"><span class="tag">D06 · FILE INTEGRITY</span><h3>Ghi file tạm rồi đổi tên</h3><p><strong>Lý do:</strong> tránh ghi trực tiếp từng phần lên file chính. File tạm đặt cùng thư mục và có tên UUID riêng.</p><p><strong>Giới hạn:</strong> không thay thế backup hoặc bảo đảm bền vững khi mất điện. JSON hỏng được báo lỗi, không tự ghi đè.</p></article>
+        <article class="card decision"><span class="tag">D07 · VALIDATION</span><h3>Kiểm tra dữ liệu tại server</h3><p><strong>Lý do:</strong> kiểm tra HTML có thể bị bỏ qua. Service kiểm tra lại kiểu dữ liệu, trường bắt buộc, định dạng, độ dài và mã/email duy nhất.</p><p><strong>Quy tắc:</strong> mã sinh viên 2–30 ký tự chữ không dấu/số/_/-; tên tối đa 100; email tối đa 254; lớp tối đa 50.</p></article>
+        <article class="card decision"><span class="tag">D08 · RESPONSE</span><h3>Post/Redirect/Get và lỗi theo trường</h3><p><strong>Lý do:</strong> sau khi lưu dùng redirect 303; refresh trang danh sách không gửi lại POST. Nhập sai thì trả 422 và giữ dữ liệu form.</p><p><strong>Hiển thị:</strong> EJS dùng <code>&lt;%= ... %&gt;</code> để escape dữ liệu; lỗi hệ thống chi tiết chỉ ghi tại terminal.</p></article>
+        <article class="card decision"><span class="tag">D09 · FILTER</span><h3>Lọc lớp bằng GET query</h3><p><strong>Lý do:</strong> <code>?className=CNTT01</code> dễ lưu, chia sẻ và tải lại. Dùng trường <code>className</code> hiện có làm mã lớp.</p><p><strong>Quy tắc:</strong> trim + viết hoa khi so sánh, khớp chính xác; chưa có bảng lớp riêng. Thống kê toàn bộ được giữ khi lọc.</p></article>
+        <article class="card decision"><span class="tag">D10 · OPERATIONS</span><h3>Cổng 3000 mặc định, cấu hình qua PORT</h3><p><strong>Lý do:</strong> dễ chạy local bằng npm start, có thể đổi cổng mà không sửa code. Localhost là máy đang chạy ứng dụng.</p><p><strong>Vận hành:</strong> npm run dev dùng node --watch; trang sinh viên có Cache-Control: no-store; body form giới hạn 10 KB.</p></article>
+      </div>
+    </section>
+
+
+  </main>
+  <footer><div class="wrap"><span>StudentSpace · Tài liệu theo triển khai hiện tại</span><span>HTML độc lập · Không cần thư viện bên ngoài</span></div></footer>
+  <script>
+    (() => {
+      const tablist = document.querySelector('.tabs');
+      const tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+      const panels = tabs.map(tab => document.getElementById(tab.getAttribute('aria-controls')));
+      function activate(index, focus = false) {
+        tabs.forEach((tab, i) => {
+          tab.setAttribute('aria-selected', String(i === index));
+          tab.tabIndex = i === index ? 0 : -1;
+          panels[i].hidden = i !== index;
+        });
+        if (focus) tabs[index].focus();
+      }
+      panels.forEach((panel, index) => {
+        panel.setAttribute('role', 'tabpanel');
+        panel.setAttribute('aria-labelledby', tabs[index].id);
+        panel.tabIndex = 0;
+      });
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => activate(index));
+        tab.addEventListener('keydown', event => {
+          let next;
+          if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+          if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+          if (event.key === 'Home') next = 0;
+          if (event.key === 'End') next = tabs.length - 1;
+          if (next !== undefined) { event.preventDefault(); activate(next, true); }
+        });
+      });
+      tablist.hidden = false;
+      activate(0);
+    })();
+  </script>
+</body>
+</html>

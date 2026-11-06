@@ -16,7 +16,7 @@ npm test
 npm run dev
 ```
 
-API: `http://localhost:3000/api/dishes`. Đặt `SPA_ORIGIN` trùng chính xác origin FE (mặc định `http://localhost:5173`, không có dấu `/` cuối). FE gọi API trực tiếp, không cần proxy. JSON API không dùng `DEMO_MODE` hay các biến đăng nhập của Block5; mọi CRUD gọi Prisma thật.
+API: `http://localhost:3000/api/dishes`. Đặt `SPA_ORIGIN` trùng origin FE (mặc định `http://localhost:5173`, không có dấu `/` cuối). Với origin local, cả `localhost` và `127.0.0.1` trên cùng cổng đều được phép. Có thể khai báo thêm origin bằng dấu phẩy, ví dụ `SPA_ORIGIN=http://localhost:5173,http://localhost:4173`. FE gọi API trực tiếp, không cần proxy. JSON API không dùng `DEMO_MODE` hay các biến đăng nhập của Block5; mọi CRUD gọi Prisma thật.
 
 Database Block5 có CHECK `price >= 1000`: chạy `npm run db:migrate` để áp dụng migration Block6 cho phép giá 0, không cần seed lại dữ liệu cũ. Với database phát triển mới:
 

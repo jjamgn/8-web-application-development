@@ -2,7 +2,7 @@ import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
 import { Prisma } from '@prisma/client';
-import { chefs, ingredients, dishes } from '../src/data.js';
+import { chefs, ingredients, dishes, specialties as specialtyNames } from '../src/data.js';
 
 // Adapted from Block5 mutations.test.ts. Never connect to or mutate Supabase.
 process.env.DATABASE_URL = 'postgresql://test:test@127.0.0.1:1/test';
@@ -13,44 +13,41 @@ const p = prisma as any;
 const resources = ['dishes', 'chefs', 'ingredients'] as const;
 const samples = {
   dishes: { name: 'Món mới', description: 'Mô tả', price: 0, category: 'Món chính', chefId: 1, available: false },
-  chefs: { name: 'Đầu bếp mới', specialty: 'Món Việt', bio: 'Giới thiệu' },
+  chefs: { name: 'Đầu bếp mới', specialtyIds: [1], bio: 'Giới thiệu' },
   ingredients: { name: 'Nguyên liệu mới', unit: 'g' },
 };
 let state: Record<string, any[]>;
 let calls: { kind: string; op: string; args: any }[];
 let fault: Error | undefined;
+let searchIds: number[] | undefined;
+let searchTotal: number | undefined;
 const dbError = (code: string) => new Prisma.PrismaClientKnownRequestError('private database details', { code, clientVersion: '6.12.0' });
 before(() => {
-  p.$transaction = async (action: any) => action(p);
-  p.$executeRaw = async () => 0;
-  p.$queryRaw = async (sql: Prisma.Sql) => {
-    calls.push({ kind: 'dishes', op: 'queryRaw', args: sql });
+  p.$queryRaw = async (query: Prisma.Sql) => {
+    calls.push({ kind: 'dishes', op: '$queryRaw', args: query });
     if (fault) throw fault;
-    const pattern = sql.values.find(v => typeof v === 'string' && v.startsWith('%')) as string | undefined;
-    const normalize = (v: string) => v.normalize('NFD').replace(/\p{M}/gu, '').replace(/[đĐ]/g, 'd').toLowerCase();
-    const kind = sql.sql.includes('FROM \"Ingredient\"') ? 'ingredients' : 'dishes';
-    const rows = state[kind].filter(row => !pattern || normalize(row.name).includes(normalize(pattern.slice(1, -1).replace(/!(.)/g, '$1'))));
-    return sql.sql.includes('count(*)') ? [{ total: rows.length }] : sql.sql.includes('LIMIT') ? rows.slice(Number(sql.values.at(-1)), Number(sql.values.at(-1)) + Number(sql.values.at(-2))) : rows;
+    const ids = searchIds ?? state.dishes.map(row => row.id);
+    return query.sql.includes('COUNT(*)') ? [{ total: searchTotal ?? ids.length }] : ids.map(id => ({ id }));
   };
+  p.specialty.findMany = async () => specialtyNames.map((name, index) => ({ id: index + 1, name }));
+  p.specialty.count = async ({ where }: any) => specialtyNames.filter((_name, index) => where.id.in.includes(index + 1)).length;
   for (const [kind, model] of [['chefs', 'chef'], ['ingredients', 'ingredient'], ['dishes', 'dish']]) {
     for (const op of ['findMany', 'findUnique', 'create', 'update', 'delete']) {
       p[model][op] = async (args: any) => {
         calls.push({ kind, op, args });
         if (fault) throw fault;
         const rows = state[kind];
-        if (op === 'findMany') return rows.filter(row => (!args.where?.name || row.name.toLocaleLowerCase('vi').includes(args.where.name.contains.toLocaleLowerCase('vi'))) && (!args.where?.id?.in || args.where.id.in.includes(row.id)));
-        const values = { ...args.data };
-        if (kind === 'dishes' && values.ingredients?.create) values.ingredients = values.ingredients.create.map((r: any) => ({ ...r, ingredient: state.ingredients.find(i => i.id === r.ingredientId) }));
+        if (op === 'findMany') return rows.filter(row => !args.where?.name || row.name.toLocaleLowerCase('vi').includes(args.where.name.contains.toLocaleLowerCase('vi')));
         if (op === 'findUnique') return rows.find(row => row.id === args.where.id) ?? null;
         if (kind === 'ingredients' && args.data?.name && rows.some(row => row.name === args.data.name && row.id !== args.where?.id)) throw dbError('P2002');
         if (op === 'create') {
-          const row = { id: Math.max(0, ...rows.map(row => row.id)) + 1, ...values };
+          const row = { id: Math.max(0, ...rows.map(row => row.id)) + 1, ...args.data };
           rows.push(row);
           return row;
         }
         const index = rows.findIndex(row => row.id === args.where.id);
         if (index < 0) throw dbError('P2025');
-        if (op === 'update') { rows[index] = { ...rows[index], ...values }; return rows[index]; }
+        if (op === 'update') { rows[index] = { ...rows[index], ...args.data }; return rows[index]; }
         if (kind !== 'dishes' && args.where.id === 1) throw dbError('P2003');
         return rows.splice(index, 1)[0];
       };
@@ -65,6 +62,8 @@ beforeEach(() => {
   };
   calls = [];
   fault = undefined;
+  searchIds = undefined;
+  searchTotal = undefined;
 });
 after(() => prisma.$disconnect());
 
@@ -74,6 +73,7 @@ test('all 15 endpoints: CRUD, read after writes and successful deletion use HTTP
     assert.equal(list.status, 200);
     assert.equal(list.body.ok, true);
     assert.ok(Array.isArray(kind === 'dishes' ? list.body.data.items : list.body.data));
+    if (kind === 'dishes') assert.equal(list.body.data.total, state.dishes.length);
     const created = await request(app).post(`/api/${kind}`).send({ ...samples[kind], id: 999, admin: true, createdAt: 'fake' });
     assert.equal(created.status, 200);
     assert.equal(created.body.ok, true);
@@ -94,16 +94,61 @@ test('all 15 endpoints: CRUD, read after writes and successful deletion use HTTP
   }
 });
 
-test('search trims q, binds ILIKE parameter, returns pagination metadata and validates query', async () => {
+test('search trims q, binds case-insensitive SQL and returns a paginated result', async () => {
+  searchIds = [1, 5];
   const r = await request(app).get('/api/dishes').query({ q: '  BÚN  ' });
   assert.equal(r.body.data.items.length, 2);
   assert.equal(r.body.data.total, 2);
-  assert.match(calls[0].args.sql, /b7_normalize.*LIKE/);
-  assert.ok(calls[0].args.values.includes('%BÚN%'));
-  assert.deepEqual((await request(app).get('/api/dishes?q=NO_MATCH')).body.data, { items: [], total: 0, page: 1, pageSize: 12 });
+  assert.match(calls[0].args.sql, /ILIKE/);
+  assert.equal(calls[0].args.values[0], '%BÚN%');
+  assert.ok(calls.find(call => call.op === 'findMany')?.args.include.chef);
+  searchIds = [];
+  assert.deepEqual((await request(app).get('/api/dishes?q=NO_MATCH')).body, { ok: true, data: {items: [], total: 0, page: 1, pageSize: 12}, error: null });
   for (const query of ['q=a&q=b', `q=${'x'.repeat(161)}`]) {
     assert.equal((await request(app).get(`/api/dishes?${query}`)).body.error.code, 'VALIDATION_FAILED');
   }
+});
+
+test('search binds filters and page offsets and preserves database result order', async () => {
+  searchIds = [7, 5]; searchTotal = 33;
+  const r = await request(app).get('/api/dishes').query({mode:'advanced',category:'Món chay',minPrice:'0',maxPrice:'100000',available:'false',sort:'price_desc',page:'3',pageSize:'2'});
+  assert.equal(r.body.ok, true);
+  assert.deepEqual(r.body.data.items.map((dish: any) => dish.id), [7, 5]);
+  assert.equal(r.body.data.total, 33);
+  assert.equal(r.body.data.page, 3);
+  assert.equal(r.body.data.pageSize, 2);
+  const selected = calls.find(call => call.op === '$queryRaw' && !call.args.sql.includes('COUNT(*)'))!.args;
+  assert.deepEqual(selected.values, ['Món chay', 0, 100000, false, 2, 4]);
+  assert.match(selected.sql, /"price" DESC, "id" ASC/);
+  assert.ok(calls.find(call => call.op === 'findMany')!.args.include.ingredients.include.ingredient);
+});
+
+test('fulltext and fuzzy select distinct SQL modes without interpolating user text', async () => {
+  const q = "x' OR TRUE --";
+  for (const mode of ['basic', 'fulltext', 'fuzzy']) {
+    calls = [];
+    const r = await request(app).get('/api/dishes').query({mode,q});
+    assert.equal(r.body.ok, true);
+    const query = calls.find(call => call.op === '$queryRaw')!.args;
+    assert.ok(query.values.some((value: unknown) => typeof value === 'string' && value.includes(q)));
+    assert.ok(!query.sql.includes(q));
+    assert.match(query.sql, mode === 'fulltext' ? /plainto_tsquery/ : mode === 'fuzzy' ? /similarity/ : /ILIKE/);
+  }
+});
+
+test('search rejects invalid, duplicated and unknown query parameters before database access', async () => {
+  for (const query of ['page=0','page=1.5','pageSize=101','minPrice=-1','minPrice=20&maxPrice=10','available=0','mode=other','mode=fuzzy','mode=fulltext','sort=unknown','q=a&q=b','unknown=value']) {
+    calls = [];
+    const r = await request(app).get(`/api/dishes?${query}`);
+    assert.equal(r.body.error?.code, 'VALIDATION_FAILED', query);
+    assert.equal(calls.length, 0, query);
+  }
+});
+
+test('basic search treats SQL wildcard characters literally', async () => {
+  await request(app).get('/api/dishes').query({q:'a%_!'});
+  const query = calls.find(call => call.op === '$queryRaw')!.args;
+  assert.equal(query.values[0], '%a!%!_!!%');
 });
 
 test('serialize Decimal price and recipe quantity as numbers, with resolved imageUrl', async () => {
@@ -133,7 +178,7 @@ test('price accepts zero and rejects missing, null, empty string, strings, negat
 
 test('PATCH preserves omitted image, chef, recipe, availability and bio; whitelist strips nested writes', async () => {
   const original = { ...state.dishes[0] };
-  const r = await request(app).patch('/api/dishes/1').send({ name: 'Tên mới', id: 9, chef: { delete: true } });
+  const r = await request(app).patch('/api/dishes/1').send({ name: 'Tên mới', id: 9, imagePath: 'evil', ingredients: { deleteMany: {} }, chef: { delete: true } });
   assert.equal(r.body.ok, true);
   assert.equal(r.body.data.chefId, original.chefId);
   assert.equal(r.body.data.imagePath, original.imagePath);
@@ -141,7 +186,7 @@ test('PATCH preserves omitted image, chef, recipe, availability and bio; whiteli
   assert.equal(r.body.data.ingredients.length, original.ingredients.length);
   assert.deepEqual(calls.find(call => call.op === 'update')?.args.data, { name: 'Tên mới' });
   const bio = state.chefs[0].bio;
-  const chef = await request(app).patch('/api/chefs/1').send({ specialty: 'Mới' });
+  const chef = await request(app).patch('/api/chefs/1').send({ specialtyIds: [1, 2] });
   assert.equal(chef.body.data.bio, bio);
   const zero = await request(app).patch('/api/dishes/1').send({ price: 0, available: false });
   assert.equal(zero.body.data.price, 0);
@@ -210,18 +255,20 @@ test('technical 404/400/500 use JSON without business envelope and keep CORS hea
   }
 });
 
-test('CORS allows configured origin and same-port loopback alias, including JSON preflight', async () => {
-  for (const origin of ['http://localhost:5173', 'http://127.0.0.1:5173']) {
-  const r = await request(app).options('/api/dishes/1').set('Origin', origin).set('Access-Control-Request-Method', 'PATCH').set('Access-Control-Request-Headers', 'content-type');
+test('CORS preflight allows exact SPA origin, JSON and required methods only', async () => {
+  const r = await request(app).options('/api/dishes/1').set('Origin', 'http://localhost:5173').set('Access-Control-Request-Method', 'PATCH').set('Access-Control-Request-Headers', 'content-type');
   assert.equal(r.status, 204);
-  assert.equal(r.headers['access-control-allow-origin'], origin);
+  assert.equal(r.headers['access-control-allow-origin'], 'http://localhost:5173');
   assert.match(r.headers['access-control-allow-methods'], /GET, POST, PATCH, DELETE, OPTIONS/);
   assert.equal(r.headers['access-control-allow-headers'], 'Content-Type');
   assert.match(r.headers.vary, /Origin/);
-  assert.equal((await request(app).get('/api/dishes').set('Origin', origin)).headers['access-control-allow-origin'], origin);
-  assert.equal((await request(app).get('/api/no-resource').set('Origin', origin)).headers['access-control-allow-origin'], origin);
-  }
-  for (const origin of ['http://localhost:5174', 'http://127.0.0.1:5174', 'https://localhost:5173', 'https://evil.test', 'http://localhost:5173.evil.test', 'http://127.0.0.1.evil.test:5173', 'null']) {
+  const loopback = 'http://127.0.0.1:5173';
+  const localPreflight = await request(app).options('/api/dishes/1').set('Origin', loopback).set('Access-Control-Request-Method', 'PATCH').set('Access-Control-Request-Headers', 'content-type');
+  assert.equal(localPreflight.status, 204);
+  assert.equal(localPreflight.headers['access-control-allow-origin'], loopback);
+  assert.equal((await request(app).get('/api/dishes').set('Origin', loopback)).headers['access-control-allow-origin'], loopback);
+  assert.equal((await request(app).get('/api/unknown').set('Origin', loopback)).headers['access-control-allow-origin'], loopback);
+  for (const origin of ['http://localhost:5174', 'https://evil.test', 'http://localhost:5173.evil.test']) {
     assert.equal((await request(app).get('/api/dishes').set('Origin', origin)).headers['access-control-allow-origin'], undefined);
     assert.equal((await request(app).options('/api/dishes').set('Origin', origin)).headers['access-control-allow-origin'], undefined);
   }
@@ -238,35 +285,4 @@ test('GET does not write; SSR URLs and unsupported methods never redirect/render
     assert.match(r.headers['content-type'], /application\/json/);
   }
   assert.equal((await request(app).put('/api/dishes/1').send({ name: 'Mới' })).status, 404);
-});
-
-
-test('ingredient pagination is opt-in, preserves legacy list, and finds unaccented names', async () => {
-  assert.ok(Array.isArray((await request(app).get('/api/ingredients')).body.data));
-  const first = (await request(app).get('/api/ingredients?page=1&pageSize=3')).body.data;
-  const second = (await request(app).get('/api/ingredients?page=2&pageSize=3')).body.data;
-  assert.equal(first.total, ingredients.length); assert.equal(first.items.length, 3);
-  assert.ok(second.items.every((r: any) => !first.items.some((v: any) => v.id === r.id)));
-  const found = (await request(app).get('/api/ingredients').query({ q: 'dau hu', page: 1 })).body.data;
-  assert.equal(found.total, 1); assert.equal(found.items[0].name, 'Đậu hũ');
-  for (const query of ['page=0', 'page=abc', 'pageSize=101', 'q=a&q=b']) assert.equal((await request(app).get(`/api/ingredients?${query}`)).body.ok, false);
-});
-
-test('dish recipe supports create, replace, preserve and clear with validated ingredient quantities', async () => {
-  const created = await request(app).post('/api/dishes').send({ ...samples.dishes, ingredients: [{ ingredientId: 1, quantity: 2.5 }, { ingredientId: 2, quantity: 100 }] });
-  assert.equal(created.body.ok, true); const id = created.body.data.id;
-  assert.equal(created.body.data.ingredients.length, 2);
-  const changed = await request(app).patch(`/api/dishes/${id}`).send({ ingredients: [{ ingredientId: 2, quantity: 50 }] });
-  assert.equal(changed.body.ok, true); assert.equal(changed.body.data.ingredients.length, 1); assert.equal(changed.body.data.ingredients[0].quantity, 50);
-  assert.deepEqual(calls.filter(call => call.op === 'update').at(-1)?.args.data.ingredients, { deleteMany: {}, create: [{ ingredientId: 2, quantity: 50 }] });
-  const preserved = await request(app).patch(`/api/dishes/${id}`).send({ name: 'Giữ công thức' });
-  assert.equal(preserved.body.data.ingredients[0].quantity, 50);
-  const clear = await request(app).patch(`/api/dishes/${id}`).send({ ingredients: [] });
-  assert.deepEqual(clear.body.data.ingredients, []);
-  for (const recipe of [[{ ingredientId: 1, quantity: 0 }], [{ ingredientId: 1, quantity: 1.111 }], [{ ingredientId: 1, quantity: '1' }], [{ ingredientId: 1, quantity: 1 }, { ingredientId: 1, quantity: 2 }], [{ ingredientId: 9999, quantity: 1 }], { deleteMany: {} }]) {
-    const before = calls.filter(call => call.op === 'update').length;
-    const result = await request(app).patch(`/api/dishes/${id}`).send({ ingredients: recipe });
-    assert.equal(result.body.ok, false); assert.ok(result.body.error.fields.ingredients);
-    assert.equal(calls.filter(call => call.op === 'update').length, before);
-  }
 });

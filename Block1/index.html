@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Portfolio học phần của nhóm Bộ Ba Phần Mềm.">
+    <title>Bộ Ba Phần Mềm — Portfolio nhóm</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/main.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header" id="top">
+      <div class="container site-header__inner">
+        <div class="site-header__brand">Bộ Ba Phần Mềm</div>
+        <nav class="site-nav" aria-label="Điều hướng chính">
+          <a href="#gioi-thieu">Giới thiệu</a>
+          <a href="#thanh-vien">Thành viên</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro-section page-section" id="gioi-thieu" aria-labelledby="group-title">
+        <div class="container intro-section__content">
+          <h1 id="group-title">Bộ Ba Phần Mềm</h1>
+          <h2>Giới thiệu nhóm</h2>
+          <p class="intro-section__description">Chúng mình là Cao Hải Vy, Nguyễn Lâm Thảo Trang và Ngô Thị Thanh Thuyết — ba sinh viên năm 3 chuyên ngành Kỹ thuật phần mềm tại trường Đại học Khoa học Tự nhiên - ĐHQG.HCM. Website này giới thiệu các thành viên và những dự án của từng người trong quá trình học tập.</p>
+          <p class="intro-section__details">Sinh viên năm 3 <span aria-hidden="true">•</span> Kỹ thuật phần mềm <span aria-hidden="true">•</span> Đại học Khoa học Tự nhiên - ĐHQG.HCM</p>
+        </div>
+      </section>
+
+      <section class="members-section page-section" id="thanh-vien" aria-labelledby="members-title">
+        <div class="container">
+          <h2 class="section-title" id="members-title">Thành viên nhóm</h2>
+          <div class="member-grid">
+            <article class="member-card">
+              <img class="member-card__avatar" src="assets/images/cao-hai-vy-chibi.png" alt="Hình chibi của Cao Hải Vy" width="160" height="160">
+              <div class="member-card__content">
+                <h3>Cao Hải Vy</h3>
+                <p>MSSV: 24127598</p>
+              </div>
+              <button class="button" type="button" data-dialog-target="projects-vy" aria-label="Xem project của Cao Hải Vy">Xem project</button>
+            </article>
+
+            <article class="member-card">
+              <img class="member-card__avatar" src="assets/images/nguyen-lam-thao-trang-chibi.png" alt="Hình chibi của Nguyễn Lâm Thảo Trang" width="160" height="160">
+              <div class="member-card__content">
+                <h3>Nguyễn Lâm Thảo Trang</h3>
+                <p>MSSV: 24127566</p>
+              </div>
+              <button class="button" type="button" data-dialog-target="projects-trang" aria-label="Xem project của Nguyễn Lâm Thảo Trang">Xem project</button>
+            </article>
+
+            <article class="member-card">
+              <img class="member-card__avatar" src="assets/images/ngo-thi-thanh-thuyet-chibi.png" alt="Hình chibi của Ngô Thị Thanh Thuyết" width="160" height="160">
+              <div class="member-card__content">
+                <h3>Ngô Thị Thanh Thuyết</h3>
+                <p>MSSV: 24127554</p>
+              </div>
+              <button class="button" type="button" data-dialog-target="projects-thuyet" aria-label="Xem project của Ngô Thị Thanh Thuyết">Xem project</button>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">Bộ Ba Phần Mềm — Portfolio nhóm</div>
+    </footer>
+
+    <dialog class="project-dialog" id="projects-vy" aria-labelledby="projects-vy-title">
+      <div class="project-dialog__actions">
+        <button class="button project-dialog__close" type="button" data-dialog-close>Đóng</button>
+      </div>
+      <h2 id="projects-vy-title">Project của Cao Hải Vy</h2>
+      <div class="project-list">
+        <article class="project-item">
+          <h3><button class="project-toggle" type="button" aria-expanded="false" aria-controls="vy-project-1">Quản lý thư viện<span class="project-toggle__indicator" aria-hidden="true">+</span></button></h3>
+          <div class="project-details" id="vy-project-1" hidden>
+            <p>Ứng dụng quản lý sách, độc giả và việc mượn trả; hỗ trợ tìm kiếm sách và theo dõi hạn trả.</p>
+            <p><strong>Công nghệ:</strong> C#, .NET, SQL Server</p>
+            <p><strong>Vai trò:</strong> Xây dựng chức năng quản lý sách và xử lý nghiệp vụ mượn trả.</p>
+          </div>
+        </article>
+        <article class="project-item">
+          <h3><button class="project-toggle" type="button" aria-expanded="false" aria-controls="vy-project-2">Theo dõi chi tiêu cá nhân<span class="project-toggle__indicator" aria-hidden="true">+</span></button></h3>
+          <div class="project-details" id="vy-project-2" hidden>
+            <p>Ứng dụng ghi lại thu chi theo danh mục và tổng hợp số tiền theo tháng.</p>
+            <p><strong>Công nghệ:</strong> HTML5, CSS3, JavaScript, LocalStorage</p>
+            <p><strong>Vai trò:</strong> Xây dựng giao diện nhập giao dịch và chức năng tổng hợp thu chi.</p>
+          </div>
+        </article>
+        <article class="project-item">
+          <h3><button class="project-toggle" type="button" aria-expanded="false" aria-controls="vy-project-3">Đặt lịch phòng học nhóm<span class="project-toggle__indicator" aria-hidden="true">+</span></button></h3>
+          <div class="project-details" id="vy-project-3" hidden>
+            <p>Website cho phép xem khung giờ và đăng ký sử dụng phòng học nhóm.</p>
+            <p><strong>Công nghệ:</strong> React, Node.js, PostgreSQL</p>
+            <p><strong>Vai trò:</strong> Xây dựng giao diện lịch và kiểm tra các khung giờ đặt trùng.</p>
+          </div>
+        </article>
+      </div>
+    </dialog>
+
+    <dialog class="project-dialog" id="projects-trang" aria-labelledby="projects-trang-title">
+      <div class="project-dialog__actions">
+        <button class="button project-dialog__close" type="button" data-dialog-close>Đóng</button>
+      </div>
+      <h2 id="projects-trang-title">Project của Nguyễn Lâm Thảo Trang</h2>
+      <div class="project-list">
+        <article class="project-item">
+          <h3><button class="project-toggle" type="button" aria-expanded="false" aria-controls="trang-project-1">Quản lý công việc nhóm<span class="project-toggle__indicator" aria-hidden="true">+</span></button></h3>
+          <div class="project-details" id="trang-project-1" hidden>
+            <p>Ứng dụng tạo công việc, phân công thành viên và theo dõi tiến độ thực hiện.</p>
+            <p><strong>Công nghệ:</strong> React, Express, MongoDB</p>
+            <p><strong>Vai trò:</strong> Xây dựng bảng công việc và chức năng cập nhật trạng thái.</p>
+          </div>
+        </article>
+        <article class="project-item">
+          <h3><button class="project-toggle" type="button" aria-expanded="false" aria-controls="trang-project-2">Website bán sách<span class="project-toggle__indicator" aria-hidden="true">+</span></button></h3>
+          <div class="project-details" id="trang-project-2" hidden>
+            <p>Website giới thiệu sách, tìm kiếm theo thể loại và quản lý giỏ hàng.</p>
+            <p><strong>Công nghệ:</strong> HTML5, CSS3, JavaScript</p>
+            <p><strong>Vai trò:</strong> Xây dựng trang danh sách sách và xử lý giỏ hàng.</p>
+          </div>
+        </article>
+        <article class="project-item">
+          <h3><button class="project-toggle" type="button" aria-expanded="false" aria-controls="trang-project-3">Quản lý kết quả học tập<span class="project-toggle__indicator" aria-hidden="true">+</span></button></h3>
+          <div class="project-details" id="trang-project-3" hidden>
+            <p>Ứng dụng lưu điểm môn học, tính điểm trung bình và tra cứu kết quả theo học kỳ.</p>
+            <p><strong>Công nghệ:</strong> Java, JavaFX, MySQL</p>
+            <p><strong>Vai trò:</strong> Xây dựng chức năng nhập điểm và tính điểm trung bình.</p>
+          </div>
+        </article>
+      </div>
+    </dialog>
+
+    <dialog class="project-dialog" id="projects-thuyet" aria-labelledby="projects-thuyet-title">
+      <div class="project-dialog__actions">
+        <button class="button project-dialog__close" type="button" data-dialog-close>Đóng</button>
+      </div>
+      <h2 id="projects-thuyet-title">Project của Ngô Thị Thanh Thuyết</h2>
+      <div class="project-list">
+        <article class="project-item">
+          <h3><button class="project-toggle" type="button" aria-expanded="false" aria-controls="thuyet-project-1">Đăng ký sự kiện sinh viên<span class="project-toggle__indicator" aria-hidden="true">+</span></button></h3>
+          <div class="project-details" id="thuyet-project-1" hidden>
+            <p>Website giới thiệu sự kiện và tiếp nhận thông tin đăng ký tham gia.</p>
+            <p><strong>Công nghệ:</strong> HTML5, CSS3, JavaScript, Firebase</p>
+            <p><strong>Vai trò:</strong> Xây dựng giao diện sự kiện và kiểm tra dữ liệu đăng ký.</p>
+          </div>
+        </article>
+        <article class="project-item">
+          <h3><button class="project-toggle" type="button" aria-expanded="false" aria-controls="thuyet-project-2">Quản lý kho hàng<span class="project-toggle__indicator" aria-hidden="true">+</span></button></h3>
+          <div class="project-details" id="thuyet-project-2" hidden>
+            <p>Ứng dụng theo dõi sản phẩm, nhập xuất kho và thống kê số lượng tồn.</p>
+            <p><strong>Công nghệ:</strong> Python, Flask, SQLite</p>
+            <p><strong>Vai trò:</strong> Xây dựng chức năng nhập xuất kho và truy vấn tồn kho.</p>
+          </div>
+        </article>
+        <article class="project-item">
+          <h3><button class="project-toggle" type="button" aria-expanded="false" aria-controls="thuyet-project-3">Ôn tập bằng flashcard<span class="project-toggle__indicator" aria-hidden="true">+</span></button></h3>
+          <div class="project-details" id="thuyet-project-3" hidden>
+            <p>Ứng dụng tạo bộ thẻ, lật thẻ để xem đáp án và đánh dấu nội dung cần ôn lại.</p>
+            <p><strong>Công nghệ:</strong> HTML5, CSS3, JavaScript, LocalStorage</p>
+            <p><strong>Vai trò:</strong> Xây dựng chức năng quản lý bộ thẻ và tương tác ôn tập.</p>
+          </div>
+        </article>
+      </div>
+    </dialog>
+  </body>
+</html>

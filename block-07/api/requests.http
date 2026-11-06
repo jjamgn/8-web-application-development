@@ -32,6 +32,9 @@ DELETE {{base}}/dishes/{{dishId}}
 ### Đầu bếp
 GET {{base}}/chefs
 
+### Danh mục chuyên môn dùng chung
+GET {{base}}/specialties
+
 ### Chi tiết đầu bếp
 GET {{base}}/chefs/1
 
@@ -39,13 +42,13 @@ GET {{base}}/chefs/1
 POST {{base}}/chefs
 Content-Type: application/json
 
-{"name":"Đầu bếp kiểm thử","specialty":"Món Việt","bio":"Block6"}
+{"name":"Đầu bếp kiểm thử","specialtyIds":[1],"bio":"Block7"}
 
 ### Sửa đầu bếp
 PATCH {{base}}/chefs/{{chefId}}
 Content-Type: application/json
 
-{"specialty":"Món chay"}
+{"specialtyIds":[2,3]}
 
 ### Xóa đầu bếp độc lập
 DELETE {{base}}/chefs/{{chefId}}
@@ -89,7 +92,6 @@ POST {{base}}/dishes
 Origin: {{origin}}
 Content-Type: application/json
 
-{
 
 ### Preflight: HTTP 204, origin chính xác, PATCH và Content-Type
 OPTIONS {{base}}/dishes/1

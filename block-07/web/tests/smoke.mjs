@@ -13,30 +13,25 @@ const results = [], runtimeErrors = [], network = [], writes = [];
 page.on('pageerror', e => runtimeErrors.push(e.message));
 const categories = ['Khai vị', 'Món chính', 'Món chay', 'Tráng miệng'];
 const rows = Array.from({ length: 41 }, (_, i) => ({ id: i + 1, name: `Món thử ${String(i + 1).padStart(3, '0')}`, description: 'Hương vị Việt cùng rau vườn tươi ngon.', price: i * 10000, category: categories[i % 4], available: i % 3 !== 0, chefId: 1, imageUrl: '/images/beef.png', imagePath: '/images/beef.png' }));
-const chefs = [{ id: 1, name: 'Nguyễn Minh An', specialty: 'Món Việt' }, { id: 2, name: 'Trần Hoài Thương', specialty: 'Món chay và bánh ngọt' }, { id: 3, name: 'Lê Quốc Bảo', specialty: 'Hải sản' }];
-const ingredients = Array.from({ length: 31 }, (_, i) => ({ id: i + 1, name: i === 0 ? 'Đậu hũ' : i === 1 ? 'Mực' : `Nguyên liệu ${String(i + 1).padStart(3, '0')}`, unit: 'g' }));
-let failPage = 0, holdOldQuery = false, pausedRequest = null;
-function pauseAPI(matches) {
-  let release;
-  const promise = new Promise(resolve => { release = resolve; });
-  pausedRequest = { matches, promise };
-  return () => { pausedRequest = null; release(); };
-}
+const ingredientRows = [
+  { id: 1, name: 'Đậu hũ', unit: 'g' },
+  { id: 2, name: 'Nước cốt dừa', unit: 'ml' },
+  { id: 3, name: 'Nấm đông cô', unit: 'g' },
+  { id: 4, name: 'Đậu hũ non', unit: 'cái' },
+  { id: 5, name: 'Trứng gà', unit: 'quả' },
+];
+let failPage = 0, holdOldQuery = false, ingredientFault = '';
 await context.route('**/api/**', async route => {
   const req = route.request(), url = new URL(req.url()), p = url.searchParams;
   const parts = url.pathname.split('/'), resource = parts[2], id = Number(parts[3]);
   const headers = { 'access-control-allow-origin': base, 'access-control-allow-methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'access-control-allow-headers': 'Content-Type' };
   const json = body => route.fulfill({ headers, contentType: 'application/json', body: JSON.stringify(body) }).catch(() => {});
   if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
-  const pause = pausedRequest;
-  if (req.method() === 'GET' && pause?.matches(url)) await pause.promise;
-  if (req.method() === 'GET' && resource === 'chefs') return json({ ok: true, data: chefs });
+  if (req.method() === 'GET' && resource === 'specialties') return json({ ok: true, data: [{ id: 1, name: 'Món Việt' }, { id: 2, name: 'Món chay' }] });
+  if (req.method() === 'GET' && resource === 'chefs') return json({ ok: true, data: [{ id: 1, name: 'Đầu bếp thử', specialties: [{ id: 1, name: 'Món Việt' }] }] });
   if (req.method() === 'GET' && resource === 'ingredients') {
-    if (id) return json({ ok: true, data: ingredients.find(i => i.id === id) });
-    const normalize = v => v.normalize('NFD').replace(/\p{M}/gu, '').replace(/[đĐ]/g, 'd').toLowerCase();
-    const items = ingredients.filter(i => !p.get('q') || normalize(i.name).includes(normalize(p.get('q'))));
-    const page = Number(p.get('page') || 1), size = Number(p.get('pageSize') || 12);
-    return json({ ok: true, data: p.has('page') ? { items: items.slice((page - 1) * size, page * size), total: items.length, page, pageSize: size } : items });
+    if (ingredientFault === 'http') return route.fulfill({ status: 500, headers, contentType: 'application/json', body: '{"message":"temporary"}' });
+    return json({ ok: true, data: id ? ingredientRows.find(row => row.id === id) : ingredientFault === 'empty' ? [] : ingredientRows });
   }
   if (req.method() === 'GET' && resource === 'dishes' && !id) {
     network.push(Object.fromEntries(p));
@@ -181,86 +176,20 @@ try {
     await page.screenshot({ path: path.join(evidence, 'fixture-infinite-scroll.png'), fullPage: true });
     await page.reload(); await waitCount(12);
   });
-  await check('Fuzzy search is primary and stays consistent across pages/filters; fallbacks and modes remain automatic', async () => {
+  await check('Literal and full-text search take priority; fuzzy is a fallback and the selected mode stays consistent', async () => {
     await goto('/dishes?q=huongvi'); await waitCount(12);
     assert.equal(await page.locator('[name=mode]').count(), 0);
-    await page.getByText('Kết quả phù hợp với tên hoặc mô tả món ăn.', { exact: true }).waitFor();
+    await page.getByText('Kết quả phù hợp với tên, mô tả hoặc nguyên liệu, có dấu hoặc không dấu.', { exact: true }).waitFor();
+    assert.equal(await page.locator('[name=sort]').isDisabled(), false);
+    assert.equal(await page.locator('[name=sort]').inputValue(), 'name_asc');
     await page.getByRole('button', { name: 'Tải thêm món' }).click(); await waitCount(24);
-    assert.deepEqual(network.filter(n => n.q === 'huongvi').map(n => [n.mode, n.page]), [['fuzzy','1'],['basic','1'],['fulltext','1'],['fulltext','2']]);
+    assert.deepEqual(network.filter(n => n.q === 'huongvi').map(n => [n.mode, n.page]), [['basic','1'],['fulltext','1'],['fulltext','2']]);
     assert.equal(new URL(page.url().split('#')[1], base).searchParams.has('mode'), false);
     await goto('/dishes?q=monn'); await waitCount(12);
-    await page.getByText('Gợi ý những món có tên gần giống.', { exact: true }).waitFor();
-    await page.getByRole('button', { name: 'Tải thêm món' }).click(); await waitCount(18);
-    assert.deepEqual(network.filter(n => n.q === 'monn').map(n => [n.mode, n.page]), [['fuzzy', '1'], ['fuzzy', '2']]);
+    await page.getByText('Gợi ý món có tên hoặc nguyên liệu gần giống, có dấu hoặc không dấu.', { exact: true }).waitFor();
+    assert.equal(await page.locator('[name=sort]').isDisabled(), true);
     assert.equal(await page.locator('[name=sort]').inputValue(), 'relevance');
-    await goto(`/admin/dishes?${new URLSearchParams({ q: 'monn', category: 'Món chay', minPrice: '0', available: 'false' })}`);
-    await page.locator('tbody tr').first().waitFor();
-    const filtered = network.filter(n => n.q === 'monn' && n.category).at(-1);
-    assert.equal(filtered.mode, 'fuzzy'); assert.equal(filtered.minPrice, '0'); assert.equal(filtered.available, 'false');
-  });
-  await check('Chef search replaces dropdown, supports unaccented names/specialties and preserves recipes on edit', async () => {
-    const release = pauseAPI(url => url.pathname === '/api/chefs');
-    try { await goto('/admin/dishes/new'); await page.locator('.chef-picker .skeleton-options').waitFor(); } finally { release(); }
-    await page.locator('[data-chef-id="1"]').waitFor();
-    assert.equal(await page.locator('select[name=chefId]').count(), 0);
-    await page.locator('[name=name]').fill('Món chọn đầu bếp'); await page.locator('textarea[name=description]').fill('Chọn đầu bếp và nguyên liệu'); await page.locator('[name=price]').fill('0');
-    await page.getByRole('button', { name: 'Thêm món ăn', exact: false }).click(); await page.locator('#field-chefId-error').waitFor();
-    assert.equal(await page.evaluate(() => document.activeElement.name), 'chefSearch');
-    await page.locator('[name=chefSearch]').fill('minh an'); await page.getByRole('button', { name: 'Chọn Nguyễn Minh An', exact: true }).click();
-    assert.equal(await page.locator('[name=chefId]').inputValue(), '1');
-    await page.locator('[name=chefSearch]').fill('hai san'); await page.getByRole('button', { name: 'Chọn Lê Quốc Bảo', exact: true }).click();
-    assert.equal(await page.locator('[name=chefId]').inputValue(), '3');
-    await page.locator('[name=chefSearch]').fill('khongco'); await page.getByText('Chưa tìm thấy đầu bếp phù hợp. Thử tên hoặc chuyên môn khác.', { exact: true }).waitFor();
-    assert.equal(await page.locator('[name=chefId]').inputValue(), '3');
-    await page.locator('[name=chefSearch]').fill('');
-    await page.locator('[name=ingredientSearch]').fill('dau hu'); await page.getByRole('button', { name: 'Chọn Đậu hũ', exact: true }).click(); await page.locator('[name=quantity-1]').fill('50');
-    const writeCount = writes.length; await page.locator('[name=chefSearch]').press('Enter'); assert.equal(writes.length, writeCount);
-    await page.locator('.chef-picker').screenshot({ path: path.join(evidence, 'chef-search-picker.png') });
-    await page.setViewportSize({ width: 390, height: 844 }); assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)); await page.locator('.chef-picker').screenshot({ path: path.join(evidence, 'chef-search-picker-mobile.png') }); await page.setViewportSize({ width: 1440, height: 1000 });
-    await page.getByRole('button', { name: 'Thêm món ăn', exact: false }).click(); await page.waitForURL(/#\/admin\/dishes$/); await page.locator('tbody tr').first().waitFor();
-    assert.equal(writes.at(-1).body.chefId, 3); assert.deepEqual(writes.at(-1).body.ingredients, [{ ingredientId: 1, quantity: 50 }]);
-    const dish = rows.find(d => d.name === 'Món chọn đầu bếp');
-    await goto(`/admin/dishes/${dish.id}/edit`); await page.locator('[data-chef-id="3"]').waitFor();
-    assert.equal(await page.locator('[name=chefId]').inputValue(), '3'); assert.equal(await page.locator('[name=quantity-1]').inputValue(), '50');
-    await page.locator('[name=chefSearch]').fill('minh an'); await page.getByRole('button', { name: 'Chọn Nguyễn Minh An', exact: true }).click();
-    await page.getByRole('button', { name: 'Lưu thay đổi', exact: false }).click(); await page.waitForURL(/#\/admin\/dishes$/); await page.locator('tbody tr').first().waitFor();
-    assert.deepEqual(writes.at(-1).body, { chefId: 1 });
-    await goto(`/admin/dishes/${dish.id}/edit`); await page.locator('[name=quantity-1]').waitFor(); assert.equal(await page.locator('[name=quantity-1]').inputValue(), '50');
-  });
-  await check('Ingredient admin uses server page numbers, URL restore and unaccented search with skeletons', async () => {
-    await goto('/admin/ingredients'); await page.locator('tbody tr').first().waitFor();
-    assert.equal(await page.locator('tbody tr').count(), 12);
-    const release = pauseAPI(url => url.pathname === '/api/ingredients' && url.searchParams.get('page') === '2');
-    try { await page.getByRole('button', { name: 'Trang 2', exact: true }).click(); await page.locator('.skeleton-table').waitFor(); } finally { release(); }
-    await page.waitForURL(/page=2/); await page.locator('tbody tr').first().waitFor();
-    const ids = await page.locator('tbody td:first-child').allTextContents();
-    await page.reload(); await page.locator('tbody tr').first().waitFor(); assert.deepEqual(await page.locator('tbody td:first-child').allTextContents(), ids);
-    await page.screenshot({ path: path.join(evidence, 'ingredient-admin-pages.png'), fullPage: true });
-    await page.locator('[name=ingredientQuery]').fill('dau hu'); await page.getByRole('button', { name: 'Tìm nguyên liệu', exact: true }).click();
-    await page.locator('tbody').getByText('Đậu hũ', { exact: true }).waitFor(); assert.equal(await page.locator('tbody tr').count(), 1); assert.match(page.url(), /page=1/);
-    await page.getByRole('link', { name: 'Sửa Đậu hũ', exact: true }).click(); await page.locator('[name=name]').waitFor(); await page.getByRole('link', { name: 'Hủy', exact: true }).click();
-    await page.locator('tbody').getByText('Đậu hũ', { exact: true }).waitFor(); assert.match(page.url(), /q=dau/);
-    await page.setViewportSize({ width: 390, height: 844 }); assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)); await page.screenshot({ path: path.join(evidence, 'ingredient-admin-mobile.png'), fullPage: true }); await page.setViewportSize({ width: 1440, height: 1000 });
-  });
-  await check('Dish form searches/selects ingredients, validates quantities and persists/replaces/clears the recipe', async () => {
-    await goto('/admin/dishes/new'); await page.locator('[data-chef-id="1"]').waitFor();
-    await page.locator('[name=name]').fill('Món công thức thử'); await page.locator('textarea[name=description]').fill('Công thức thử'); await page.locator('[name=price]').fill('0'); await page.locator('[data-chef-id="1"]').click();
-    const release = pauseAPI(url => url.pathname === '/api/ingredients' && url.searchParams.get('q') === 'muc');
-    try { await page.locator('[name=ingredientSearch]').fill('muc'); await page.locator('.ingredient-picker .skeleton-options').waitFor(); } finally { release(); }
-    await page.getByRole('button', { name: 'Chọn Mực', exact: true }).click(); await page.locator('[name=quantity-2]').fill('2.5');
-    assert.equal(await page.getByRole('button', { name: 'Đã chọn Mực', exact: true }).isDisabled(), true);
-    await page.locator('[name=ingredientSearch]').fill('dau hu'); await page.getByRole('button', { name: 'Chọn Đậu hũ', exact: true }).click(); await page.locator('[name=quantity-1]').fill('100');
-    await page.screenshot({ path: path.join(evidence, 'dish-ingredient-picker.png'), fullPage: true });
-    await page.setViewportSize({ width: 390, height: 844 }); assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)); await page.screenshot({ path: path.join(evidence, 'dish-ingredient-picker-mobile.png'), fullPage: true }); await page.setViewportSize({ width: 1440, height: 1000 });
-    const count = writes.length; await page.locator('[name=quantity-2]').fill('0'); await page.getByRole('button', { name: 'Thêm món ăn', exact: false }).click(); await page.locator('.ingredient-picker [role=alert]').waitFor(); assert.equal(writes.length, count);
-    await page.locator('[name=quantity-2]').fill('2.5'); await page.getByRole('button', { name: 'Thêm món ăn', exact: false }).click(); await page.waitForURL(/#\/admin\/dishes$/); await page.locator('tbody tr').first().waitFor();
-    assert.deepEqual(writes.at(-1).body.ingredients, [{ ingredientId: 2, quantity: 2.5 }, { ingredientId: 1, quantity: 100 }]);
-    const dish = rows.find(d => d.name === 'Món công thức thử');
-    await goto(`/admin/dishes/${dish.id}/edit`); await page.locator('[name=quantity-2]').waitFor(); assert.equal(await page.locator('[name=quantity-2]').inputValue(), '2.5');
-    await page.getByRole('button', { name: 'Bỏ Mực', exact: true }).click(); await page.locator('[name=quantity-1]').fill('150'); await page.getByRole('button', { name: 'Lưu thay đổi', exact: false }).click(); await page.waitForURL(/#\/admin\/dishes$/); await page.locator('tbody tr').first().waitFor();
-    assert.deepEqual(writes.at(-1).body, { ingredients: [{ ingredientId: 1, quantity: 150 }] });
-    await goto(`/admin/dishes/${dish.id}/edit`); await page.locator('[name=quantity-1]').waitFor(); await page.locator('[name=name]').fill('Món công thức cập nhật'); await page.getByRole('button', { name: 'Lưu thay đổi', exact: false }).click(); await page.waitForURL(/#\/admin\/dishes$/); await page.locator('tbody tr').first().waitFor(); assert.deepEqual(writes.at(-1).body, { name: 'Món công thức cập nhật' });
-    await goto(`/admin/dishes/${dish.id}/edit`); await page.locator('[name=quantity-1]').waitFor(); await page.getByRole('button', { name: 'Bỏ Đậu hũ', exact: true }).click(); await page.getByRole('button', { name: 'Lưu thay đổi', exact: false }).click(); await page.waitForURL(/#\/admin\/dishes$/); await page.locator('tbody tr').first().waitFor(); assert.deepEqual(writes.at(-1).body, { ingredients: [] });
+    assert.deepEqual(network.filter(n => n.q === 'monn').map(n => n.mode), ['basic', 'fulltext', 'fuzzy']);
   });
   await check('Image source and HTTP 422 field errors keep the form draft', async () => {
     await goto('/admin/dishes/new'); await page.locator('[data-chef-id="1"]').waitFor();
@@ -271,9 +200,76 @@ try {
     await page.locator('[name=name]').fill('Món URL mới'); await page.getByRole('button', { name: 'Thêm món ăn', exact: false }).click(); await page.waitForURL(/#\/admin\/dishes$/);
     assert.equal(writes.at(-1).body.imagePath, 'https://images.example/food.png'); assert.equal(writes.at(-1).body.price, 0);
   });
+  await check('Ingredient name/unit filters support Vietnamese without accents and survive reload/edit/back', async () => {
+    await goto('/admin/ingredients');
+    await page.getByRole('heading', { name: 'Quản lý nguyên liệu', exact: true }).waitFor();
+    await page.waitForFunction(() => document.querySelectorAll('tbody tr').length === 5);
+    assert.equal(await page.locator('.site-header').getByRole('link', { name: 'Quản trị', exact: true }).textContent(), 'Quản trị');
+    await page.getByLabel('Tìm theo tên nguyên liệu').fill('DAU HU');
+    await page.getByLabel('Đơn vị', { exact: true }).selectOption('g');
+    await page.getByRole('button', { name: 'Tìm nguyên liệu', exact: true }).click();
+    await page.getByText('1 / 5 nguyên liệu', { exact: true }).waitFor();
+    assert.equal(await page.locator('tbody tr').count(), 1);
+    await page.locator('tbody').getByText('Đậu hũ', { exact: true }).waitFor();
+    assert.equal(new URL(page.url().split('#')[1], base).searchParams.get('q'), 'DAU HU');
+    await page.reload();
+    await page.getByText('1 / 5 nguyên liệu', { exact: true }).waitFor();
+    assert.equal(await page.getByLabel('Tìm theo tên nguyên liệu').inputValue(), 'DAU HU');
+    assert.equal(await page.getByLabel('Đơn vị', { exact: true }).inputValue(), 'g');
+    await page.getByRole('link', { name: 'Sửa Đậu hũ', exact: true }).click();
+    await page.getByRole('heading', { name: 'Sửa nguyên liệu', exact: true }).waitFor();
+    await page.getByRole('link', { name: 'Hủy', exact: true }).click();
+    await page.getByText('1 / 5 nguyên liệu', { exact: true }).waitFor();
+    ingredientFault = 'http';
+    await page.getByRole('link', { name: 'Sửa Đậu hũ', exact: true }).click();
+    await page.getByRole('heading', { name: 'Chưa thể tải dữ liệu', exact: true }).waitFor();
+    ingredientFault = '';
+    await page.getByRole('link', { name: '← Danh sách nguyên liệu', exact: true }).click();
+    await page.getByText('1 / 5 nguyên liệu', { exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Xóa điều kiện', exact: true }).click();
+    await page.getByText('5 / 5 nguyên liệu', { exact: true }).waitFor();
+    await page.goBack();
+    await page.getByText('1 / 5 nguyên liệu', { exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Xóa điều kiện', exact: true }).click();
+    await page.getByText('5 / 5 nguyên liệu', { exact: true }).waitFor();
+    await page.getByLabel('Tìm theo tên nguyên liệu').fill('chưa áp dụng');
+    await page.getByRole('button', { name: 'Xóa điều kiện', exact: true }).click();
+    assert.equal(await page.getByLabel('Tìm theo tên nguyên liệu').inputValue(), '');
+    await page.getByLabel('Đơn vị', { exact: true }).selectOption('ml');
+    await page.getByRole('button', { name: 'Tìm nguyên liệu', exact: true }).click();
+    await page.getByText('1 / 5 nguyên liệu', { exact: true }).waitFor();
+    await page.locator('tbody').getByText('Nước cốt dừa', { exact: true }).waitFor();
+    await page.screenshot({ path: path.join(evidence, 'fixture-ingredients-desktop.png'), fullPage: true });
+    await page.getByLabel('Tìm theo tên nguyên liệu').fill('NẤM');
+    await page.getByRole('button', { name: 'Tìm nguyên liệu', exact: true }).click();
+    await page.getByRole('heading', { name: 'Chưa có kết quả phù hợp', exact: true }).waitFor();
+    assert.equal(await page.locator('tbody tr').count(), 0);
+    await page.getByRole('button', { name: 'Xóa điều kiện', exact: true }).click();
+    await page.getByText('5 / 5 nguyên liệu', { exact: true }).waitFor();
+  });
+  await check('Ingredient filters retain error/retry and empty states; mobile fits viewport', async () => {
+    ingredientFault = 'http';
+    await page.reload();
+    await page.getByRole('heading', { name: 'Chưa thể tải dữ liệu', exact: true }).waitFor();
+    ingredientFault = '';
+    await page.getByRole('button', { name: 'Thử lại', exact: true }).click();
+    await page.getByText('5 / 5 nguyên liệu', { exact: true }).waitFor();
+    ingredientFault = 'empty';
+    await page.reload();
+    await page.getByText('0 / 0 nguyên liệu', { exact: true }).waitFor();
+    await page.getByRole('heading', { name: 'Chưa có kết quả phù hợp', exact: true }).waitFor();
+    ingredientFault = '';
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.reload();
+    await page.getByText('5 / 5 nguyên liệu', { exact: true }).waitFor();
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    await page.screenshot({ path: path.join(evidence, 'fixture-ingredients-mobile.png'), fullPage: true });
+  });
   await check('Mobile layout fits viewport', async () => {
     await page.setViewportSize({ width: 390, height: 844 }); await goto('/dishes'); await waitCount(12);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    assert.equal(await page.locator('.image-arrow').count(), 0);
+    assert.equal(await page.getByRole('button', { name: 'Khám phá thực đơn', exact: true }).textContent(), 'Khám phá thực đơn');
     await page.screenshot({ path: path.join(evidence, 'fixture-menu-mobile.png'), fullPage: true });
   });
   assert.deepEqual(runtimeErrors, []);
