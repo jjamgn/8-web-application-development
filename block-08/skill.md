@@ -28,15 +28,16 @@ Hoàn thành luồng: mở trang đăng ký → nhập thông tin và hoàn thà
 - Giữ nguyên migration `prisma/migrations/202611060001_add_registration_models/migration.sql`; đã tạo migration bổ sung `202611060002_align_registration_contract` theo xác nhận của người dùng. SQL đã được đối chiếu với Prisma migrate diff; tài khoản có `emailVerifiedAt` sẵn được chuyển sang `active` để giữ đúng quy ước khi áp dụng migration.
 - Mỗi user có tối đa một bản ghi OTP hiện tại qua khóa chính `EmailVerification.userId`.
 - Migration bật RLS cho hai bảng mới; ứng dụng truy cập qua kết nối database phía server.
-- Prisma validate/generate, đối chiếu migration 005 với schema diff và TypeScript build đạt; toàn bộ 61/61 test đạt, gồm validation, service OTP và router HTTP với adapter giả lập. Chưa nghiệm thu đăng ký/CAPTCHA với PostgreSQL và token thật; Gmail gửi/nhận thật đã kiểm tra riêng.
-- Đã tạo `.env` khung; người dùng đã điền hai URL. Kiểm tra lịch sử trước khi áp dụng đúng hai migration xác thực được người dùng đồng ý: database hiện có `User`, `EmailVerification` và 9 migration thành công.
+- Prisma validate/generate, TypeScript build và toàn bộ 61/61 test đạt sau đồng bộ schema xác thực chung. Đã áp dụng migration 005 và kiểm tra 34 cột xác thực khớp metadata Supabase. Chưa nghiệm thu đăng ký/CAPTCHA với PostgreSQL và token thật; Gmail gửi/nhận thật đã kiểm tra riêng.
+- Đã tạo .env, người dùng điền hai URL. Đã kiểm tra lịch sử và áp dụng các migration của người 1 được đồng ý; database hiện có 12 migration thành công sau khi nhóm bổ sung 003/004 và mình chạy 005.
 - Đã bổ sung 6 file lịch sử từ `block-07/api/prisma/migrations`, chọn kiểu xuống dòng khớp checksum đã ghi nhận. Không sửa migration khởi tạo hoặc hai migration xác thực hiện có.
 - Database đã có thay đổi Block 07: bỏ `Chef.specialty`, thêm `Dish.searchVector`. Người dùng chọn thêm xác thực trước; phần sửa schema/CRUD hỏi riêng. Không copy trực tiếp schema Block 07 vì còn conflict marker.
 - Đã kiểm tra metadata hai bảng xác thực: default, enum, usedAt nullable, unique email, cascade và RLS đều đúng. Số bản ghi của sáu bảng CRUD trước/sau giữ nguyên.
 - Đã xác nhận và cài Nodemailer qua SMTP cùng type TypeScript; đã viết `src/services/mailer.ts` và test. Gmail App Password qua `smtp.gmail.com:465`, secure=true, MAIL_FROM dùng chính Gmail gửi đã xác thực thành công. Đã gửi đúng một thư kiểm thử được người dùng duyệt đến SMTP_USER; người dùng xác nhận đã nhận ngày 06/11/2026. Hoàn tất kiểm tra gửi/nhận thật, không tự gửi thêm.
 - Đã chọn Turnstile Managed cho localhost/127.0.0.1 và kiểm tra hai key có giá trị trong .env. Đã có module, router và view đăng ký/xác minh; chưa mount app chính hoặc kiểm chứng token thật.
 - Người dùng đã chốt chính sách OTP/khóa, bcrypt/HMAC, route GET, form, session tạm và giới hạn IP. Đã tạo OTP_SECRET ngẫu nhiên trong .env, không in giá trị.
-- Supabase đã có thêm vy_sessions và auth_flow_support do nhóm chạy. Đã lấy vy_sessions đúng checksum từ origin/master; auth_flow_support chưa push. Người dùng yêu cầu tạm gác đồng bộ/chạy migration. File lockedUntil của mình đổi sang 202611060005_add_otp_lock, chưa áp dụng; Supabase chưa có cột này.
+- Đã lấy vy_sessions và auth_flow_support từ origin/master, checksum khớp Supabase; lý do tạm gác trước đó đã giải quyết khi người dùng push 004. Đã chạy 202611060005_add_otp_lock, kiểm tra lockedUntil nullable và số bản ghi CRUD giữ nguyên.
+- Theo xác nhận người dùng, chỉ đồng bộ các model/field xác thực chung từ master, giữ CRUD tạm gác: User mới, Session, LoginAttempt, PasswordResetToken, sendWindowStartedAt/sendCount/index expiresAt, cùng lockedUntil của mình. Metadata kiểm tra đủ 34 cột/5 model, RLS bật; không thay chính sách login/reset hoặc counters của các thành viên khác.
 
 ## 3. Công việc tiếp theo: cấu hình môi trường và database
 
@@ -48,6 +49,7 @@ Hoàn thành luồng: mở trang đăng ký → nhập thông tin và hoàn thà
 - [x] Kiểm tra lịch sử migration của database đích: đã có `_prisma_migrations`, không cần baseline migration khởi tạo. Không reset hoặc xóa dữ liệu để vượt lỗi.
 - [x] Người dùng chốt đồng bộ 6 file migration cũ từ Block 07 và thêm xác thực trước; đã đối chiếu/khôi phục lịch sử. Sửa lệch schema/CRUD nằm ngoài bước này và cần hỏi riêng.
 - [x] Áp dụng đúng hai migration xác thực và kiểm tra bảng, default viewer/pending, enum, usedAt nullable, khóa ngoại cascade, unique email và RLS. Sáu bảng CRUD giữ nguyên số bản ghi.
+- [x] Sau khi 004 được push, khớp lịch sử, áp dụng riêng 005 thêm lockedUntil và đối chiếu schema xác thực chung. Không còn tạm gác migration.
 
 Các lệnh dùng khi cấu hình và lịch sử migration đã phù hợp:
 
@@ -98,7 +100,7 @@ Nếu chưa có thông tin dịch vụ thật, tiếp tục phát triển bằng
 - Đã chốt HMAC-SHA256 gắn với user bằng OTP_SECRET; không lưu/log OTP nguyên văn hoặc trả OTP trong response. OTP_SECRET phải giữ ổn định qua restart và dùng chung giữa các instance xác minh.
 - Thay mã cũ khi gửi lại, không lặp lại cùng giá trị 6 số. Cập nhật có điều kiện theo phiên bản challenge, attempts, usedAt và lockedUntil để không tiêu thụ mã cũ/request thua tranh chấp.
 - Xác minh thành công phải cập nhật `User.emailVerifiedAt`, `User.status=active` và `EmailVerification.usedAt` trong cùng transaction, giữ bản ghi OTP. Từ chối mã có `usedAt` và tránh kích hoạt bằng bản ghi đã bị thay thế.
-- Đã thêm lockedUntil vào schema source và migration 005 chưa chạy; tạm gác áp dụng theo yêu cầu người dùng vì còn thiếu auth_flow_support. Không thay checksum/lịch sử database để vượt preflight.
+- lockedUntil đã có trong source và Supabase qua migration 005; lịch sử 004 đã đồng bộ đúng SQL gốc, không đổi checksum để vượt preflight.
 - SMTP lỗi giữ pending và vẫn cooldown 60 giây; không tự retry hoặc khẳng định đã gửi. HTTP dùng thông báo có điều kiện chung để không tiết lộ trạng thái email trùng.
 
 ## 6. Triển khai chức năng theo thứ tự
@@ -156,7 +158,7 @@ Hướng dẫn bàn giao cho Trang: gắn router sau session và thiết lập `
 - [ ] Test tự động giả lập SMTP và Turnstile, không gửi thư thật và không phụ thuộc mạng ngoài.
 - [x] Bổ sung các file test mới vào npm test; Prisma validate/generate, schema diff, build và toàn bộ 61/61 test đạt.
 - [ ] Kiểm tra thủ công trên trình duyệt và hộp thư thật khi có cấu hình.
-- [x] Cập nhật README về cấu hình, migration còn tạm gác, cách tích hợp router và phạm vi kiểm thử; kịch bản nghiệm thu thật thực hiện sau tích hợp.
+- [x] Cập nhật README: schema xác thực/migration đã đồng bộ, cách tích hợp router và phạm vi kiểm thử; kịch bản nghiệm thu thật thực hiện sau tích hợp.
 
 ## 9. Cách cập nhật tiến độ
 
@@ -174,8 +176,9 @@ Khi tiếp tục công việc, đọc lại code và file này, chọn hạng m�
 | Gửi và nhận thư thật | Hoàn thành | Đã gửi đúng một thư thử qua module sendMail; SMTP chấp nhận và người dùng xác nhận đã nhận |
 | Module Turnstile | Hoàn thành trong source | 10 test CAPTCHA giả lập và build đạt; toàn bộ 31/31 test đạt; chưa có form để kiểm thử token thật |
 | Cấu hình widget Turnstile | Đã điền trong .env | Có Site key, Secret key và hai hostname local; chưa kiểm chứng với Cloudflare/token thật |
-| Đăng ký, xác minh, gửi lại OTP | Hoàn thành code và test adapter | Có router/service/view; build và 61/61 test đạt; chưa mount app.ts, chưa áp dụng lockedUntil hoặc kiểm thử PostgreSQL/token thật |
-| Migration lockedUntil | Tạm gác theo yêu cầu người dùng | Đã đổi sang 005; vy_sessions đồng bộ từ master, auth_flow_support chưa push; không sửa database để vượt lỗi |
+| Đăng ký, xác minh, gửi lại OTP | Hoàn thành code và test adapter | Có router/service/view; build và 61/61 test đạt; lockedUntil đã áp dụng; chưa mount app.ts hoặc kiểm thử PostgreSQL/token thật |
+| Migration lockedUntil | Hoàn thành | 004 khớp SQL gốc và 005 áp dụng thành công; lịch sử 12 migration, số bản ghi CRUD giữ nguyên |
+| Schema xác thực chung | Hoàn thành đồng bộ từ master | Client đã generate, 34 cột/5 model khớp metadata và RLS; giữ nguyên CRUD tạm gác |
 | Test chức năng mới và demo | Chưa thực hiện | Thực hiện sau khi có các luồng tương ứng |
 
 ## 10. Tài liệu tra cứu khi triển khai
