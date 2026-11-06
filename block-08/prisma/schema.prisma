@@ -7,11 +7,19 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum UserStatus {
+  pending
+  active
+}
+
 model User {
   id                Int                @id @default(autoincrement())
   /// Normalize email before saving so the unique constraint also prevents case variants.
   email             String             @unique @db.VarChar(254)
   passwordHash      String             @db.VarChar(255)
+  /// Assigned by the server; registration must never accept a role from the form.
+  role              String             @default("viewer")
+  status            UserStatus         @default(pending)
   /// Null until the email OTP has been verified successfully.
   emailVerifiedAt   DateTime?
   createdAt         DateTime           @default(now())
@@ -26,6 +34,8 @@ model EmailVerification {
   expiresAt  DateTime
   attempts   Int      @default(0)
   lastSentAt DateTime @default(now())
+  /// Set when consumed; retain the record so the same OTP cannot be used again.
+  usedAt     DateTime?
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
