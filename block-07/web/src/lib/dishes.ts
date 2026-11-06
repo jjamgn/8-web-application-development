@@ -30,7 +30,8 @@ export function queryParams(query: DishQuery, includePage = true): URLSearchPara
 }
 export async function fetchDishPage(query: DishQuery, signal: AbortSignal, resolvedMode?: SearchMode) {
   const hasFilters = ['category', 'minPrice', 'maxPrice', 'available'].some(key => query[key as keyof DishQuery] !== '');
-  const modes: SearchMode[] = resolvedMode ? [resolvedMode] : [hasFilters ? 'advanced' : 'basic', ...(query.q ? ['fulltext', 'fuzzy'] as const : [])];
+  const nameMode: SearchMode = hasFilters ? 'advanced' : 'basic';
+  const modes: SearchMode[] = resolvedMode ? [resolvedMode] : query.q.trim() ? ['fuzzy', nameMode, 'fulltext'] : [nameMode];
   let result: DishPage | undefined;
   for (const mode of modes) {
   const response = await request<DishPage | Dish[]>(`/dishes?${queryParams({ ...query, mode })}`, { signal });

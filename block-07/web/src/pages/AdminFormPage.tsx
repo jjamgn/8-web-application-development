@@ -33,6 +33,8 @@ function Editor({ resource, id, item, chefs, ingredients, specialtyCatalog }: { 
   const [savingStage, setSavingStage] = useState('');
   const [initial] = useState(() => createDraft(resource, item));
   const [draft, setDraft] = useState(initial);
+  const [initialRecipe] = useState(() => selectedIngredients(resource === 'dishes' ? item as Dish : undefined));
+  const [recipe, setRecipe] = useState(initialRecipe);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [message, setMessage] = useState('');
   const [pending, setPending] = useState(false);
@@ -49,6 +51,7 @@ function Editor({ resource, id, item, chefs, ingredients, specialtyCatalog }: { 
   const ingredientsUnavailable = resource === 'dishes' && (ingredients.status !== 'success' || ingredientOptions.length === 0);
   const resourcesUnavailable = chefsUnavailable || ingredientsUnavailable || specialtiesUnavailable;
   const fieldNames = new Set(config.fields.map(field => field.name));
+  if (resource === 'dishes') fieldNames.add('ingredients');
   const extraErrors = Object.entries(errors).filter(([key]) => !fieldNames.has(key));
 
   function update(name: string, value: string | boolean | number[] | DishIngredientDraft[]) {
@@ -59,7 +62,8 @@ function Editor({ resource, id, item, chefs, ingredients, specialtyCatalog }: { 
   function focusError(fields: FieldErrors) {
     requestAnimationFrame(() => {
       const first = config.fields.find(field => fields[field.name]);
-      if (first) (formRef.current?.elements.namedItem(first.name) as HTMLElement | null)?.focus();
+      if (first) (formRef.current?.elements.namedItem(first.name === 'chefId' ? 'chefSearch' : first.name) as HTMLElement | null)?.focus();
+      else if (fields.ingredients) formRef.current?.querySelector<HTMLInputElement>('[data-ingredients] input[aria-invalid=true], [name=ingredientSearch]')?.focus();
     });
   }
   async function submit(event: FormEvent) {
@@ -69,6 +73,8 @@ function Editor({ resource, id, item, chefs, ingredients, specialtyCatalog }: { 
     if (resource === 'dishes') {
       if (image.mode === 'file' && !image.file) validation.imagePath = 'Vui lòng chọn ảnh từ máy.';
       if (image.mode === 'url' && !validImageUrl(image.url)) validation.imagePath = 'Vui lòng nhập link ảnh HTTPS hợp lệ.';
+      const invalidRecipe = recipeError(recipe);
+      if (invalidRecipe) validation.ingredients = invalidRecipe;
     }
     setErrors(validation);
     setMessage('');
@@ -171,7 +177,7 @@ function Editor({ resource, id, item, chefs, ingredients, specialtyCatalog }: { 
           else if (field.type === 'select') {
             const values = field.name === 'chefId' ? chefOptions.map(chef => ({ value: String(chef.id), label: `${chef.name} — ${chef.specialties.map(item => item.name).join(' · ')}` })) : categories.map(category => ({ value: category, label: category }));
             const current = String(draft[field.name]);
-            input = <select {...shared} required disabled={field.name === 'chefId' && chefs.status !== 'success'} value={current} onChange={e => update(field.name, e.target.value)}><option value="">{field.name === 'chefId' ? 'Chọn đầu bếp' : 'Chọn danh mục'}</option>{current && !values.some(option => option.value === current) && <option value={current}>{field.name === 'chefId' ? `Đầu bếp #${current} (cần chọn lại)` : current}</option>}{values.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select>;
+            input = <select {...shared} required value={current} onChange={e => update(field.name, e.target.value)}><option value="">Chọn danh mục</option>{current && !values.some(option => option.value === current) && <option value={current}>{current}</option>}{values.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select>;
           } else input = <input {...shared} type={field.type} required maxLength={field.maxLength} min={field.type === 'number' ? 0 : undefined} max={field.type === 'number' ? 999999999 : undefined} step={field.type === 'number' ? 1 : undefined} value={String(draft[field.name])} onChange={e => update(field.name, e.target.value)} />;
           return <label key={field.name} htmlFor={inputId} className={field.type === 'checkbox' ? 'checkbox-label' : undefined}>{field.type === 'checkbox' && input}<span>{field.label}{field.type !== 'checkbox' && <b> *</b>}</span>{field.type !== 'checkbox' && input}{errors[field.name] && <small className="field-error" id={errorId}>{errors[field.name]}</small>}</label>;
         })}

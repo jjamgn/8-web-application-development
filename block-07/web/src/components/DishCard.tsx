@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { imageSource, money } from '../config/resources';
+import { money } from '../config/resources';
+import DishImage from './DishImage';
 import type { Dish } from '../types';
 
 export default function DishCard({ dish }: { dish: Dish }) {

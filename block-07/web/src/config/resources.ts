@@ -48,13 +48,13 @@ export function validId(value: string | undefined): boolean {
 }
 export const money = (value: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(value);
 
-const seedImages = new Set(['beef.png', 'dessert.png', 'fish.png', 'fresh-rolls.png', 'mango.png', 'mushroom.png', 'rolls.png', 'tofu.png']);
+export const missingDishImage = '/images/placeholder.svg';
 export function imageSource(value?: string, imagePath?: string): string {
-  // Block5 seed files are also bundled locally; avoid waiting for Storage for these copies.
-  const seedName = imagePath?.match(/^(?:seed\/|\/images\/)([^/]+)$/)?.[1];
-  if (seedName && seedImages.has(seedName)) return `/images/${seedName}`;
-  if (value?.startsWith('/images/') || /^https?:\/\//i.test(value || '')) return value!;
-  return '/images/beef.png';
+  // The API's current URL is authoritative, even when imagePath has a legacy seed name.
+  const usable = (url?: string) => !!url && (url.startsWith('/images/') || url.startsWith('/uploads/') || /^https?:\/\//i.test(url));
+  if (usable(value)) return value!;
+  if (usable(imagePath)) return imagePath!;
+  return missingDishImage;
 }
 
 export function createDraft(resource: Resource, item?: Entity): Draft {

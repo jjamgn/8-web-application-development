@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import PageState from '../components/PageState';
-import { imageSource, money, validId } from '../config/resources';
+import { money, validId } from '../config/resources';
+import DishImage from '../components/DishImage';
 import { useLoad } from '../hooks/useLoad';
 import type { Dish } from '../types';
 import NotFoundPage from './NotFoundPage';

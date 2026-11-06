@@ -1,9 +1,10 @@
+import DishImage from '../components/DishImage';
 import { useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import DishFilters from '../components/DishFilters';
 import { PageNumbers } from '../components/DishPagination';
 import PageState from '../components/PageState';
-import { imageSource, money } from '../config/resources';
+import { money } from '../config/resources';
 import { useDishPagination } from '../hooks/useDishPagination';
 import { defaultQuery, parseQuery, queryParams } from '../lib/dishes';
 

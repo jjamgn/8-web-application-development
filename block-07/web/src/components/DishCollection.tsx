@@ -1,5 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import DishCard from './DishCard';
+import Skeleton from './Skeleton';
 import DishFilters from './DishFilters';
 import PageState from './PageState';
 import { MoreDishes } from './DishPagination';
@@ -14,6 +15,7 @@ export default function DishCollection({ infinite = false }: { infinite?: boolea
     {load.status === 'success' && <p className="result-count search-count" aria-live="polite">{load.total} món{query.q && ` cho “${query.q}”`}</p>}
     <PageState {...load} onRetry={load.reload} loadingVariant="cards" loadingLabel="Đang tải thực đơn…" empty={load.status === 'success' && load.items.length === 0} />
     {load.status === 'success' && <div className="dish-grid">{load.items.map(dish => <DishCard key={dish.id} dish={dish} />)}</div>}
+    {load.loadingMore && <Skeleton variant="cards" count={Math.min(query.pageSize, load.total - load.items.length)} label="Đang tải thêm món ăn…" />}
     <MoreDishes load={load} infinite={infinite} />
   </>;
 }

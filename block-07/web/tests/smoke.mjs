@@ -46,7 +46,9 @@ await context.route('**/api/**', async route => {
   if (resource === 'dishes' && ['POST', 'PATCH'].includes(req.method())) {
     const body = req.postDataJSON(); writes.push({ method: req.method(), body });
     if (body.name === 'SERVER_ERROR') return route.fulfill({ status: 422, headers, contentType: 'application/json', body: JSON.stringify({ ok: false, error: { code: 'VALIDATION_FAILED', message: 'Tên đã tồn tại.', fields: { name: 'Tên đã tồn tại.' } } }) });
-    const row = req.method() === 'POST' ? { id: rows.length + 1, ...body, imageUrl: body.imagePath } : Object.assign(rows.find(d => d.id === id), body);
+    const values = { ...body };
+    if (values.ingredients) values.ingredients = values.ingredients.map(row => ({ ...row, ingredient: ingredients.find(i => i.id === row.ingredientId) }));
+    const row = req.method() === 'POST' ? { id: rows.length + 1, ...values, imageUrl: body.imagePath } : Object.assign(rows.find(d => d.id === id), values);
     if (req.method() === 'POST') rows.push(row);
     return json({ ok: true, data: row });
   }
@@ -57,6 +59,87 @@ async function check(name, fn) { await fn(); results.push({ name, result: 'PASS'
 const cards = () => page.locator('.dish-card');
 const waitCount = count => page.waitForFunction(n => document.querySelectorAll('.dish-card').length === n, count);
 try {
+  await check('Skeletons cover initial/next loading and disappear on success/error; reduced motion and mobile work', async () => {
+    let release = pauseAPI(url => url.pathname === '/api/dishes' && url.searchParams.get('page') === '1');
+    try {
+      await goto('/dishes'); await page.locator('.skeleton-cards').waitFor();
+      assert.equal(await cards().count(), 0); assert.equal(await page.locator('.skeleton-card').count(), 12);
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      assert.equal(await page.locator('.skeleton-surface').first().evaluate(el => getComputedStyle(el).animationName), 'none');
+      await page.screenshot({ path: path.join(evidence, 'skeleton-menu-desktop.png'), fullPage: true });
+      await page.setViewportSize({ width: 390, height: 844 });
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      await page.screenshot({ path: path.join(evidence, 'skeleton-menu-mobile.png'), fullPage: true });
+      await page.setViewportSize({ width: 1440, height: 1000 }); await page.emulateMedia({ reducedMotion: 'no-preference' });
+    } finally { release(); }
+    await waitCount(12); assert.equal(await page.locator('.skeleton-state').count(), 0);
+    release = pauseAPI(url => url.pathname === '/api/dishes' && url.searchParams.get('page') === '2');
+    try {
+      await page.getByRole('button', { name: 'Tải thêm món' }).click(); await page.locator('.skeleton-cards').waitFor();
+      assert.equal(await cards().count(), 12); assert.equal(await page.locator('.skeleton-card').count(), 12);
+      assert.equal(await page.getByRole('button', { name: 'Đang tải món' }).isDisabled(), true);
+    } finally { release(); }
+    await waitCount(24); assert.equal(await page.locator('.skeleton-state').count(), 0);
+    release = pauseAPI(url => url.pathname === '/api/dishes' && url.searchParams.get('page') === '1');
+    try { await goto('/explore'); await page.locator('.skeleton-cards').waitFor(); } finally { release(); }
+    await waitCount(12);
+    release = pauseAPI(url => url.pathname === '/api/dishes' && url.searchParams.get('page') === '2');
+    try {
+      await page.locator('.more-dishes').scrollIntoViewIfNeeded(); await page.locator('.skeleton-cards').waitFor();
+      assert.equal(await cards().count(), 12);
+    } finally { release(); }
+    await waitCount(24);
+    release = pauseAPI(url => url.pathname === '/api/dishes' && url.searchParams.get('page') === '1');
+    try {
+      await goto('/admin/dishes'); await page.locator('.skeleton-table').waitFor();
+      assert.equal(await page.locator('tbody tr').count(), 0); assert.equal(await page.locator('.skeleton-table-row').count(), 13);
+      await page.screenshot({ path: path.join(evidence, 'skeleton-admin.png'), fullPage: true });
+    } finally { release(); }
+    await page.locator('tbody tr').first().waitFor();
+    release = pauseAPI(url => url.pathname === '/api/dishes' && url.searchParams.get('page') === '2');
+    try {
+      await page.getByRole('button', { name: 'Trang 2', exact: true }).click(); await page.locator('.skeleton-table').waitFor();
+      assert.equal(await page.locator('tbody tr').count(), 0);
+    } finally { release(); }
+    await page.locator('tbody').getByText('Món thử 013', { exact: true }).waitFor();
+    release = pauseAPI(url => url.pathname === '/api/dishes/1');
+    try {
+      await goto('/dishes/1'); await page.locator('.skeleton-detail').waitFor();
+      assert.ok((await page.locator('.skeleton-detail-image').boundingBox()).width > 400);
+      await page.screenshot({ path: path.join(evidence, 'skeleton-detail.png'), fullPage: true });
+      await page.setViewportSize({ width: 390, height: 844 });
+      assert.ok((await page.locator('.skeleton-detail-image').boundingBox()).width > 300);
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      await page.screenshot({ path: path.join(evidence, 'skeleton-detail-mobile.png'), fullPage: true });
+      await page.setViewportSize({ width: 1440, height: 1000 });
+    } finally { release(); }
+    await page.getByRole('heading', { name: 'Món thử 001', exact: true }).waitFor();
+    release = pauseAPI(url => url.pathname === '/api/dishes/1');
+    try { await goto('/admin/dishes/1/edit'); await page.locator('.skeleton-form').waitFor(); } finally { release(); }
+    await page.locator('[name=name]').waitFor();
+    release = pauseAPI(url => url.pathname === '/api/dishes' && url.searchParams.get('page') === '1');
+    failPage = 1;
+    try { await goto('/dishes?q=skeleton-error'); await page.locator('.skeleton-cards').waitFor(); } finally { release(); }
+    await page.getByRole('heading', { name: 'Chưa thể tải dữ liệu', exact: true }).waitFor();
+    assert.equal(await page.locator('.skeleton-state').count(), 0);
+  });
+  await check('Current API image wins over old seed path; missing images use a neutral placeholder', async () => {
+    const original = { imageUrl: rows[0].imageUrl, imagePath: rows[0].imagePath };
+    await context.route('**/images/sourced/latest-test.png', route => route.fulfill({ path: fileURLToPath(new URL('../public/images/tofu.png', import.meta.url)), contentType: 'image/png' }));
+    await context.route('**/images/sourced/missing-test.png', route => route.fulfill({ status: 404, body: '' }));
+    try {
+      rows[0].imageUrl = '/images/sourced/latest-test.png'; rows[0].imagePath = 'seed/beef.png';
+      await goto('/dishes'); await waitCount(12);
+      const image = page.locator('.dish-card img').first(); await image.scrollIntoViewIfNeeded();
+      await page.waitForFunction(() => { const img = document.querySelector('.dish-card img'); return img?.getAttribute('src') === '/images/sourced/latest-test.png' && img.naturalWidth > 0; });
+      await goto('/admin/dishes'); await page.locator('tbody tr').first().waitFor();
+      assert.equal(await page.locator('tbody tr img').first().getAttribute('src'), '/images/sourced/latest-test.png');
+      rows[0].imageUrl = '/images/sourced/missing-test.png';
+      await goto('/dishes/1'); await page.waitForFunction(() => document.querySelector('.detail-image img')?.getAttribute('src') === '/images/placeholder.svg');
+      rows[0].imageUrl = '/images/sourced/latest-test.png';
+      await page.reload(); await page.waitForFunction(() => { const img = document.querySelector('.detail-image img'); return img?.getAttribute('src') === '/images/sourced/latest-test.png' && img.naturalWidth > 0; });
+    } finally { Object.assign(rows[0], original); }
+  });
   await check('Load More appends, retries the same page and stops at the end', async () => {
     await goto('/dishes'); await waitCount(12);
     await page.getByRole('button', { name: 'Tải thêm món' }).click(); await waitCount(24);
@@ -93,14 +176,14 @@ try {
     await page.screenshot({ path: path.join(evidence, 'fixture-infinite-scroll.png'), fullPage: true });
     await page.reload(); await waitCount(12);
   });
-  await check('Search modes are hidden; automatic description and typo fallbacks keep pagination consistent', async () => {
+  await check('Fuzzy search is primary and stays consistent across pages/filters; fallbacks and modes remain automatic', async () => {
     await goto('/dishes?q=huongvi'); await waitCount(12);
     assert.equal(await page.locator('[name=mode]').count(), 0);
     await page.getByText('Kết quả phù hợp với tên hoặc mô tả món ăn.', { exact: true }).waitFor();
     assert.equal(await page.locator('[name=sort]').isDisabled(), false);
     assert.equal(await page.locator('[name=sort]').inputValue(), 'name_asc');
     await page.getByRole('button', { name: 'Tải thêm món' }).click(); await waitCount(24);
-    assert.deepEqual(network.filter(n => n.q === 'huongvi').map(n => [n.mode, n.page]), [['basic','1'],['fulltext','1'],['fulltext','2']]);
+    assert.deepEqual(network.filter(n => n.q === 'huongvi').map(n => [n.mode, n.page]), [['fuzzy','1'],['basic','1'],['fulltext','1'],['fulltext','2']]);
     assert.equal(new URL(page.url().split('#')[1], base).searchParams.has('mode'), false);
     await goto('/dishes?q=monn'); await waitCount(12);
     await page.getByText('Gợi ý những món có tên gần giống.', { exact: true }).waitFor();
@@ -109,8 +192,8 @@ try {
     assert.deepEqual(network.filter(n => n.q === 'monn').map(n => n.mode), ['basic', 'fulltext', 'fuzzy']);
   });
   await check('Image source and HTTP 422 field errors keep the form draft', async () => {
-    await goto('/admin/dishes/new'); await page.locator('[name=chefId] option[value="1"]').waitFor({ state: 'attached' });
-    await page.locator('[name=name]').fill('SERVER_ERROR'); await page.locator('textarea[name=description]').fill('Một món ngon'); await page.locator('[name=price]').fill('0'); await page.locator('[name=chefId]').selectOption('1');
+    await goto('/admin/dishes/new'); await page.locator('[data-chef-id="1"]').waitFor();
+    await page.locator('[name=name]').fill('SERVER_ERROR'); await page.locator('textarea[name=description]').fill('Một món ngon'); await page.locator('[name=price]').fill('0'); await page.locator('[data-chef-id="1"]').click();
     await page.locator('[name=imageSource][value=url]').check(); await page.locator('[name=imageUrl]').fill('https://images.example/food.png');
     await page.getByRole('button', { name: 'Thêm món ăn', exact: false }).click();
     await page.locator('#field-name-error').waitFor(); assert.equal(await page.locator('textarea[name=description]').inputValue(), 'Một món ngon');
