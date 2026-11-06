@@ -31,6 +31,16 @@ export function parseDishListQuery(value: unknown) {
 }
 
 const text = (max: number) => z.string().trim().min(1, 'Vui lòng nhập thông tin.').max(max, `Tối đa ${max} ký tự.`);
+const dishIngredient = z.object({
+  ingredientId: z.number().int().positive().max(2147483647),
+  quantity: z.number().min(0.01, 'Định lượng phải lớn hơn 0.').max(99999999.99, 'Định lượng tối đa 99.999.999,99.')
+    .refine(value => Math.abs(value * 100 - Math.round(value * 100)) < 1e-8, 'Định lượng tối đa 2 chữ số thập phân.'),
+});
+const recipe = z.array(dishIngredient).refine(
+  items => new Set(items.map(item => item.ingredientId)).size === items.length,
+  'Mỗi nguyên liệu chỉ được chọn một lần.',
+);
+const recipeInput = z.preprocess(value => Array.isArray(value) ? value : undefined, recipe.optional());
 const dish = z.object({
   name: text(160),
   description: text(5000),
@@ -38,8 +48,12 @@ const dish = z.object({
   category: z.string().refine(value => categories.includes(value), 'Danh mục không hợp lệ.'),
   available: z.boolean(),
   chefId: z.number().int().positive().max(2147483647),
+  ingredients: recipeInput,
 });
-const chef = z.object({ name: text(120), specialty: text(200), bio: z.string().trim().max(3000) });
+const specialtyIds = z.array(z.number().int().positive().max(2147483647))
+  .min(1, 'Chọn ít nhất một chuyên môn.')
+  .refine(ids => new Set(ids).size === ids.length, 'Mỗi chuyên môn chỉ được chọn một lần.');
+const chef = z.object({ name: text(120), specialtyIds, bio: z.string().trim().max(3000) });
 const ingredient = z.object({ name: text(120), unit: text(30) });
 
 // Zod strips unknown keys: IDs, timestamps and nested relations cannot be written.

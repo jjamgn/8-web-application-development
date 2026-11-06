@@ -6,20 +6,8 @@
 @chefId = 4
 @ingredientId = 11
 
-### Basic search + page 1
-GET {{base}}/dishes?mode=basic&q=b%C3%BAn&page=1&pageSize=12&sort=name_asc
-Origin: {{origin}}
-
-### Advanced search + filters + sort
-GET {{base}}/dishes?mode=advanced&q=chicken&category=M%C3%B3n%20ch%C3%ADnh&minPrice=0&maxPrice=100000&available=false&sort=price_asc&page=1&pageSize=12
-Origin: {{origin}}
-
-### PostgreSQL full-text search: name and description
-GET {{base}}/dishes?mode=fulltext&q=rau%20n%E1%BA%A5m&page=1&pageSize=12
-Origin: {{origin}}
-
-### pg_trgm fuzzy search: similarity threshold 0.3
-GET {{base}}/dishes?mode=fuzzy&q=pho&page=1&pageSize=12
+### Danh sách và tìm tên
+GET {{base}}/dishes?q=bún
 Origin: {{origin}}
 
 ### Chi tiết món và các quan hệ
@@ -44,6 +32,9 @@ DELETE {{base}}/dishes/{{dishId}}
 ### Đầu bếp
 GET {{base}}/chefs
 
+### Danh mục chuyên môn dùng chung
+GET {{base}}/specialties
+
 ### Chi tiết đầu bếp
 GET {{base}}/chefs/1
 
@@ -51,13 +42,13 @@ GET {{base}}/chefs/1
 POST {{base}}/chefs
 Content-Type: application/json
 
-{"name":"Đầu bếp kiểm thử","specialty":"Món Việt","bio":"Block6"}
+{"name":"Đầu bếp kiểm thử","specialtyIds":[1],"bio":"Block7"}
 
 ### Sửa đầu bếp
 PATCH {{base}}/chefs/{{chefId}}
 Content-Type: application/json
 
-{"specialty":"Món chay"}
+{"specialtyIds":[2,3]}
 
 ### Xóa đầu bếp độc lập
 DELETE {{base}}/chefs/{{chefId}}

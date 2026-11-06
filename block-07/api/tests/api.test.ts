@@ -2,7 +2,7 @@ import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
 import { Prisma } from '@prisma/client';
-import { chefs, ingredients, dishes } from '../src/data.js';
+import { chefs, ingredients, dishes, specialties as specialtyNames } from '../src/data.js';
 
 // Adapted from Block5 mutations.test.ts. Never connect to or mutate Supabase.
 process.env.DATABASE_URL = 'postgresql://test:test@127.0.0.1:1/test';
@@ -13,14 +13,24 @@ const p = prisma as any;
 const resources = ['dishes', 'chefs', 'ingredients'] as const;
 const samples = {
   dishes: { name: 'Món mới', description: 'Mô tả', price: 0, category: 'Món chính', chefId: 1, available: false },
-  chefs: { name: 'Đầu bếp mới', specialty: 'Món Việt', bio: 'Giới thiệu' },
+  chefs: { name: 'Đầu bếp mới', specialtyIds: [1], bio: 'Giới thiệu' },
   ingredients: { name: 'Nguyên liệu mới', unit: 'g' },
 };
 let state: Record<string, any[]>;
 let calls: { kind: string; op: string; args: any }[];
 let fault: Error | undefined;
+let searchIds: number[] | undefined;
+let searchTotal: number | undefined;
 const dbError = (code: string) => new Prisma.PrismaClientKnownRequestError('private database details', { code, clientVersion: '6.12.0' });
 before(() => {
+  p.$queryRaw = async (query: Prisma.Sql) => {
+    calls.push({ kind: 'dishes', op: '$queryRaw', args: query });
+    if (fault) throw fault;
+    const ids = searchIds ?? state.dishes.map(row => row.id);
+    return query.sql.includes('COUNT(*)') ? [{ total: searchTotal ?? ids.length }] : ids.map(id => ({ id }));
+  };
+  p.specialty.findMany = async () => specialtyNames.map((name, index) => ({ id: index + 1, name }));
+  p.specialty.count = async ({ where }: any) => specialtyNames.filter((_name, index) => where.id.in.includes(index + 1)).length;
   for (const [kind, model] of [['chefs', 'chef'], ['ingredients', 'ingredient'], ['dishes', 'dish']]) {
     for (const op of ['findMany', 'findUnique', 'create', 'update', 'delete']) {
       p[model][op] = async (args: any) => {
@@ -52,6 +62,8 @@ beforeEach(() => {
   };
   calls = [];
   fault = undefined;
+  searchIds = undefined;
+  searchTotal = undefined;
 });
 after(() => prisma.$disconnect());
 
@@ -60,7 +72,8 @@ test('all 15 endpoints: CRUD, read after writes and successful deletion use HTTP
     const list = await request(app).get(`/api/${kind}`);
     assert.equal(list.status, 200);
     assert.equal(list.body.ok, true);
-    assert.ok(Array.isArray(list.body.data));
+    assert.ok(Array.isArray(kind === 'dishes' ? list.body.data.items : list.body.data));
+    if (kind === 'dishes') assert.equal(list.body.data.total, state.dishes.length);
     const created = await request(app).post(`/api/${kind}`).send({ ...samples[kind], id: 999, admin: true, createdAt: 'fake' });
     assert.equal(created.status, 200);
     assert.equal(created.body.ok, true);
@@ -81,15 +94,61 @@ test('all 15 endpoints: CRUD, read after writes and successful deletion use HTTP
   }
 });
 
-test('search trims q, uses case-insensitive Prisma query and returns empty data array', async () => {
+test('search trims q, binds case-insensitive SQL and returns a paginated result', async () => {
+  searchIds = [1, 5];
   const r = await request(app).get('/api/dishes').query({ q: '  BÚN  ' });
-  assert.equal(r.body.data.length, 2);
-  assert.deepEqual(calls[0].args.where, { name: { contains: 'BÚN', mode: 'insensitive' } });
-  assert.ok(calls[0].args.include.chef);
-  assert.deepEqual((await request(app).get('/api/dishes?q=NO_MATCH')).body, { ok: true, data: [] });
+  assert.equal(r.body.data.items.length, 2);
+  assert.equal(r.body.data.total, 2);
+  assert.match(calls[0].args.sql, /ILIKE/);
+  assert.equal(calls[0].args.values[0], '%BÚN%');
+  assert.ok(calls.find(call => call.op === 'findMany')?.args.include.chef);
+  searchIds = [];
+  assert.deepEqual((await request(app).get('/api/dishes?q=NO_MATCH')).body, { ok: true, data: {items: [], total: 0, page: 1, pageSize: 12}, error: null });
   for (const query of ['q=a&q=b', `q=${'x'.repeat(161)}`]) {
     assert.equal((await request(app).get(`/api/dishes?${query}`)).body.error.code, 'VALIDATION_FAILED');
   }
+});
+
+test('search binds filters and page offsets and preserves database result order', async () => {
+  searchIds = [7, 5]; searchTotal = 33;
+  const r = await request(app).get('/api/dishes').query({mode:'advanced',category:'Món chay',minPrice:'0',maxPrice:'100000',available:'false',sort:'price_desc',page:'3',pageSize:'2'});
+  assert.equal(r.body.ok, true);
+  assert.deepEqual(r.body.data.items.map((dish: any) => dish.id), [7, 5]);
+  assert.equal(r.body.data.total, 33);
+  assert.equal(r.body.data.page, 3);
+  assert.equal(r.body.data.pageSize, 2);
+  const selected = calls.find(call => call.op === '$queryRaw' && !call.args.sql.includes('COUNT(*)'))!.args;
+  assert.deepEqual(selected.values, ['Món chay', 0, 100000, false, 2, 4]);
+  assert.match(selected.sql, /"price" DESC, "id" ASC/);
+  assert.ok(calls.find(call => call.op === 'findMany')!.args.include.ingredients.include.ingredient);
+});
+
+test('fulltext and fuzzy select distinct SQL modes without interpolating user text', async () => {
+  const q = "x' OR TRUE --";
+  for (const mode of ['basic', 'fulltext', 'fuzzy']) {
+    calls = [];
+    const r = await request(app).get('/api/dishes').query({mode,q});
+    assert.equal(r.body.ok, true);
+    const query = calls.find(call => call.op === '$queryRaw')!.args;
+    assert.ok(query.values.some((value: unknown) => typeof value === 'string' && value.includes(q)));
+    assert.ok(!query.sql.includes(q));
+    assert.match(query.sql, mode === 'fulltext' ? /plainto_tsquery/ : mode === 'fuzzy' ? /similarity/ : /ILIKE/);
+  }
+});
+
+test('search rejects invalid, duplicated and unknown query parameters before database access', async () => {
+  for (const query of ['page=0','page=1.5','pageSize=101','minPrice=-1','minPrice=20&maxPrice=10','available=0','mode=other','mode=fuzzy','mode=fulltext','sort=unknown','q=a&q=b','unknown=value']) {
+    calls = [];
+    const r = await request(app).get(`/api/dishes?${query}`);
+    assert.equal(r.body.error?.code, 'VALIDATION_FAILED', query);
+    assert.equal(calls.length, 0, query);
+  }
+});
+
+test('basic search treats SQL wildcard characters literally', async () => {
+  await request(app).get('/api/dishes').query({q:'a%_!'});
+  const query = calls.find(call => call.op === '$queryRaw')!.args;
+  assert.equal(query.values[0], '%a!%!_!!%');
 });
 
 test('serialize Decimal price and recipe quantity as numbers, with resolved imageUrl', async () => {
@@ -127,7 +186,7 @@ test('PATCH preserves omitted image, chef, recipe, availability and bio; whiteli
   assert.equal(r.body.data.ingredients.length, original.ingredients.length);
   assert.deepEqual(calls.find(call => call.op === 'update')?.args.data, { name: 'Tên mới' });
   const bio = state.chefs[0].bio;
-  const chef = await request(app).patch('/api/chefs/1').send({ specialty: 'Mới' });
+  const chef = await request(app).patch('/api/chefs/1').send({ specialtyIds: [1, 2] });
   assert.equal(chef.body.data.bio, bio);
   const zero = await request(app).patch('/api/dishes/1').send({ price: 0, available: false });
   assert.equal(zero.body.data.price, 0);
@@ -203,6 +262,12 @@ test('CORS preflight allows exact SPA origin, JSON and required methods only', a
   assert.match(r.headers['access-control-allow-methods'], /GET, POST, PATCH, DELETE, OPTIONS/);
   assert.equal(r.headers['access-control-allow-headers'], 'Content-Type');
   assert.match(r.headers.vary, /Origin/);
+  const loopback = 'http://127.0.0.1:5173';
+  const localPreflight = await request(app).options('/api/dishes/1').set('Origin', loopback).set('Access-Control-Request-Method', 'PATCH').set('Access-Control-Request-Headers', 'content-type');
+  assert.equal(localPreflight.status, 204);
+  assert.equal(localPreflight.headers['access-control-allow-origin'], loopback);
+  assert.equal((await request(app).get('/api/dishes').set('Origin', loopback)).headers['access-control-allow-origin'], loopback);
+  assert.equal((await request(app).get('/api/unknown').set('Origin', loopback)).headers['access-control-allow-origin'], loopback);
   for (const origin of ['http://localhost:5174', 'https://evil.test', 'http://localhost:5173.evil.test']) {
     assert.equal((await request(app).get('/api/dishes').set('Origin', origin)).headers['access-control-allow-origin'], undefined);
     assert.equal((await request(app).options('/api/dishes').set('Origin', origin)).headers['access-control-allow-origin'], undefined);

@@ -9,10 +9,23 @@ datasource db {
 model Chef {
   id Int @id @default(autoincrement())
   name String @db.VarChar(120)
-  specialty String @db.VarChar(200)
   bio String @default("")
   dishes Dish[]
+  specialties ChefSpecialty[]
   createdAt DateTime @default(now())
+}
+model Specialty {
+  id Int @id @default(autoincrement())
+  name String @unique @db.VarChar(80)
+  chefs ChefSpecialty[]
+}
+model ChefSpecialty {
+  chefId Int
+  specialtyId Int
+  chef Chef @relation(fields: [chefId], references: [id], onDelete: Cascade)
+  specialty Specialty @relation(fields: [specialtyId], references: [id], onDelete: Cascade)
+  @@id([chefId, specialtyId])
+  @@index([specialtyId])
 }
 model Ingredient {
   id Int @id @default(autoincrement())
@@ -32,6 +45,7 @@ model Dish {
   chefId Int
   chef Chef @relation(fields:[chefId], references:[id], onDelete:Restrict)
   ingredients DishIngredient[]
+  searchVector Unsupported("tsvector") @default(dbgenerated("''::tsvector"))
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([category,available])

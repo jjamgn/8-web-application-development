@@ -7,11 +7,14 @@
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
     "build": "tsc --noEmit",
-    "test": "tsx --test tests/api.test.ts",
+    "test": "tsx --test tests/api.test.ts tests/menu-catalog.test.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed:menu": "tsx prisma/seed-menu.ts",
+    "db:verify:menu": "tsx prisma/verify-menu.ts",
+    "db:images:source": "tsx prisma/source-menu-images.ts"
   },
   "dependencies": {
     "@prisma/client": "6.12.0",

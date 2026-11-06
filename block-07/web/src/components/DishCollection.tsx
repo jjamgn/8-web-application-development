@@ -12,7 +12,7 @@ export default function DishCollection({ infinite = false }: { infinite?: boolea
   const load = useDishPagination(query, true);
   return <><DishFilters value={query} searchMode={load.searchMode} onApply={next => { const p = queryParams(next, false); if (p.toString() === params.toString()) load.reload(); else setParams(p); }} onReset={() => { setParams(queryParams(defaultQuery, false)); load.reload(); }} />
     {load.status === 'success' && <p className="result-count search-count" aria-live="polite">{load.total} món{query.q && ` cho “${query.q}”`}</p>}
-    <PageState {...load} onRetry={load.reload} empty={load.status === 'success' && load.items.length === 0} />
+    <PageState {...load} onRetry={load.reload} loadingVariant="cards" loadingLabel="Đang tải thực đơn…" empty={load.status === 'success' && load.items.length === 0} />
     {load.status === 'success' && <div className="dish-grid">{load.items.map(dish => <DishCard key={dish.id} dish={dish} />)}</div>}
     <MoreDishes load={load} infinite={infinite} />
   </>;

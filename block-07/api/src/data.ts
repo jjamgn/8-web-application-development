@@ -1,8 +1,9 @@
 export const categories = ['Khai vị', 'Món chính', 'Món chay', 'Tráng miệng'];
+export const specialties = ['Ẩm thực Việt đương đại', 'Món chay', 'Bánh ngọt', 'Món nướng', 'Hải sản'];
 export const chefs = [
-  { id: 1, name: 'Nguyễn Minh An', specialty: 'Ẩm thực Việt đương đại', bio: 'Gìn giữ hương vị quen thuộc, kể lại bằng một góc nhìn mới.' },
-  { id: 2, name: 'Trần Hoài Thương', specialty: 'Món chay & bánh ngọt', bio: 'Tìm cảm hứng từ rau củ theo mùa và những khu vườn nhỏ.' },
-  { id: 3, name: 'Lê Quốc Bảo', specialty: 'Món nướng & hải sản', bio: 'Nâng niu nguyên liệu tươi với lửa than và gia vị bản địa.' }
+  { id: 1, name: 'Nguyễn Minh An', specialties: ['Ẩm thực Việt đương đại'], bio: 'Gìn giữ hương vị quen thuộc, kể lại bằng một góc nhìn mới.' },
+  { id: 2, name: 'Trần Hoài Thương', specialties: ['Món chay', 'Bánh ngọt'], bio: 'Tìm cảm hứng từ rau củ theo mùa và những khu vườn nhỏ.' },
+  { id: 3, name: 'Lê Quốc Bảo', specialties: ['Món nướng', 'Hải sản'], bio: 'Nâng niu nguyên liệu tươi với lửa than và gia vị bản địa.' }
 ];
 export const ingredients = [
   {id:1,name:'Thịt bò',unit:'g'}, {id:2,name:'Bún tươi',unit:'g'},

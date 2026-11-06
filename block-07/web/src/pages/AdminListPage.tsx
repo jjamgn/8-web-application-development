@@ -1,4 +1,6 @@
 import AdminDishesPage from './AdminDishesPage';
+import AdminIngredientsPage from './AdminIngredientsPage';
+import AdminChefsPage from './AdminChefsPage';
 import { Link } from 'react-router-dom';
 import PageState from '../components/PageState';
 import { imageSource, money, resources } from '../config/resources';
@@ -6,7 +8,10 @@ import { useLoad } from '../hooks/useLoad';
 import type { Entity, Resource } from '../types';
 
 export default function AdminListPage({ resource }: { resource: Resource }) {
-  return resource === 'dishes' ? <AdminDishesPage /> : <LegacyAdminListPage resource={resource} />;
+  if (resource === 'dishes') return <AdminDishesPage />;
+  if (resource === 'ingredients') return <AdminIngredientsPage />;
+  if (resource === 'chefs') return <AdminChefsPage />;
+  return <LegacyAdminListPage resource={resource} />;
 }
 
 function LegacyAdminListPage({ resource }: { resource: Resource }) {
@@ -15,7 +20,7 @@ function LegacyAdminListPage({ resource }: { resource: Resource }) {
   return <>
     <span className="eyebrow">BẾP NHÀ / QUẢN TRỊ</span><div className="admin-heading"><div><h1>Quản lý {config.singular}</h1><p>Chăm chút từng chi tiết cho căn bếp của bạn.</p></div><Link className="button primary" to={`/admin/${resource}/new`}>+ Thêm {config.singular}</Link></div>
     <section className="table-panel"><div className="table-panel-heading"><h2>Danh sách {config.singular} {load.status === 'success' && <span>{load.data.length}</span>}</h2></div>
-      <PageState {...load} onRetry={load.reload} empty={load.status === 'success' && load.data.length === 0} />
+      <PageState {...load} onRetry={load.reload} loadingVariant="table" columns={config.columns.length + 3} loadingLabel="Đang tải danh sách…" empty={load.status === 'success' && load.data.length === 0} />
       {load.status === 'success' && load.data.length > 0 && <div className="table-scroll" tabIndex={0} role="region" aria-label={`Danh sách ${config.singular}, có thể cuộn ngang`} data-resource={resource}><table><thead><tr><th scope="col">ID</th><th scope="col">{config.label}</th>{config.columns.map(col => <th scope="col" key={col.key}>{col.label}</th>)}<th scope="col" className="align-right">Thao tác</th></tr></thead>
         <tbody>{load.data.map(item => {
           const values = item as unknown as Record<string, unknown>;

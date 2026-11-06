@@ -5,7 +5,8 @@ import { defaultQuery, type DishQuery, type SearchMode } from '../lib/dishes';
 export default function DishFilters({ value, searchMode, onApply, onReset }: { value: DishQuery; searchMode?: SearchMode; onApply: (value: DishQuery) => void; onReset: () => void }) {
   const [draft, setDraft] = useState(value);
   const [error, setError] = useState('');
-  const byRelevance = !!value.q && draft.q.trim() === value.q && ['fulltext', 'fuzzy'].includes(searchMode || '');
+  const activeSearchMode = value.q && draft.q.trim() === value.q ? searchMode : undefined;
+  const byRelevance = activeSearchMode === 'fuzzy';
   const signature = JSON.stringify(value);
   useEffect(() => { setDraft(value); setError(''); }, [signature]); // URL restores the complete applied form.
   function update(key: keyof DishQuery, next: string) { setDraft(d => ({ ...d, [key]: next })); setError(''); }
@@ -27,6 +28,6 @@ export default function DishFilters({ value, searchMode, onApply, onReset }: { v
       <label>Trạng thái<select name="available" value={draft.available} onChange={e => update('available', e.target.value)}><option value="">Tất cả trạng thái</option><option value="true">Đang phục vụ</option><option value="false">Tạm hết</option></select></label>
       <label>Sắp xếp<select name="sort" value={byRelevance ? 'relevance' : draft.sort === 'relevance' ? 'name_asc' : draft.sort} disabled={byRelevance} onChange={e => update('sort', e.target.value)}>{byRelevance ? <option value="relevance">Phù hợp nhất</option> : <><option value="name_asc">Tên A → Z</option><option value="name_desc">Tên Z → A</option><option value="price_asc">Giá tăng dần</option><option value="price_desc">Giá giảm dần</option></>}</select></label></div>
     {error && <p className="field-error" id="filter-price-error" role="alert">{error}</p>}
-    <div className="filter-actions"><small>{byRelevance ? searchMode === 'fuzzy' ? 'Gợi ý những món có tên gần giống.' : 'Kết quả phù hợp với tên hoặc mô tả món ăn.' : 'Tìm và lọc trên toàn bộ thực đơn.'}</small><button className="button outline" type="button" onClick={onReset}>Xóa điều kiện</button><button className="button primary" type="submit">Tìm món <span aria-hidden="true">→</span></button></div>
+    <div className="filter-actions"><small>{activeSearchMode === 'fuzzy' ? 'Gợi ý món có tên hoặc nguyên liệu gần giống, có dấu hoặc không dấu.' : activeSearchMode === 'fulltext' ? 'Kết quả phù hợp với tên, mô tả hoặc nguyên liệu, có dấu hoặc không dấu.' : 'Tìm theo tên, mô tả hoặc nguyên liệu; không cần gõ dấu.'}</small><button className="button outline" type="button" onClick={onReset}>Xóa điều kiện</button><button className="button primary" type="submit">Tìm món</button></div>
   </form>;
 }

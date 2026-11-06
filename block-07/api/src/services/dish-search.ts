@@ -2,16 +2,28 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../db.js';
 import type { DishListQuery } from '../validation.js';
 
-const dishInclude = { chef: true, ingredients: { include: { ingredient: true } } };
+const dishInclude = {
+  chef: { include: { specialties: { include: { specialty: true } } } },
+  ingredients: { include: { ingredient: true } },
+};
 
 function escapeLike(value: string) {
   // Use ! as the LIKE escape character so user-supplied %, _ and ! are literals.
   return value.replace(/[!%_]/g, '!$&');
 }
 
+function ingredientSimilarity(query: string) {
+  return Prisma.sql`coalesce((
+    SELECT max(similarity(public.search_unaccent(ingredient."name"), public.search_unaccent(${query})))
+    FROM "DishIngredient" AS dish_ingredient
+    JOIN "Ingredient" AS ingredient ON ingredient."id" = dish_ingredient."ingredientId"
+    WHERE dish_ingredient."dishId" = "Dish"."id"
+  ), 0.0)`;
+}
+
 function sortSql(sort: DishListQuery['sort'], mode: DishListQuery['mode'], q?: string) {
   if (mode === 'fuzzy' && q) {
-    return Prisma.sql`similarity("name", ${q}) DESC, "id" ASC`;
+    return Prisma.sql`GREATEST(similarity(public.search_unaccent("Dish"."name"), public.search_unaccent(${q})), ${ingredientSimilarity(q)}) DESC, "id" ASC`;
   }
   switch (sort) {
     case 'name_asc': return Prisma.sql`"name" ASC, "id" ASC`;
@@ -27,12 +39,22 @@ export async function searchDishes(query: DishListQuery) {
 
   if (query.q) {
     if (query.mode === 'fulltext') {
-      filters.push(Prisma.sql`to_tsvector('simple', coalesce("name", '') || ' ' || coalesce("description", '')) @@ plainto_tsquery('simple', ${query.q})`);
+      filters.push(Prisma.sql`"Dish"."searchVector" @@ plainto_tsquery('simple', public.search_unaccent(${query.q}))`);
     } else if (query.mode === 'fuzzy') {
-      filters.push(Prisma.sql`similarity("name", ${query.q}) >= 0.3`);
+      filters.push(Prisma.sql`GREATEST(similarity(public.search_unaccent("Dish"."name"), public.search_unaccent(${query.q})), ${ingredientSimilarity(query.q)}) >= 0.3`);
     } else {
       const pattern = `%${escapeLike(query.q)}%`;
-      filters.push(Prisma.sql`"name" ILIKE ${pattern} ESCAPE '!'`);
+      filters.push(Prisma.sql`(
+        public.search_unaccent("Dish"."name") ILIKE public.search_unaccent(${pattern}) ESCAPE '!'
+        OR public.search_unaccent("Dish"."description") ILIKE public.search_unaccent(${pattern}) ESCAPE '!'
+        OR EXISTS (
+          SELECT 1
+          FROM "DishIngredient" AS dish_ingredient
+          JOIN "Ingredient" AS ingredient ON ingredient."id" = dish_ingredient."ingredientId"
+          WHERE dish_ingredient."dishId" = "Dish"."id"
+            AND public.search_unaccent(ingredient."name") ILIKE public.search_unaccent(${pattern}) ESCAPE '!'
+        )
+      )`);
     }
   }
   if (query.category !== undefined) filters.push(Prisma.sql`"category" = ${query.category}`);

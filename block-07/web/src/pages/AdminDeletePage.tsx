@@ -34,7 +34,7 @@ export default function AdminDeletePage({ resource, id }: { resource: Resource; 
   }
   const config = resources[resource];
   return <><Link className="back-link" to={returnPath}>← Danh sách {config.singular}</Link>
-    {load.status !== 'success' ? <PageState {...load} onRetry={load.reload} /> : <section className="confirm-panel"><span className="confirm-icon" aria-hidden="true">!</span><span className="eyebrow">XÁC NHẬN THAO TÁC</span><h1>Xóa {config.singular} này?</h1><p>Bạn đang xóa <strong>{load.data.name}</strong>.<br />Dữ liệu đã xóa không thể khôi phục.</p>{message && <div className="alert" role="alert">{message}</div>}
+    {load.status !== 'success' ? <PageState {...load} onRetry={load.reload} loadingVariant="confirm" loadingLabel="Đang tải thông tin cần xác nhận…" /> : <section className="confirm-panel"><span className="confirm-icon" aria-hidden="true">!</span><span className="eyebrow">XÁC NHẬN THAO TÁC</span><h1>Xóa {config.singular} này?</h1><p>Bạn đang xóa <strong>{load.data.name}</strong>.<br />Dữ liệu đã xóa không thể khôi phục.</p>{message && <div className="alert" role="alert">{message}</div>}
       <div className="form-actions"><Link className="button outline" to={returnPath}>Giữ lại</Link><button className="button danger" onClick={remove} disabled={pending}>{pending ? 'Đang xóa…' : 'Xác nhận xóa'}</button></div></section>}
   </>;
 }
