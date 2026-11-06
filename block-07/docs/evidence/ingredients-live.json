@@ -1,0 +1,28 @@
+{
+  "source": "real HTTP API and Supabase; only owned test dish is modified and removed",
+  "before": 1000,
+  "after": 1000,
+  "results": [
+    {
+      "name": "Server ingredient pages and search ignore accents while legacy list stays compatible",
+      "result": "PASS"
+    },
+    {
+      "name": "Vietnamese normalization feeds simple tsquery: gỏi mực matches goi muc",
+      "result": "PASS"
+    },
+    {
+      "name": "Create dish with actual ingredient relations and decimal quantities",
+      "result": "PASS"
+    },
+    {
+      "name": "All four search modes return identical results with accented/unaccented query",
+      "result": "PASS"
+    },
+    {
+      "name": "PATCH replaces recipe, omitted recipe preserves it, empty recipe clears it",
+      "result": "PASS"
+    }
+  ],
+  "removedOwnedId": 1008
+}

@@ -1,0 +1,38 @@
+{
+  "name": "bep-nha-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/run.mjs dev",
+    "start": "node scripts/run.mjs start",
+    "build": "node scripts/run.mjs build",
+    "test": "node scripts/run.mjs test",
+    "config:check": "node scripts/run.mjs config:check",
+    "verify:readonly": "node scripts/run.mjs verify:readonly",
+    "verify:enhancements": "node scripts/run.mjs verify:enhancements",
+    "db:generate": "node scripts/run.mjs db:generate",
+    "db:migrate": "node scripts/run.mjs db:migrate",
+    "db:status": "node scripts/run.mjs db:status",
+    "db:push": "node scripts/run.mjs db:push",
+    "db:seed": "node scripts/run.mjs db:seed",
+    "db:seed:block7": "node scripts/run.mjs db:seed:block7"
+  },
+  "dependencies": {
+    "@prisma/client": "6.12.0",
+    "@supabase/supabase-js": "2.57.4",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^20.17.30",
+    "@types/supertest": "^6.0.3",
+    "prisma": "6.12.0",
+    "supertest": "^7.1.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}

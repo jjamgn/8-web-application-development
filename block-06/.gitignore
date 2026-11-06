@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+.env.local
+.pnpm-store/
+.pnpm-cache/
+.pnpm-state/
+.sites-runtime/
+*.tsbuildinfo
