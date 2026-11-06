@@ -95,6 +95,7 @@ export function validateDraft(resource: Resource, draft: Draft): FieldErrors {
     const recipe = draft.ingredients;
     if (!Array.isArray(recipe) || recipe.length === 0) errors.ingredients = 'Chọn ít nhất một nguyên liệu.';
     else if (recipe.some(item => {
+      if (typeof item === 'number') return true;
       const quantity = Number(item.quantity);
       return !Number.isFinite(quantity) || quantity <= 0 || quantity > 99999999.99 || Math.round(quantity * 100) / 100 !== quantity;
     })) errors.ingredients = 'Nhập định lượng lớn hơn 0, tối đa 2 chữ số thập phân cho từng nguyên liệu.';

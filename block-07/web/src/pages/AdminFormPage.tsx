@@ -10,6 +10,7 @@ import Skeleton from '../components/Skeleton';
 import { categories, createDraft, imageSource, resources, toPayload, validateDraft } from '../config/resources';
 import { useLoad } from '../hooks/useLoad';
 import { ApiError, errorMessage, request } from '../lib/api';
+import { recipeError, selectedIngredients } from '../lib/ingredients';
 import type { Chef, Dish, DishIngredientDraft, Entity, FieldErrors, Ingredient, Resource, Specialty } from '../types';
 
 export default function AdminFormPage({ resource, id }: { resource: Resource; id?: string }) {
@@ -58,6 +59,13 @@ function Editor({ resource, id, item, chefs, ingredients, specialtyCatalog }: { 
     setDraft(current => ({ ...current, [name]: value }));
     setErrors(current => { const next = { ...current }; delete next[name]; return next; });
     setMessage('');
+  }
+  function updateIngredients(rows: DishIngredientDraft[]) {
+    update('ingredients', rows);
+    setRecipe(rows.map(row => {
+      const ingredient = ingredientOptions.find(option => option.id === row.ingredientId);
+      return { ingredientId: row.ingredientId, name: ingredient?.name || `Nguyên liệu #${row.ingredientId}`, unit: ingredient?.unit || '', quantity: String(row.quantity) };
+    }));
   }
   function focusError(fields: FieldErrors) {
     requestAnimationFrame(() => {
@@ -148,11 +156,11 @@ function Editor({ resource, id, item, chefs, ingredients, specialtyCatalog }: { 
           if (field.name === 'ingredients') {
             const inputId = 'field-ingredients';
             const errorId = inputId + '-error';
-            const value = Array.isArray(draft.ingredients) ? draft.ingredients : [];
+            const value = Array.isArray(draft.ingredients) ? draft.ingredients.filter((entry): entry is DishIngredientDraft => typeof entry !== 'number') : [];
             return <div className="dish-ingredients-field" key={field.name}>
               <span className="dish-ingredients-label" id={inputId + '-label'}>{field.label}<b> *</b></span>
               <IngredientPicker value={value} options={ingredientOptions}
-                onChange={next => update(field.name, next)} disabled={pending || ingredients.status !== 'success'}
+                onChange={updateIngredients} disabled={pending || ingredients.status !== 'success'}
                 inputId={inputId} labelId={inputId + '-label'} errorId={errors[field.name] ? errorId : undefined} invalid={!!errors[field.name]} />
               {errors[field.name] && <small className="field-error" id={errorId}>{errors[field.name]}</small>}
             </div>;
