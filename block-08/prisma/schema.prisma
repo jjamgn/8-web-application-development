@@ -75,6 +75,8 @@ model User {
   passwordVersion Int       @default(0)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @default(now()) @updatedAt
+  emailVerification EmailVerification?
+  passwordResetTokens PasswordResetToken[]
   sessions        Session[]
 }
 
@@ -97,4 +99,31 @@ model LoginAttempt {
   updatedAt       DateTime @updatedAt
 
   @@index([lockedUntil])
+}
+
+model EmailVerification {
+  userId              Int      @id
+  otpHash             String   @db.VarChar(255)
+  expiresAt           DateTime
+  attempts            Int      @default(0)
+  lastSentAt          DateTime @default(now())
+  usedAt              DateTime?
+  sendWindowStartedAt DateTime @default(now())
+  sendCount           Int      @default(1)
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    Int
+  tokenHash String   @unique @db.Char(64)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([expiresAt])
 }

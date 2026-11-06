@@ -1,0 +1,27 @@
+<%- include('../partials/header') %>
+<main class="auth-page">
+  <%- include('_intro', { introTitle: 'Sẵn sàng vào bếp, cùng đội ngũ.', introCopy: 'Kiểm tra hộp thư và nhập mã xác minh để kích hoạt tài khoản đội ngũ Bếp Nhà. Người quản lý cấp quyền quản trị riêng.' }) %>
+  <section class="auth-card" aria-labelledby="auth-title">
+    <span class="eyebrow">HOÀN TẤT ĐĂNG KÝ</span>
+    <h1 id="auth-title">Xác minh email</h1>
+    <p class="auth-lead">Nhập mã 6 chữ số trong email để kích hoạt tài khoản. Bạn có thể đăng nhập sau khi xác minh; quyền quản trị do người quản lý cấp.</p>
+    <%- include('_messages') %>
+    <form class="auth-form" method="post" action="/auth/verify-email">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="auth-field"><label for="email">Địa chỉ email đã đăng ký</label><input id="email" type="email" name="email" autocomplete="email" value="<%= values.email || '' %>" required maxlength="200" aria-invalid="<%= errors.email ? 'true' : 'false' %>" <%- errors.email ? 'aria-describedby="email-error"' : '' %>><%- include('_field-error', { field: 'email' }) %></div>
+      <div class="auth-field"><label for="otp">Mã xác minh</label><input class="auth-otp" id="otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required placeholder="000000" aria-invalid="<%= errors.otp ? 'true' : 'false' %>" aria-describedby="otp-help<%= errors.otp ? ' otp-error' : '' %>"><small class="auth-field-help" id="otp-help">Mã có hiệu lực trong 10 phút và tối đa 5 lần nhập.</small><%- include('_field-error', { field: 'otp' }) %></div>
+      <button class="button primary auth-submit" type="submit">Kích hoạt tài khoản <span aria-hidden="true">→</span></button>
+    </form>
+    <div class="auth-resend">
+      <h2>Chưa nhận được email?</h2>
+      <p>Kiểm tra mục thư rác trước khi gửi lại. Mỗi lần gửi cách nhau ít nhất 60 giây, tối đa 5 lần mỗi giờ.</p>
+      <form class="auth-form" method="post" action="/auth/verify-email/resend">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="auth-field"><label for="resend-email">Email nhận mã mới</label><input id="resend-email" type="email" name="email" autocomplete="email" value="<%= values.email || '' %>" required maxlength="200"></div>
+        <button class="button outline auth-submit" type="submit">Gửi lại mã xác minh</button>
+      </form>
+    </div>
+    <p class="auth-switch">Đã xác minh email? <a href="/auth/login">Đăng nhập quản trị</a></p>
+  </section>
+</main>
+<%- include('../partials/footer') %>

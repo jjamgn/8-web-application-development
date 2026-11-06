@@ -8,6 +8,7 @@
     <% if (currentUser) { %>
       <p class="auth-lead">Chào <strong><%= currentUser.name %></strong>, đây là thông tin tài khoản Bếp Nhà của bạn.</p>
       <dl class="auth-account-details"><div><dt>Họ và tên</dt><dd><%= currentUser.name %></dd></div><div><dt>Địa chỉ email</dt><dd><%= currentUser.email %></dd></div><div><dt>Trạng thái email</dt><dd><span class="status <%= currentUser.emailVerifiedAt ? '' : 'off' %>"><%= currentUser.emailVerifiedAt ? 'Đã xác minh' : 'Chưa xác minh' %></span></dd></div><div><dt>Quyền truy cập</dt><dd><span class="status <%= currentUser.role === 'admin' ? '' : 'off' %>"><%= currentUser.role === 'admin' ? 'Quyền quản trị' : 'Chờ cấp quyền quản trị' %></span></dd></div></dl>
+      <% if (!currentUser.emailVerifiedAt) { %><a class="auth-secondary-link" href="/auth/verify-email">Xác minh địa chỉ email của bạn</a><% } %>
       <% if (currentUser.role === 'admin') { %>
         <a class="button primary auth-submit" href="/admin/dishes">Về trang quản trị <span aria-hidden="true">→</span></a>
       <% } else { %>

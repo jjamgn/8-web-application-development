@@ -37,7 +37,7 @@ test('a request loaded before logout cannot restore its destroyed authenticated 
   // Logout can be served by another process/store after this request loaded.
   const restarted = new PrismaSessionStore(db);
   await destroy(restarted, 'authenticated-session');
-  inFlight.csrf = 'changed-during-the-older-request@example.test';
+  inFlight.pendingEmail = 'changed-during-the-older-request@example.test';
   inFlight.cookie.expires = new Date(Date.now() + 120_000);
   await save(first, 'authenticated-session', inFlight);
 
@@ -54,13 +54,13 @@ test('a new session can be saved repeatedly without persisting the internal mark
   assert.equal(Object.hasOwn(rows.get('fresh-session')!.sess, '_persistedSid'), false);
 
   // express-session can explicitly save before redirect and save again later.
-  data.csrf = 'saved-again@example.test';
+  data.pendingEmail = 'saved-again@example.test';
   await save(store, 'fresh-session', data);
   assert.equal(rows.size, 1);
   assert.equal(rows.get('fresh-session')!.userId, 7);
-  assert.equal(rows.get('fresh-session')!.sess.csrf, data.csrf);
+  assert.equal(rows.get('fresh-session')!.sess.pendingEmail, data.pendingEmail);
   assert.equal(Object.hasOwn(rows.get('fresh-session')!.sess, '_persistedSid'), false);
-  assert.equal((await load(new PrismaSessionStore(db), 'fresh-session'))!.csrf, data.csrf);
+  assert.equal((await load(new PrismaSessionStore(db), 'fresh-session'))!.pendingEmail, data.pendingEmail);
 });
 
 test('an in-flight save cannot reactivate an expired persisted session', async () => {

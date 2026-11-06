@@ -10,12 +10,12 @@ import { fileURLToPath } from 'node:url';
 import { prisma, demo, imageUrl } from './db.js';
 import { dishes, chefs, ingredients, categories } from './data.js';
 import { schemas, validId } from './validation.js';
-import { createLoginRouter } from './auth/login.js';
+import { createAuthRouter } from './auth/routes.js';
 import { PrismaSessionStore } from './auth/session-store.js';
 import { loadCurrentUser, requireAdmin } from './auth/access.js';
 import { SESSION_TTL_MS } from './auth/login.js';
 
-declare module 'express-session' { interface SessionData { csrf?:string; userId?:number; passwordVersion?:number; absoluteExpiresAt?:number;  captcha?:{nonce:string;hash:string;expiresAt:number}; } }
+declare module 'express-session' { interface SessionData { csrf?:string; userId?:number; passwordVersion?:number; absoluteExpiresAt?:number; pendingEmail?:string; captcha?:{nonce:string;hash:string;expiresAt:number}; } }
 export const app=express();
 const root=fileURLToPath(new URL('../',import.meta.url));
 if(!demo && (!process.env.DATABASE_URL || !process.env.SESSION_SECRET)) throw new Error('Thiếu cấu hình database hoặc session. Xem .env.example.');
@@ -44,7 +44,7 @@ function csrf(req:Request,res:Response,next:NextFunction){
   next();
 }
 app.use(loadCurrentUser);
-app.use('/auth',createLoginRouter(demo,csrf));
+app.use('/auth',createAuthRouter(demo,csrf));
 function writable(_req:Request,res:Response,next:NextFunction){if(demo)return res.status(503).render('error',{title:'Chế độ xem thử',message:'Thao tác ghi chưa bật. Hãy cấu hình Supabase và tài khoản quản trị trong .env, sau đó đặt DEMO_MODE=false.'});next();}
 const upload=multer({storage:multer.memoryStorage(),limits:{fileSize:5*1024*1024,files:1,fields:80}});
 const chefInclude={specialties:{include:{specialty:true}}};

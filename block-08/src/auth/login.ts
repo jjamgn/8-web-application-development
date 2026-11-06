@@ -5,7 +5,7 @@ import type { Prisma, User } from '@prisma/client';
 import { prisma } from '../db.js';
 import { authClock, authTransaction, tokenHash } from './tokens.js';
 import { loginSchema } from './validation.js';
-import { createCaptcha, consumeCaptcha } from './captcha.js';
+import { consumeCaptcha } from './captcha.js';
 
 export const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 export const LOGIN_LOCK_MS = 15 * 60 * 1000;
@@ -57,12 +57,6 @@ function renderLogin(req: Request, res: Response, state: State, status = 200, er
 
 export function createLoginRouter(demo: boolean, csrf: RequestHandler) {
   const router = Router();
-  router.use((_req, res, next) => { res.set({ 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }); next(); });
-  router.get('/captcha', (req, res) => res.type('svg').send(createCaptcha(req)));
-  router.get('/account', (_req, res) => {
-    if (!res.locals.currentUser) return res.redirect(303, '/auth/login');
-    return res.render('auth/account', { title: 'Tài khoản quản trị · Bếp Nhà' });
-  });
   const requestLimit = rateLimit({ windowMs: LOGIN_WINDOW_MS, limit: 120, standardHeaders: 'draft-7', legacyHeaders: false, handler: (_req, res) => res.status(429).render('error', { title: 'Vui lòng thử lại sau', message: 'Bạn đã gửi quá nhiều yêu cầu đăng nhập. Vui lòng thử lại sau 15 phút.' }) });
   router.get('/login', async (req, res) => {
     const state = demo ? { captchaRequired: false, lockedUntil: null } : await loginState(normalizedEmail(req.query.email), req.ip || 'unknown');

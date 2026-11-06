@@ -9,13 +9,15 @@
     <form class="auth-form" method="post" action="/auth/login">
       <input type="hidden" name="_csrf" value="<%= csrf %>">
       <div class="auth-field"><label for="email">Địa chỉ email</label><input id="email" type="email" name="email" autocomplete="username" value="<%= values.email || '' %>" required maxlength="200" aria-invalid="<%= errors.email ? 'true' : 'false' %>" <%- errors.email ? 'aria-describedby="email-error"' : '' %>><%- include('_field-error', { field: 'email' }) %></div>
-      <div class="auth-field"><div class="auth-label-row"><label for="password">Mật khẩu</label></div><input id="password" type="password" name="password" autocomplete="current-password" required maxlength="72" aria-invalid="<%= errors.password ? 'true' : 'false' %>" <%- errors.password ? 'aria-describedby="password-error"' : '' %>><%- include('_field-error', { field: 'password' }) %></div>
+      <div class="auth-field"><div class="auth-label-row"><label for="password">Mật khẩu</label><a href="/auth/forgot-password">Quên mật khẩu?</a></div><input id="password" type="password" name="password" autocomplete="current-password" required maxlength="72" aria-invalid="<%= errors.password ? 'true' : 'false' %>" <%- errors.password ? 'aria-describedby="password-error"' : '' %>><%- include('_field-error', { field: 'password' }) %></div>
       <% if (typeof captchaRequired !== 'undefined' && captchaRequired) { %>
         <p class="auth-field-help">Vui lòng nhập mã bảo vệ sau nhiều lần đăng nhập sai. Khi bị tạm khóa, bạn cần chờ 15 phút trước khi thử lại.</p>
         <%- include('_captcha', { refreshPath: '/auth/login' }) %>
       <% } %>
       <button class="button primary auth-submit" type="submit">Vào trang quản trị <span aria-hidden="true">→</span></button>
     </form>
+    <p class="auth-switch">Được mời vào đội ngũ? <a href="/auth/register">Đăng ký tài khoản</a></p>
+    <a class="auth-secondary-link" href="/auth/verify-email">Xác minh email hoặc gửi lại mã</a>
   </section>
 </main>
 <%- include('../partials/footer') %>

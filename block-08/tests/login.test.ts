@@ -219,15 +219,6 @@ test('session storage keeps its absolute expiry across store instances and rejec
   assert.equal(expired, null);
 });
 
-test('the Vy module does not implement registration, OTP or password recovery routes', async () => {
-  const agent = request.agent(app);
-  const page = await agent.get('/auth/login');
-  for (const path of ['/auth/register', '/auth/verify-email', '/auth/verify-email/resend', '/auth/forgot-password', '/auth/reset-password']) {
-    assert.equal((await agent.get(path)).status, 404, path);
-    assert.equal((await agent.post(path).type('form').send({ _csrf: csrf(page.text) })).status, 404, path);
-  }
-});
-
 test('database failures fail closed instead of creating an authenticated session', async () => {
   const find = p.loginAttempt.findUnique;
   p.loginAttempt.findUnique = async () => { throw new Error('private database failure details'); };
