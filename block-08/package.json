@@ -7,7 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
     "build": "tsc --noEmit",
-    "test": "tsx --test tests/ssr.test.ts tests/mutations.test.ts",
+    "test": "tsx --test tests/ssr.test.ts tests/mutations.test.ts tests/mailer.test.ts tests/captcha.test.ts tests/email-verification.test.ts tests/registration-validation.test.ts tests/registration.test.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
@@ -30,6 +30,7 @@
     "helmet": "^8.1.0",
     "method-override": "^3.0.0",
     "multer": "^2.0.2",
+    "nodemailer": "^10.3.1",
     "zod": "^3.24.4"
   },
   "devDependencies": {
@@ -40,6 +41,7 @@
     "@types/method-override": "^3.0.0",
     "@types/multer": "^2.0.0",
     "@types/node": "^20.17.30",
+    "@types/nodemailer": "^8.0.2",
     "@types/supertest": "^6.0.3",
     "prisma": "6.12.0",
     "supertest": "^7.1.0",
