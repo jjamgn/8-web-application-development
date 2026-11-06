@@ -14,6 +14,7 @@ enum UserStatus {
 
 model User {
   id                Int                @id @default(autoincrement())
+  name              String             @default("") @db.VarChar(120)
   /// Normalize email before saving so the unique constraint also prevents case variants.
   email             String             @unique @db.VarChar(254)
   passwordHash      String             @db.VarChar(255)
@@ -23,7 +24,11 @@ model User {
   /// Null until the email OTP has been verified successfully.
   emailVerifiedAt   DateTime?
   createdAt         DateTime           @default(now())
+  passwordVersion   Int                @default(0)
+  updatedAt         DateTime           @default(now()) @updatedAt
   emailVerification EmailVerification?
+  passwordResetTokens PasswordResetToken[]
+  sessions          Session[]
 }
 
 model EmailVerification {
@@ -38,7 +43,45 @@ model EmailVerification {
   usedAt     DateTime?
   /// Five failed attempts lock verification and resending for fifteen minutes.
   lockedUntil DateTime?
+  sendWindowStartedAt DateTime @default(now())
+  sendCount  Int      @default(1)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model Session {
+  sid       String   @id @db.VarChar(128)
+  sess      Json
+  userId    Int?
+  expiresAt DateTime
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model LoginAttempt {
+  key             String   @id @db.VarChar(80)
+  failures        Int      @default(0)
+  windowStartedAt DateTime
+  lockedUntil     DateTime?
+  updatedAt       DateTime @updatedAt
+
+  @@index([lockedUntil])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    Int
+  tokenHash String   @unique @db.Char(64)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([expiresAt])
 }
 
 model Chef {

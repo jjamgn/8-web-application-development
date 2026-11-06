@@ -87,10 +87,10 @@ Các quyết định dưới đây được người phụ trách yêu cầu 1 x
 - Đã chốt hợp đồng `verifyCaptcha(token): Promise<void>`: gọi Cloudflare Siteverify, timeout toàn bộ quá trình 5 giây, không retry, báo lỗi khi token thiếu/sai/hết hạn, dịch vụ lỗi hoặc timeout. Chọn widget Managed cho môi trường local, hai hostname `localhost`, `127.0.0.1`; backend đối chiếu hostname qua `TURNSTILE_ALLOWED_HOSTNAMES`.
 - Đã viết `src/services/captcha.ts` và 10 test giả lập. Build và toàn bộ 31/31 test đạt; người dùng đã điền key nhưng chưa gọi Cloudflare bằng token thật hoặc gắn CAPTCHA vào form đăng ký. Phần tích hợp `src/app.ts` vẫn do Trang phụ trách.
 - Đã tạo OTP_SECRET ngẫu nhiên riêng trong .env, không hiển thị giá trị. Code OTP dùng HMAC gắn với user, lưu attempts/lockedUntil, thay mã khi gửi lại và cập nhật usedAt/active/emailVerifiedAt trong transaction; không tự đăng nhập.
-- Database hiện ghi nhận thêm `202611060003_vy_sessions` và `202611060004_auth_flow_support`. Đã lấy đúng file vy_sessions từ origin/master và đối chiếu checksum khớp. Auth_flow_support đã chạy nhưng chưa push; người dùng yêu cầu tạm gác phần đồng bộ/chạy migration trên Supabase.
-- Migration riêng chưa chạy của người 1 đã đổi tên thành `202611060005_add_otp_lock` theo xác nhận. Chỉ thêm lockedUntil nullable; preflight trước đó dừng do thiếu lịch sử, không thay đổi database. Hiện Supabase chưa có lockedUntil; chưa được dùng module OTP mới trên DB này trước khi đồng bộ/apply xong.
-- Metadata mới của nhóm còn có User.name/passwordVersion/updatedAt và EmailVerification.sendWindowStartedAt/sendCount; chưa tự dựng lại SQL gốc hoặc thay mô hình của Vy/Trang. Không dùng db:push/reset để vượt khác biệt schema/lịch sử này.
-- Kiểm tra cuối phần đăng ký: Prisma validate/generate, đối chiếu migration 005 với schema diff và TypeScript build đạt; toàn bộ 61/61 test đạt. Chưa thực hiện vòng đăng ký–OTP thật, test concurrency PostgreSQL hoặc gắn router vào app chính.
+- Đã lấy đúng `202611060003_vy_sessions` và `202611060004_auth_flow_support` từ origin/master, đối chiếu checksum khớp Supabase. Việc tạm gác do chưa push 004 trước đó đã được giải quyết sau khi người dùng báo đã push.
+- Đã áp dụng riêng `202611060005_add_otp_lock`: lockedUntil nullable đã tồn tại, lịch sử database hiện có 12 migration thành công. Preflight xác nhận chỉ 005 còn chờ trước khi chạy; số bản ghi sáu bảng CRUD trước/sau giữ nguyên. Không sửa migration đã áp dụng hoặc reset database.
+- Người dùng đã đồng ý đồng bộ riêng schema xác thực từ master: User.name/passwordVersion/updatedAt, Session, LoginAttempt, PasswordResetToken, EmailVerification.sendWindowStartedAt/sendCount và index expiresAt; giữ lockedUntil và không thay phần CRUD tạm gác. Kiểm tra chỉ đọc: 34 cột của 5 model xác thực khớp type/nullability với Supabase, RLS đều bật.
+- Kiểm tra sau đồng bộ: Prisma validate/generate, TypeScript build và toàn bộ 61/61 test đạt. Chưa thực hiện vòng đăng ký–OTP thật, test concurrency PostgreSQL hoặc gắn router vào app chính.
 
 ## 7. Chuẩn bị cấu hình cục bộ
 
@@ -231,8 +231,8 @@ import { createRegistrationRouter } from './routes/registration.js';
 app.use('/auth', createRegistrationRouter({ csrf }));
 ```
 
-Áp dụng CSP ở mục 10. Thống nhất schema User/Session/LoginAttempt và auth_flow_support trước, generate Prisma Client và chạy migration 005 theo lịch sử đã khớp. Không thay file migration đã áp dụng. Khi chạy thật cần `DEMO_MODE=false` và đủ cấu hình server; module từ chối POST khi demo bật. Người 1 chưa sửa app.ts, header hoặc mount router thay Trang.
+Áp dụng CSP ở mục 10. Schema xác thực chung đã đồng bộ, Prisma Client đã generate và migration 005 đã chạy; không thay file migration đã áp dụng. Khi chạy thật cần `DEMO_MODE=false` và đủ cấu hình server; module từ chối POST khi demo bật. Người 1 chưa sửa app.ts, header hoặc mount router thay Trang. Nếu nhánh tích hợp đã có handler đăng ký/OTP trùng đường dẫn, Trang thống nhất dùng một luồng, không mount hai handler cạnh tranh; giữ riêng login/logout/reset của các thành viên.
 
 Kiểm thử hiện có: validation/mật khẩu, CAPTCHA, service OTP và router qua HTTP với database/email/CAPTCHA giả lập. Adapter transaction trong test là in-memory, không chứng minh chạy đồng thời trên PostgreSQL nhiều tiến trình. Cần kiểm thử lại token Turnstile thật, vòng đời OTP trên PostgreSQL, browser/mobile và tương tác với session/login của Vy sau tích hợp. Gmail gửi/nhận thật đã kiểm tra riêng trước đó.
 
-Kết quả cuối mốc này: `npm run build` và `npm test` đạt 61/61. Migration `202611060005_add_otp_lock` khớp Prisma schema diff nhưng chưa áp dụng, theo yêu cầu tạm gác của người dùng. Khi `202611060004_auth_flow_support` được push, lấy SQL gốc và đồng bộ schema chung trước khi chạy tiếp; không đánh dấu nghiệm thu toàn hệ thống chỉ từ kết quả adapter.
+Kết quả mới nhất: migration 004 đã đồng bộ đúng SQL gốc, 005 đã áp dụng, 34 cột xác thực khớp metadata, `npm run build` và 61/61 test đạt sau khi generate lại Client. Không đánh dấu nghiệm thu toàn hệ thống chỉ từ kết quả adapter; bước tiếp theo là tích hợp và kiểm thử luồng thật.
