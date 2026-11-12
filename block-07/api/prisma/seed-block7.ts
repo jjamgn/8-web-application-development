@@ -1,12 +1,19 @@
 import 'dotenv/config';
 import { prisma } from '../src/db.js';
-import { dishes } from '../src/data.js';
+import { dishes, specialties } from '../src/data.js';
 const prefix = 'B7 · ';
 async function main() {
   const missing = Math.max(0, 1000 - await prisma.dish.count());
   if (!missing) { console.log('Supabase đã có ít nhất 1.000 món; không thêm hoặc sửa dữ liệu.'); return; }
   let chefs = await prisma.chef.findMany({ orderBy: { id: 'asc' } });
-  if (!chefs.length) chefs = [await prisma.chef.create({ data: { name: 'Đầu bếp Bếp Nhà', specialty: 'Ẩm thực Việt', bio: '' } })];
+  if (!chefs.length) {
+    const specialtyName = specialties[0];
+    const specialty = await prisma.specialty.upsert({ where: { name: specialtyName }, update: {}, create: { name: specialtyName } });
+    chefs = [await prisma.chef.create({ data: {
+      name: 'Đầu bếp Bếp Nhà', bio: '',
+      specialties: { create: { specialty: { connect: { id: specialty.id } } } },
+    } })];
+  }
   const existing = new Set((await prisma.dish.findMany({ where: { name: { startsWith: prefix } }, select: { name: true } })).map(d => d.name));
   const data = Array.from({ length: 1000 }, (_, i) => {
     const dish = dishes[i % dishes.length];
