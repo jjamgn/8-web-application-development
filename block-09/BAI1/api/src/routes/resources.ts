@@ -1,4 +1,4 @@
-import { Router, type Request } from 'express';
+import { Router, type Request, type RequestHandler } from 'express';
 import { createSchemas, parseDishListQuery, patchSchemas, validId, type Kind } from '../validation.js';
 import * as service from '../services/resources.js';
 import { searchDishes } from '../services/dish-search.js';
@@ -21,8 +21,12 @@ function input(kind: Kind, body: unknown, patch = false) {
   }
   return parsed.data;
 }
-export function resourceRouter(kind: Kind) {
+export function resourceRouter(kind: Kind, authenticate: RequestHandler) {
   const router = Router();
+  router.use((req, res, next) => {
+    const publicRead = kind === 'dishes' && (req.method === 'GET' || req.method === 'HEAD');
+    return publicRead ? next() : authenticate(req, res, next);
+  });
   router.get('/', async (req, res) => {
     if (kind === 'dishes') {
       const parsed = parseDishListQuery(req.query);

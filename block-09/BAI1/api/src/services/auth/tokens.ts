@@ -1,6 +1,10 @@
 import { createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { Prisma, type PrismaClient } from '@prisma/client';
 
+// Compatibility exports for B's extracted helpers; A's factory still allows
+// an explicit clock to be injected for service-level tests.
+export const authClock = { now: () => new Date() };
+
 export const OTP_TTL_MS = 10 * 60 * 1000;
 export const RESET_TTL_MS = 30 * 60 * 1000;
 export const RESEND_COOLDOWN_MS = 60 * 1000;
@@ -24,6 +28,7 @@ export function tokenHash(purpose: string, raw: string, userId?: number) {
 // The refresh and CSRF formulae are deliberately distinct from the OTP/reset
 // purpose/user-separated hashes, matching the CSR contract exactly.
 export const refreshHash = (raw: string) => createHmac('sha256', secret()).update(raw).digest('hex');
+export const refreshTokenHash = refreshHash;
 export const csrfTokenForFamily = (familyId: string) => createHmac('sha256', secret()).update(`csrf:${familyId}`).digest('base64url');
 export function sameHash(left: string, right: string) {
   return left.length === right.length && timingSafeEqual(Buffer.from(left), Buffer.from(right));

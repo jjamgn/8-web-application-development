@@ -1,14 +1,35 @@
 import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import request from 'supertest';
+import supertest from 'supertest';
+import { createAuthFixture } from './helpers/auth-fixture.js';
+import { signAccessToken } from '../src/lib/auth-jwt.js';
 import { Prisma } from '@prisma/client';
 import { chefs, ingredients, dishes, specialties as specialtyNames } from '../src/data.js';
 
 // Adapted from Block5 mutations.test.ts. Never connect to or mutate Supabase.
 process.env.DATABASE_URL = 'postgresql://test:test@127.0.0.1:1/test';
 process.env.SPA_ORIGIN = 'http://localhost:5173';
+process.env.SPA_ORIGINS = 'http://localhost:5173,http://127.0.0.1:5173';
+process.env.JWT_SECRET = 'test-only-jwt-secret-with-at-least-32-bytes';
+process.env.AUTH_TOKEN_SECRET = 'test-only-auth-secret-with-at-least-32-bytes';
 const { prisma } = await import('../src/db.js');
-const { app } = await import('../src/app.js');
+const { createApp } = await import('../src/app.js');
+const fixture = createAuthFixture();
+const app = createApp(fixture.services);
+const grant = await fixture.services.login({ email: fixture.user.email, password: 'password-test', captchaToken: '' }, { ip: 'test', verifyCaptcha: async () => {} });
+const accessToken = await signAccessToken(fixture.user, grant.familyId);
+// Preserve A's complete resource/search baseline while exercising B's guards.
+function request(target: typeof app) {
+  const agent = supertest(target);
+  return {
+    get: (path: string) => agent.get(path).auth(accessToken, { type: 'bearer' }),
+    post: (path: string) => agent.post(path).auth(accessToken, { type: 'bearer' }),
+    patch: (path: string) => agent.patch(path).auth(accessToken, { type: 'bearer' }),
+    delete: (path: string) => agent.delete(path).auth(accessToken, { type: 'bearer' }),
+    put: (path: string) => agent.put(path).auth(accessToken, { type: 'bearer' }),
+    options: (path: string) => agent.options(path),
+  };
+}
 const p = prisma as any;
 const resources = ['dishes', 'chefs', 'ingredients'] as const;
 const samples = {
@@ -262,7 +283,7 @@ test('CORS preflight allows exact SPA origin, JSON and required methods only', a
   assert.equal(r.status, 204);
   assert.equal(r.headers['access-control-allow-origin'], 'http://localhost:5173');
   assert.match(r.headers['access-control-allow-methods'], /GET, POST, PATCH, DELETE, OPTIONS/);
-  assert.equal(r.headers['access-control-allow-headers'], 'Content-Type');
+  assert.equal(r.headers['access-control-allow-headers'], 'Content-Type, Authorization, X-CSRF-Token');
   assert.match(r.headers.vary, /Origin/);
   const loopback = 'http://127.0.0.1:5173';
   const localPreflight = await request(app).options('/api/dishes/1').set('Origin', loopback).set('Access-Control-Request-Method', 'PATCH').set('Access-Control-Request-Headers', 'content-type');

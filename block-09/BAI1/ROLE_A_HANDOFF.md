@@ -2,6 +2,8 @@
 
 Ngày: 13/11/2026. Căn cứ: [contract](../BAI1_CONTRACT.md), [kế hoạch](../plan.md), [nhật ký thực hiện](../history.md).
 
+**Cập nhật sau merge A/B:** API/JWT/middleware của B đã được ghép vào working copy. Phần mô tả chưa mount bên dưới ghi nhận trạng thái bàn giao A ban đầu. Runtime vẫn chưa nối factory A vào interface AuthServices của B; mặc định fail closed bằng 503, không có adapter giả. Bộ test tổng hợp sau merge: 49/49 và build pass. Xem `README.md` cùng thư mục để biết các khác biệt giao tiếp cần nối tiếp.
+
 ## Trạng thái
 
 Đã có schema/migration bổ sung và các service auth độc lập với HTTP. API/web được chép từ Block 7. **Chưa mount endpoint auth hoặc bảo vệ resource routes**; app hiện tại vẫn chạy theo snapshot Block 7. B cần tích hợp route/JWT/cookie/Origin/CSRF/CORS/IP rate limit; C làm giao diện và single-flight. Không coi working copy này là API auth hoàn chỉnh để triển khai công khai.

@@ -72,7 +72,7 @@ api/
 
 ## Contract cho FE
 
-Mỗi resource là dishes, chefs, ingredients có đủ năm endpoint, tổng 15; danh mục chuyên môn có thêm endpoint chỉ đọc:
+Mỗi `resource` là `dishes`, `chefs`, `ingredients` có đủ năm endpoint, tổng 15:
 
 | Method | URL | `data` thành công |
 |---|---|---|
@@ -81,15 +81,14 @@ Mỗi resource là dishes, chefs, ingredients có đủ năm endpoint, tổng 15
 | POST | `/api/{resource}` | Bản ghi đã tạo |
 | PATCH | `/api/{resource}/:id` | Bản ghi đã sửa |
 | DELETE | `/api/{resource}/:id` | `null` |
-| GET | `/api/specialties` | Danh mục chuyên môn dùng chung, sắp xếp theo tên |
 
-`GET /api/dishes` nhận phần Search API từ nhánh `feature/search-api`. Kết quả món nằm tại `data.items`; `data` còn có `total`, `page`, `pageSize`. Danh sách đầu bếp và nguyên liệu vẫn trả mảng. Chef và `dish.chef` trả chuyên môn dưới dạng `specialties: [{ id, name }]`; `GET /api/specialties` trả danh mục dùng chung. Dish trả kèm `chef`, `ingredients[].ingredient`; `price` và `quantity` là number, `available` là boolean. Các ID là số nguyên dương trong miền PostgreSQL Int.
+`GET /api/dishes` nhận phần Search API từ nhánh `feature/search-api`. Kết quả món nằm tại `data.items`; `data` còn có `total`, `page`, `pageSize`. Danh sách đầu bếp và nguyên liệu vẫn trả mảng. Dish trả kèm `chef`, `ingredients[].ingredient`; `price` và `quantity` là number, `available` là boolean. Các ID là số nguyên dương trong miền PostgreSQL Int.
 
 ### Tìm kiếm và phân trang món ăn
 
-Tham số hỗ trợ: `mode=basic|advanced|fulltext|fuzzy`, `q` tối đa 160 ký tự, `category`, `minPrice`, `maxPrice`, `available=true|false`, `sort=name_asc|name_desc|price_asc|price_desc`, `page` (mặc định 1), `pageSize` (mặc định 12, tối đa 100). Filter áp dụng trước phân trang; giá 0 và trạng thái false hợp lệ. Basic/advanced tìm chuỗi con không phân biệt dấu trong tên, mô tả và tên nguyên liệu; fulltext tìm trên search vector gồm cả văn bản gốc và bản bỏ dấu; fuzzy xếp hạng tên món hoặc tên nguyên liệu gần giống sau khi bỏ dấu. Ba chế độ tìm kiếm đều yêu cầu `q`.
+Tham số hỗ trợ: `mode=basic|advanced|fulltext|fuzzy`, `q` tối đa 160 ký tự, `category`, `minPrice`, `maxPrice`, `available=true|false`, `sort=name_asc|name_desc|price_asc|price_desc`, `page` (mặc định 1), `pageSize` (mặc định 12, tối đa 100). Filter áp dụng trước phân trang; giá 0 và trạng thái false hợp lệ. Fulltext tìm trên tên và mô tả; fuzzy tìm tên gần giống, hai chế độ này yêu cầu `q`.
 
-Migration `202610300001_enable_pg_trgm` bổ sung extension PostgreSQL cho fuzzy search. Migration `202610300002_normalize_chef_specialties` tạo danh mục dùng chung và tách chuyên môn cũ theo dấu & mà vẫn giữ các liên kết. Migration `202610300003_accent_insensitive_search` bật `unaccent`, thêm `Dish.searchVector`, GIN index và trigger để giữ vector đồng bộ với tên/mô tả món cùng tên nguyên liệu. Việc lấy code không tự chạy migration hoặc seed lại database; sau khi pull Block 7, chạy `npm run db:migrate` rồi `npm run db:generate` từ thư mục `block-07/api`.
+Migration `202610300001_enable_pg_trgm` bổ sung extension PostgreSQL cho fuzzy search. Việc lấy code không tự chạy migration hoặc seed lại database. Khi chuẩn bị bật fuzzy trên database phát triển, áp dụng migration bằng `npm run db:migrate`.
 
 Ví dụ: `GET /api/dishes?mode=advanced&category=M%C3%B3n%20chay&minPrice=0&available=false&sort=price_asc&page=1&pageSize=12`.
 
@@ -111,13 +110,13 @@ Gửi `Content-Type: application/json` khi có body. Giá, ID đầu bếp phả
 
 | Tài nguyên | POST bắt buộc | POST tùy chọn | PATCH |
 |---|---|---|---|
-| dishes | `name`, `description`, `price`, `category`, `chefId` | `available` (mặc định true), `ingredients` (mảng `{ ingredientId, quantity }`) | Bất kỳ tập con không rỗng của các trường này; `ingredients` thay toàn bộ công thức khi được gửi |
-| chefs | `name`, `specialtyIds` (mảng ID danh mục, ít nhất một mục) | `bio` (mặc định chuỗi rỗng) | `name`, `specialtyIds`, `bio` |
+| dishes | `name`, `description`, `price`, `category`, `chefId` | `available` (mặc định true) | Bất kỳ tập con không rỗng của các trường này |
+| chefs | `name`, `specialty` | `bio` (mặc định chuỗi rỗng) | `name`, `specialty`, `bio` |
 | ingredients | `name`, `unit` | Không | `name`, `unit` |
 
-Tên được trim và không rỗng: dish tối đa 160 ký tự; chef/ingredient 120. Description 5000, bio 3000, unit 30. Mỗi đầu bếp phải chọn ít nhất một chuyên môn từ `GET /api/specialties`; danh mục dùng chung, không nhận tên tự do. Danh mục món ăn: `Khai vị`, `Món chính`, `Món chay`, `Tráng miệng`. Công thức món ăn nhận `ingredients: [{ ingredientId, quantity }]`; ID nguyên liệu phải tồn tại và không trùng, định lượng lớn hơn 0, tối đa hai chữ số thập phân. PATCH không gửi `ingredients` sẽ giữ công thức hiện tại; gửi mảng sẽ thay toàn bộ công thức.
+Tên được trim và không rỗng: dish tối đa 160 ký tự; chef/ingredient 120. Description 5000, specialty 200, bio 3000, unit 30. Danh mục: `Khai vị`, `Món chính`, `Món chay`, `Tráng miệng`.
 
-Whitelist bỏ trường ngoài contract, gồm `id`, timestamps, `imagePath`, `imageUrl` và nested relation. PATCH rỗng hoặc chỉ gồm trường ngoài contract bị từ chối. Không có trường nào ngầm reset khi PATCH thiếu. Tạo Dish gán `imagePath=/images/beef.png`; PATCH giữ ảnh nếu không có thay đổi. Không nhận upload ảnh qua API. Xóa món sử dụng cascade của schema cho công thức; không tự xóa object Storage có thể được dùng chung.
+Whitelist bỏ trường ngoài contract, gồm `id`, timestamps, `imagePath`, `imageUrl`, `ingredients`, nested relation. PATCH rỗng hoặc chỉ gồm trường ngoài contract bị từ chối. Không có trường nào ngầm reset khi PATCH thiếu. Tạo Dish gán `imagePath=/images/beef.png`; PATCH giữ ảnh và công thức cũ. Không nhận upload/định lượng trong phiên bản này. Xóa món sử dụng cascade của schema cho công thức; không tự xóa object Storage có thể được dùng chung.
 
 `imageUrl` trả đường dẫn `/images/*` cho ảnh local (FE cần ảnh tại `web/public/images` như phân công), hoặc URL đầy đủ của Supabase Storage cho object ảnh. Ảnh trong `api/public/images` phục vụ seed, API không phục vụ giao diện hay static assets cho FE.
 

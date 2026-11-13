@@ -1,0 +1,7 @@
+{
+  "experiment": "Remove JWT passwordVersion comparison in an isolated temporary module",
+  "buggyAcceptedStaleJwt": true,
+  "fixedRejectedStaleJwt": true,
+  "productionFileModified": false,
+  "credentialsRecorded": false
+}

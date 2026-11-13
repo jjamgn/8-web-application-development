@@ -68,3 +68,13 @@ Nhật ký này ghi quá trình làm việc, quyết định và thay đổi th�
 - Kế hoạch vẫn có đủ 8 giai đoạn tổng 40 phút; các link tài liệu nội bộ đã kiểm tra tồn tại.
 - Đã dừng PostgreSQL thử nghiệm sau kiểm chứng; dữ liệu thử nghiệm ở .local được gitignore. Không để server thử nghiệm tiếp tục chạy.
 - Tầng dữ liệu/service Role A đã sẵn sàng cho B tích hợp. Bằng chứng cuối: Prisma validate/generate pass, build pass, npm test 25/25, test:auth:db 29/29 không skip. Những phần B/C và dịch vụ thật chưa thực hiện được liệt kê trong ROLE_A_HANDOFF.md.
+
+## 13/11/2026 — Commit Thuyet và hợp nhất main
+
+- Người dùng yêu cầu commit lên Thuyet và merge main. Kiểm tra thấy code Role A đã được commit/push sẵn trong `1d0604a` (Thuyet), working tree sạch; không tạo commit code trùng.
+- Fetch origin phát hiện `origin/main` có commit B `44f41d6`, hai nhánh lệch nhau một commit. Merge origin/main vào Thuyet để giải quyết trước khi cập nhật main.
+- Có 68 xung đột add/add do hai bên tạo BAI1 độc lập. Giữ baseline/schema/migration/search/web đầy đủ của A; ghép app/JWT/route/middleware/env B; giữ endpoint specialties của baseline. Không sửa nguồn Block 7/8.
+- Hợp nhất package: giữ bcryptjs/Nodemailer/type của A, thêm jose 6.2.17 của B. Đồng bộ DTO login/OTP, alias token helper và fixture API có token viewer; CORS test theo headers auth mới.
+- Bản merge qua TypeScript build và 49/49 test tổng hợp (API/search/catalog + unit A + boundary auth B), không skip. Không chạy lại PostgreSQL vì schema/service DB không đổi về nghiệp vụ; 29 test PostgreSQL trước merge vẫn là bằng chứng riêng của A.
+- Cập nhật verifier snapshot cho auth schema/docs, cache và CRLF; đồng bộ hai file reference README/schema về source Block 8 hiện có. Manifest xác nhận không còn sai lệch ngoài phạm vi được ghi nhận.
+- Ghi rõ trong tài liệu A/B: factory service A và port B chưa được nối qua adapter production; app vẫn fail closed 503 cho service chưa nối. Không tự nhận việc merge đã hoàn thành tích hợp auth end-to-end.
