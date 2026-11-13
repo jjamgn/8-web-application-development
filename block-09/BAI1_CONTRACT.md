@@ -142,3 +142,14 @@ Nhóm ghi lại bằng chứng cho các luồng sau, che token, mật khẩu, OT
 - Auth Block 8 đã chốt trên main: commit `e2a8a723`; ưu tiên `block-08/README.md`, `block-08/src/app.ts`, `block-08/src/auth/**` và `block-08/prisma/schema.prisma`. Không lấy module cũ chưa mount làm chuẩn.
 - Tài liệu thư viện JWT: [panva/jose](https://github.com/panva/jose).
 - Refresh rotation/reuse detection: [RFC 9700 §4.14](https://www.rfc-editor.org/rfc/rfc9700.html#section-4.14); tránh lưu credential trong Web Storage: [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html); cookie/CORS: [MDN Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie), [MDN CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS).
+
+## Bổ sung triển khai Role A — 13/11/2026
+
+Người dùng đã xác nhận dùng DTO ở mục 6 `plan.md`, thêm snapshot passwordVersion cho refresh và cho A cập nhật dependency/test script cần để build–test. B vẫn sở hữu route/JWT/cookie/CORS.
+
+- `RefreshToken` có khóa chính `id` và thêm `passwordVersion` (Int, bắt buộc): snapshot phiên bản mật khẩu lúc login, giữ nguyên khi rotate, so sánh với User trong inspect/refresh. Không dùng version hiện tại để ghi đè snapshot của phiên cũ.
+- Giao tiếp service qua `createAuthServices(...)` tại `BAI1/api/src/services/auth/index.ts`; các kiểu PublicUser, SessionGrant, RotateResult theo mục 6 plan. Grant/raw refresh chỉ dùng nội bộ để B ký JWT và đặt cookie, không serialize trực tiếp ra JSON.
+- A được thêm tests và cập nhật package.json/lockfile phục vụ dependency auth, generate/build/test; không mount route hoặc sửa cơ chế JWT/cookie/CORS.
+- A cung cấp helper login-attempts và điểm tiêm adapter CAPTCHA vào service. B cung cấp adapter Turnstile thật và áp dụng quota HTTP theo IP, Origin/CSRF. Register/forgot yêu cầu service gọi adapter thành công trước khi xử lý mật khẩu hoặc phát reset token; adapter mặc định từ chối khi chưa cấu hình.
+- Migration bổ sung xây trên baseline Block 7; thử nghiệm trên DB cô lập. DB đã có migration Block 8 cần đối chiếu trước, không reset hoặc tự chạy migration trùng bảng.
+- Chữ ký service và cách tích hợp thực tế được ghi tại `BAI1/ROLE_A_HANDOFF.md`. Riêng POST refresh, B dùng `refreshFamilyForCsrf` để đối chiếu CSRF trước `rotateRefresh`; không dùng `inspectRefresh` chặn token đã dùng trước bước reuse detection. GET csrf chỉ dùng `inspectRefresh` còn hợp lệ.
