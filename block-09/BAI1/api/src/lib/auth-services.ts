@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { registerSchema, activateSchema, resendSchema, loginSchema, forgotSchema, resetSchema } from '../validation/auth.js';
+import type { registerSchema, activateSchema, resendSchema, loginSchema, forgotSchema, resetSchema, changePasswordSchema, profileSchema } from '../validation/auth.js';
 import { AuthError } from './auth-errors.js';
 
 /** Port owned by B. A implements this against Prisma; no database-shaped casts. */
@@ -17,7 +17,7 @@ export type AuthContext = {
   /** Login calls this only when its DB counters require CAPTCHA, before bcrypt. */
   verifyCaptcha(token: string): Promise<void>;
 };
-export const AUTH_IP_LIMITS = { register: 30, activate: 40, resend: 20, login: 120, forgot: 10, reset: 20, refresh: 60 } as const;
+export const AUTH_IP_LIMITS = { register: 30, activate: 40, resend: 20, login: 120, forgot: 10, reset: 20, refresh: 60, change: 10, profile: 30 } as const;
 export type AuthAction = keyof typeof AUTH_IP_LIMITS;
 
 export interface AuthServices {
@@ -30,8 +30,12 @@ export interface AuthServices {
   login(input: z.infer<typeof loginSchema>, context: AuthContext): Promise<SessionGrant>;
   forgot(input: z.infer<typeof forgotSchema>, context: AuthContext): Promise<void>;
   reset(input: z.infer<typeof resetSchema>, context: AuthContext): Promise<void>;
+  changePassword(input: z.infer<typeof changePasswordSchema>, identity: { userId: string; familyId: string; passwordVersion: number }): Promise<SessionGrant>;
+  updateProfile(input: z.infer<typeof profileSchema>, identity: { userId: string; familyId: string; passwordVersion: number }): Promise<Pick<AuthUser, 'id' | 'name' | 'email' | 'role'>>;
   /** HMAC lookup, including used tokens so B can detect replay. Never consume here. */
   inspectRefresh(rawToken: string): Promise<AuthSession | null>;
+  /** Lookup only for POST CSRF validation; includes consumed/revoked tokens. */
+  refreshFamilyForCsrf(rawToken: string): Promise<string | null>;
   /** Atomic consume/create/replacedById; on race/reuse COMMIT family revocation
    * before throwing REFRESH_TOKEN_REUSED (do not roll it back with the error). */
   rotateRefresh(rawToken: string): Promise<SessionGrant>;
@@ -44,8 +48,8 @@ const unavailable = async (): Promise<never> => { throw new AuthError('AUTH_SERV
 // No fake accounts, memory-backed authentication or successful placeholder operations.
 export const unavailableAuthServices: AuthServices = {
   enforceIpLimit: unavailable, register: unavailable, activate: unavailable, resend: unavailable,
-  login: unavailable, forgot: unavailable, reset: unavailable, inspectRefresh: unavailable,
-  rotateRefresh: unavailable, revokeFamily: unavailable, findAccessSession: unavailable,
+  login: unavailable, forgot: unavailable, reset: unavailable, changePassword: unavailable, updateProfile: unavailable, inspectRefresh: unavailable,
+  refreshFamilyForCsrf: unavailable, rotateRefresh: unavailable, revokeFamily: unavailable, findAccessSession: unavailable,
 };
 
 export const publicUser = (user: AuthUser) => ({ id: user.id, name: user.name, email: user.email, role: user.role });

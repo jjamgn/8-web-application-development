@@ -20,11 +20,11 @@ Toàn bộ `src/auth/*.ts` đang chạy, `src/app.ts`, schema và README Block 8
 
 Đã có routes auth, JWT HS256 10 phút, middleware xác minh JWT và trạng thái DB qua adapter, refresh/logout/CSRF, cookie và CORS credentials. Hai GET dishes public; mọi thao tác ghi dishes và toàn bộ chefs/ingredients cần Bearer token, không phân quyền theo role.
 
-**Đã merge schema/migration/service DB của A và API của B.** Hai bên vẫn có giao tiếp khác nhau: A xuất factory `createAuthServices`, B nhận interface `AuthServices`; adapter production chưa nối. App mặc định trả `503 AUTH_SERVICE_UNAVAILABLE` cho thao tác cần service chưa nối; không tạo tài khoản/phiên đăng nhập giả. Web vẫn là snapshot Block 7 để C làm tiếp.
+**Đã tích hợp A+B+C local từ GitHub main `5ef7427`.** Runtime dùng `api/src/lib/auth-production.ts` để nối factory A vào interface B. Frontend C có trang auth, token trong memory, khôi phục sau reload, refresh single-flight và logout server. Tìm kiếm/phân trang cùng chỉnh sửa chữ header local được giữ lại.
 
-Xem [ROLE_A_HANDOFF.md](ROLE_A_HANDOFF.md) để biết service A và các khác biệt cần xử lý khi viết adapter: kết quả `kind` so với lỗi AuthError, inspectRefresh nghiêm ngặt so với lookup cả token đã dùng, tránh xác minh hai lần cùng CAPTCHA, và quota IP do interface B yêu cầu. Sau merge, `npm test` gồm 49 test A/B đã pass; build pass. Bộ PostgreSQL riêng của A trước merge đã pass 29 test. Không coi test double của B là bằng chứng adapter production đã được nối.
+Adapter ánh xạ kết quả `kind` thành AuthError, giữ snapshot passwordVersion khi tạo phiên, dùng lookup family riêng cho CSRF trước rotation, và áp quota HTTP bằng transaction DB. CAPTCHA được xác minh một lần trong từng request rồi chia sẻ kết quả giữa route B và service A. Bộ 52 test API cùng 4 test client auth pass; API/web build pass. Test adapter dùng Prisma-shaped test double để kiểm tra nối module; chưa chạy lại PostgreSQL, SMTP hoặc Turnstile thật.
 
-Xem [B_HANDOFF.md](docs/B_HANDOFF.md) để nối adapter A, cấu hình env và kiểm tra tích hợp thật.
+Xem [INTEGRATION.md](docs/INTEGRATION.md) để cấu hình và chạy bản ghép. Bàn giao A/B giữ lại làm lịch sử thiết kế.
 
 ## Kiểm tra phần B
 

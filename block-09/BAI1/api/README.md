@@ -1,4 +1,6 @@
-# Bếp Nhà — Block 07 backend
+# Bếp Nhà — Block 09 Bài 1 API
+
+Runtime hiện đã nối service A với routes/JWT của B qua `src/lib/auth-production.ts`, phục vụ frontend C. Hướng dẫn hiện tại nằm ở [INTEGRATION.md](../docs/INTEGRATION.md). Dùng `SPA_ORIGINS` và `WEB_ORIGIN` theo `.env.example`; cấu hình DB, JWT/AUTH secrets, SMTP và Turnstile trước khi chạy. Các ghi chú Block 7 bên dưới là tài liệu nền lịch sử, không thay thế contract auth Block 9.
 
 Backend độc lập, phát triển từ Block5: Express 5, TypeScript, Prisma 6, PostgreSQL/Supabase. Không cần thư mục Block5 để cài, chạy hoặc seed. Phạm vi API local theo tài liệu phân công; không có đăng nhập, session, CSRF, EJS hay upload multipart.
 

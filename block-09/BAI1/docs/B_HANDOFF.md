@@ -1,5 +1,7 @@
 # Bàn giao B — API, JWT và tích hợp
 
+> Trạng thái mới sau tích hợp local A+B+C: runtime đã dùng production adapter A/B; CSRF trước rotation dùng refreshFamilyForCsrf; CAPTCHA chia sẻ kết quả trong request. Xem [INTEGRATION.md](INTEGRATION.md). Nội dung chưa nối bên dưới được giữ làm lịch sử bàn giao.
+
 > Cập nhật sau merge A/B ngày 13/11/2026: schema/service A đã có trong `../ROLE_A_HANDOFF.md`, nhưng adapter production chưa nối. Nội dung dưới đây giữ lại thiết kế/bằng chứng B ban đầu. Package hợp nhất dùng bcryptjs 3.0.3, Nodemailer 10.3.1, @types/nodemailer 8.0.2 từ A và jose 6.2.17 từ B; không hạ dependency về phiên bản ghi trong bản bàn giao cũ.
 
 ## Phạm vi và quyết định

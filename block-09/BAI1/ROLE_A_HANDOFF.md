@@ -1,5 +1,7 @@
 # Bàn giao Role A — dữ liệu và nghiệp vụ auth
 
+> Trạng thái mới sau tích hợp local A+B+C: adapter production đã nối vào runtime, frontend C đã ghép. Xem [INTEGRATION.md](docs/INTEGRATION.md). Các trạng thái chưa nối bên dưới là lịch sử ở thời điểm bàn giao A/B trên GitHub.
+
 Ngày: 13/11/2026. Căn cứ: [contract](../BAI1_CONTRACT.md), [kế hoạch](../plan.md), [nhật ký thực hiện](../history.md).
 
 **Cập nhật sau merge A/B:** API/JWT/middleware của B đã được ghép vào working copy. Phần mô tả chưa mount bên dưới ghi nhận trạng thái bàn giao A ban đầu. Runtime vẫn chưa nối factory A vào interface AuthServices của B; mặc định fail closed bằng 503, không có adapter giả. Bộ test tổng hợp sau merge: 49/49 và build pass. Xem `README.md` cùng thư mục để biết các khác biệt giao tiếp cần nối tiếp.

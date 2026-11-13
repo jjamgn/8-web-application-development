@@ -14,7 +14,8 @@ async function files(root, prefix = '') {
   }
   return result.sort();
 }
-const changedApi = new Set(['.env.example', 'README.md', 'package.json', 'package-lock.json', 'prisma/schema.prisma', 'src/app.ts', 'src/routes/resources.ts', 'tests/api.test.ts']);
+const changedApi = new Set(['.env.example', 'README.md', 'package.json', 'package-lock.json', 'prisma/schema.prisma', 'src/app.ts', 'src/server.ts', 'src/routes/resources.ts', 'tests/api.test.ts']);
+const changedWeb = new Set(['.env.example', 'README.md', 'package.json', 'vite.config.ts', 'src/main.tsx', 'src/vite-env.d.ts', 'src/app/router.tsx', 'src/components/Layout.tsx', 'src/lib/api.ts']);
 // Git on Windows may check text out with CRLF. Compare content independently
 // of line endings while hashing image/binary assets byte-for-byte.
 const sha = (data, name) => createHash('sha256').update(/\.(?:ts|tsx|mjs|md|json|yaml|yml|toml|prisma|sql|html|css|cmd|example)$/.test(name)
@@ -26,7 +27,7 @@ for (const kind of ['api', 'web']) {
     const hash = sha(await readFile(path.join(source, name)), name);
     let destinationHash = null;
     try { destinationHash = sha(await readFile(path.join(base, kind, name)), name); } catch { /* Record missing snapshot files. */ }
-    const expectedChange = kind === 'api' && changedApi.has(name);
+    const expectedChange = kind === 'api' ? changedApi.has(name) : changedWeb.has(name);
     const matches = hash === destinationHash;
     checks.push({ source: `block-07/${kind}/${name}`, sha256: hash, matches, expectedChange });
     if (!matches && !expectedChange) failures.push(`${kind}/${name}`);
@@ -41,5 +42,5 @@ for (const name of await files(reference)) {
   if (!matches) failures.push(`reference/block-08/${name}`);
 }
 await writeFile(path.join(base, 'docs/snapshot-manifest.json'), JSON.stringify({ checks, failures }, null, 2) + '\n');
-console.log(JSON.stringify({ filesChecked: checks.length, unchanged: checks.filter(check => check.matches).length, plannedApiChanges: checks.filter(check => check.expectedChange).length, failures }));
+console.log(JSON.stringify({ filesChecked: checks.length, unchanged: checks.filter(check => check.matches).length, plannedApiChanges: checks.filter(check => check.expectedChange && check.source.startsWith('block-07/api/')).length, plannedWebChanges: checks.filter(check => check.expectedChange && check.source.startsWith('block-07/web/')).length, failures }));
 if (failures.length) process.exitCode = 1;

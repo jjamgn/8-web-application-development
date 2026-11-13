@@ -1,4 +1,5 @@
 const definitions = {
+  CURRENT_PASSWORD_INVALID: [200, 'Mật khẩu hiện tại chưa đúng.'],
   INVALID_CREDENTIALS: [200, 'Email hoặc mật khẩu chưa đúng.'],
   ACCOUNT_NOT_ACTIVATED: [200, 'Vui lòng xác minh email và kích hoạt tài khoản.'],
   INVALID_OTP: [200, 'Mã xác minh không hợp lệ, đã dùng hoặc hết hạn.'],

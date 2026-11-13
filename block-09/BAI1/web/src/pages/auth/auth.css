@@ -1,0 +1,247 @@
+.auth-page {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 54px 20px 72px;
+}
+
+.auth-card {
+  width: min(100%, 510px);
+  padding: 38px 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffefb;
+  box-shadow: 0 16px 48px #273d310c;
+}
+
+.auth-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 30px;
+  color: var(--green);
+  font-family: var(--serif);
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.auth-brand span {
+  display: inline-grid;
+  width: 34px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid #9da68e;
+  border-radius: 50% 50% 0 0;
+  font-size: 29px;
+  line-height: 1;
+}
+
+.auth-eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #75876b;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+}
+
+.auth-card h1 {
+  font-size: 34px;
+}
+
+.auth-description {
+  margin: 10px 0 24px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.auth-form {
+  display: grid;
+  gap: 17px;
+}
+
+.auth-field {
+  display: grid;
+  gap: 7px;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.auth-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 13px;
+  border: 1px solid #d8dfce;
+  border-radius: 4px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.auth-field input[aria-invalid="true"] {
+  border-color: #ad5f49;
+  background: #fffaf7;
+}
+
+.auth-hint,
+.captcha-hint {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.auth-field-error,
+.captcha-hint.error {
+  color: #a65238;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.auth-submit {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+.auth-message {
+  padding: 11px 13px;
+  border: 1px solid #ead2c4;
+  border-radius: 4px;
+  background: #fff7f1;
+  color: #8e4a31;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.auth-message.success {
+  border-color: #d4dfce;
+  background: #f2f6ee;
+  color: #345840;
+}
+
+.auth-message.info {
+  border-color: #e4e3d5;
+  background: #f8f7ef;
+  color: #62664e;
+}
+
+.auth-card-footer {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.auth-card-footer a,
+.auth-inline-link a,
+.auth-forgot-row a,
+.auth-secondary-actions a,
+.auth-secondary-actions button {
+  color: var(--green);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-inline-link,
+.auth-forgot-row {
+  font-size: 11px;
+}
+
+.auth-forgot-row {
+  margin-top: -7px;
+  text-align: right;
+}
+
+.auth-secondary-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+  font-size: 11px;
+}
+
+.auth-secondary-actions button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+}
+
+.auth-secondary-actions button:disabled {
+  color: var(--muted);
+  cursor: wait;
+}
+
+.captcha-field {
+  display: grid;
+  gap: 6px;
+  min-height: 65px;
+}
+
+.captcha-field > div {
+  min-height: 65px;
+}
+
+.header-account {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: max-content;
+  color: var(--green);
+  font-size: 13px;
+}
+
+.header-account a,
+.header-account button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.header-account .account-name {
+  max-width: 130px;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-account .account-error {
+  position: absolute;
+  top: 78px;
+  right: 6%;
+  z-index: 5;
+  max-width: 300px;
+  padding: 5px 8px;
+  border-radius: 3px;
+  background: #fff7f1;
+  color: #8e4a31;
+  font-size: 9px;
+}
+
+@media (max-width: 980px) {
+  .header-account { gap: 8px; font-size: 13px; }
+  .header-account .account-name { display: none; }
+}
+
+@media (max-width: 760px) {
+  .auth-page { padding: 32px 15px 48px; }
+  .auth-card { padding: 28px 22px; }
+  .auth-card h1 { font-size: 29px; }
+  .auth-brand { margin-bottom: 23px; }
+  .site-header { height: auto; min-height: 82px; flex-wrap: wrap; gap: 10px 15px; padding: 12px 5%; }
+  .site-header nav { order: 3; width: 100%; height: 35px; justify-content: space-between; }
+  .site-header nav a.active:after { bottom: 0; }
+  .header-account { margin-left: auto; font-size: 10px; }
+  .header-account .account-error { top: 63px; right: 5%; }
+}

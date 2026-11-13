@@ -7,10 +7,11 @@ import { authRouter } from './routes/auth.js';
 import { requireAuth } from './middleware/require-auth.js';
 import { AuthError } from './lib/auth-errors.js';
 import { spaOrigins } from './lib/auth-http.js';
-import { unavailableAuthServices, type AuthServices } from './lib/auth-services.js';
+import type { AuthServices } from './lib/auth-services.js';
+import { createProductionAuthServices } from './lib/auth-production.js';
 
-/** A's production adapter is injected here after its migration/services arrive. */
-export function createApp(services: AuthServices = unavailableAuthServices) {
+/** Tests may inject a port; runtime connects A's services through the production adapter. */
+export function createApp(services: AuthServices = createProductionAuthServices()) {
   const app = express();
   const origins = spaOrigins();
   app.disable('x-powered-by');

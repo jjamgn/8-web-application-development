@@ -143,6 +143,25 @@ Nhóm ghi lại bằng chứng cho các luồng sau, che token, mật khẩu, OT
 - Tài liệu thư viện JWT: [panva/jose](https://github.com/panva/jose).
 - Refresh rotation/reuse detection: [RFC 9700 §4.14](https://www.rfc-editor.org/rfc/rfc9700.html#section-4.14); tránh lưu credential trong Web Storage: [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html); cookie/CORS: [MDN Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie), [MDN CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS).
 
+## Bổ sung chỉnh sửa tên trong profile — người dùng chốt 13/11/2026
+
+- Thêm form Chỉnh sửa tên / Lưu tên / Hủy tại /profile. Trim đầu/cuối, bắt buộc 1–120 ký tự, thông báo lỗi ngay trên form.
+- PATCH /api/auth/me nhận JSON name; yêu cầu Bearer JWT active, Origin allowlist, X-CSRF-Token khớp sid, giới hạn 30 PATCH/IP/15 phút.
+- Server lấy userId từ JWT, whitelist duy nhất name, bỏ qua email/role/id/passwordVersion client gửi. Recheck phiên và passwordVersion trong transaction trước cập nhật.
+- Thành công HTTP 200, ok:true, data là user công khai id/name/email/role. Validation trả 200 VALIDATION_FAILED với fields.name; phiên không hợp lệ 401, Origin/CSRF sai 403, quota 429.
+- Profile/header/avatar cập nhật ngay từ user server trả về, F5 giữ tên đã lưu. Đổi tên không thay mật khẩu/version, không xoay token hoặc đăng xuất phiên; không yêu cầu migration mới.
+
+## Bổ sung profile và đổi mật khẩu — người dùng chốt 13/11/2026
+
+- Thêm route CSR /profile, yêu cầu đăng nhập; hiển thị avatar chữ cái đầu, tên/email, về thực đơn và đăng xuất. Header dẫn tới profile. Dữ liệu lấy từ GET /api/auth/me; chỉnh sửa tên theo bổ sung PATCH /me ở trên, email/avatar chưa chỉnh sửa.
+- POST /api/auth/change-password nhận currentPassword, password, confirmPassword. Yêu cầu Bearer JWT có sid còn hoạt động, Origin trong allowlist và X-CSRF-Token khớp sid. Web dùng credentials include để nhận refresh cookie mới.
+- Giữ bcryptjs cost 12, mật khẩu mới tối thiểu 8 ký tự/tối đa 72 byte UTF-8, xác nhận khớp. Server xác minh mật khẩu cũ và recheck hash/passwordVersion/phiên trong transaction sau bcrypt.
+- Giới hạn riêng: 10 POST/IP/15 phút và 5 lần gửi hợp lệ về cấu trúc/user/15 phút, trả 429 RATE_LIMITED cùng Retry-After. Không dùng quota này để khóa đăng nhập.
+- Mật khẩu cũ sai trả HTTP 200, ok:false, CURRENT_PASSWORD_INVALID với lỗi trường currentPassword. Mật khẩu mới/xác nhận sai dùng VALIDATION_FAILED theo envelope hiện có. Phiên cũ/không hợp lệ trả 401; Origin/CSRF sai trả 403.
+- Trong một transaction: đổi passwordHash, tăng passwordVersion, thu hồi mọi family cũ, tiêu thụ reset token chưa dùng, tạo family mới cho thiết bị hiện tại với version mới. Thành công trả payload giống login/refresh và Set-Cookie mới. Frontend thay access/CSRF trong memory và giữ người dùng ở profile; không yêu cầu login lại.
+- Luồng forgot/reset qua email giữ nguyên: không tự đăng nhập sau reset. Các phiên cũ bị từ chối ở request kế tiếp.
+- Phạm vi triển khai bổ sung được người dùng giao trực tiếp cho agent hiện tại, bao gồm API, CSR, contract và kiểm tra; không cần migration/schema DB mới.
+
 ## Bổ sung triển khai Role A — 13/11/2026
 
 Người dùng đã xác nhận dùng DTO ở mục 6 `plan.md`, thêm snapshot passwordVersion cho refresh và cho A cập nhật dependency/test script cần để build–test. B vẫn sở hữu route/JWT/cookie/CORS.

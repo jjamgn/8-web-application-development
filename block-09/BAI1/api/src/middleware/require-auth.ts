@@ -12,6 +12,7 @@ export function requireAuth(services: AuthServices): RequestHandler {
     if (!session || !liveSession(session) || String(session.user.id) !== claims.userId
       || session.familyId !== claims.familyId || session.user.passwordVersion !== claims.passwordVersion) throw new AuthError('UNAUTHENTICATED');
     res.locals.authUser = publicUser(session.user);
+    res.locals.authSession = { userId: claims.userId, familyId: claims.familyId, passwordVersion: claims.passwordVersion };
     next();
   };
 }

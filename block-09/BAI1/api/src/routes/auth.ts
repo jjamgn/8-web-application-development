@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import type { z } from 'zod';
-import { registerSchema, activateSchema, resendSchema, loginSchema, forgotSchema, resetSchema } from '../validation/auth.js';
+import { registerSchema, activateSchema, resendSchema, loginSchema, forgotSchema, resetSchema, changePasswordSchema, profileSchema } from '../validation/auth.js';
 import { AuthError, type AuthErrorCode } from '../lib/auth-errors.js';
 import { ACCESS_TTL_SECONDS, signAccessToken } from '../lib/auth-jwt.js';
 import { clearRefreshCookie, csrfToken, readRefreshCookie, requireCsrf, requireOrigin, setRefreshCookie } from '../lib/auth-http.js';
@@ -16,7 +16,15 @@ function parse<T extends z.ZodTypeAny>(schema: T, body: unknown, invalid?: AuthE
   for (const issue of parsed.error.issues) fields[String(issue.path[0] ?? 'body')] ??= issue.message;
   throw new AuthError('VALIDATION_FAILED', fields);
 }
-const context = (req: Request): AuthContext => ({ ip: req.ip || 'unknown', verifyCaptcha: token => verifyCaptcha(token, req.ip || 'unknown') });
+function context(req: Request): AuthContext {
+  const ip = req.ip || 'unknown';
+  const verified = new Map<string, Promise<void>>();
+  return { ip, verifyCaptcha(token) {
+    let result = verified.get(token);
+    if (!result) { result = verifyCaptcha(token, ip); verified.set(token, result); }
+    return result;
+  } };
+}
 const notices = {
   register: 'Nếu thông tin phù hợp, bạn sẽ nhận email hướng dẫn kích hoạt tài khoản.',
   resend: 'Nếu tài khoản cần xác minh, bạn sẽ nhận email hướng dẫn kích hoạt.',
@@ -75,17 +83,9 @@ export function authRouter(services: AuthServices, origins: ReadonlySet<string>)
     await services.enforceIpLimit('refresh', context(req).ip);
     try {
       const raw = readRefreshCookie(req);
-      const session = raw ? await services.inspectRefresh(raw) : null;
-      if (!raw || !session) throw new AuthError('INVALID_REFRESH_TOKEN');
-      requireCsrf(req, session.familyId);
-      if (session.usedAt) {
-        await services.revokeFamily(session.familyId);
-        throw new AuthError('REFRESH_TOKEN_REUSED');
-      }
-      if (!liveSession(session)) {
-        await services.revokeFamily(session.familyId);
-        throw new AuthError('INVALID_REFRESH_TOKEN');
-      }
+      const familyId = raw ? await services.refreshFamilyForCsrf(raw) : null;
+      if (!raw || !familyId) throw new AuthError('INVALID_REFRESH_TOKEN');
+      requireCsrf(req, familyId);
       // A rechecks user/version/expiry AND atomically rotates inside its transaction.
       await grantResponse(await services.rotateRefresh(raw), res);
     } catch (error) {
@@ -106,6 +106,21 @@ export function authRouter(services: AuthServices, origins: ReadonlySet<string>)
   });
   router.get('/me', requireAuth(services), (_req, res) => {
     res.json({ ok: true, data: res.locals.authUser });
+  });
+  router.patch('/me', requireAuth(services), async (req, res) => {
+    requireOrigin(req, origins);
+    const identity = res.locals.authSession;
+    requireCsrf(req, identity.familyId);
+    await services.enforceIpLimit('profile', context(req).ip);
+    const user = await services.updateProfile(parse(profileSchema, req.body), identity);
+    res.json({ ok: true, data: user });
+  });
+  router.post('/change-password', requireAuth(services), async (req, res) => {
+    requireOrigin(req, origins);
+    const identity = res.locals.authSession;
+    requireCsrf(req, identity.familyId);
+    await services.enforceIpLimit('change', context(req).ip);
+    await grantResponse(await services.changePassword(parse(changePasswordSchema, req.body), identity), res);
   });
   router.post('/forgot', async (req, res) => {
     const ctx = context(req);

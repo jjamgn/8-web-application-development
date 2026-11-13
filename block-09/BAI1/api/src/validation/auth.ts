@@ -25,3 +25,11 @@ export const loginSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ResetInput = z.infer<typeof resetSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Vui lòng nhập mật khẩu hiện tại.')
+    .refine(value => Buffer.byteLength(value, 'utf8') <= 72, 'Mật khẩu tối đa 72 byte UTF-8.'),
+  ...passwordFields,
+}).refine(matching, matchError);
+export const profileSchema = z.object({
+  name: z.string().trim().min(1, 'Vui lòng nhập họ và tên.').max(120, 'Họ và tên tối đa 120 ký tự.'),
+});

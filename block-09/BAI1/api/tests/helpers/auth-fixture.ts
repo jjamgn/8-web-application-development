@@ -34,6 +34,14 @@ export function createAuthFixture() {
     resend: input => operation('resend', input),
     forgot: input => operation('forgot', input),
     async reset(input) { await operation('reset', input); user.passwordVersion++; for (const row of rows.values()) row.revokedAt = new Date(); },
+    async updateProfile(input) { await operation('update-profile', input); user.name = input.name; return { id: user.id, name: user.name, email: user.email, role: user.role }; },
+    async changePassword(input) {
+      await operation('change-password', input);
+      if (input.currentPassword !== 'password-test') throw new AuthError('CURRENT_PASSWORD_INVALID');
+      user.passwordVersion++;
+      for (const row of rows.values()) row.revokedAt = new Date();
+      return issue();
+    },
     async login(input, context) {
       calls.push({ operation: 'login', input });
       if (fixture.loginError) throw fixture.loginError;
@@ -43,6 +51,7 @@ export function createAuthFixture() {
       return issue();
     },
     async inspectRefresh(raw) { const row = rows.get(raw); return row ? snapshot(row) : null; },
+    async refreshFamilyForCsrf(raw) { return rows.get(raw)?.familyId ?? null; },
     async rotateRefresh(raw) {
       const row = rows.get(raw);
       if (!row) throw new AuthError('INVALID_REFRESH_TOKEN');
@@ -50,7 +59,10 @@ export function createAuthFixture() {
         for (const item of rows.values()) if (item.familyId === row.familyId) item.revokedAt = new Date();
         throw new AuthError('REFRESH_TOKEN_REUSED');
       }
-      if (!liveSession(snapshot(row))) throw new AuthError('INVALID_REFRESH_TOKEN');
+      if (!liveSession(snapshot(row))) {
+        for (const item of rows.values()) if (item.familyId === row.familyId) item.revokedAt = new Date();
+        throw new AuthError('INVALID_REFRESH_TOKEN');
+      }
       row.usedAt = new Date();
       return issue(row.familyId, row.absoluteExpiresAt);
     },

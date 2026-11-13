@@ -4,6 +4,7 @@ import request from 'supertest';
 import { SignJWT, decodeJwt } from 'jose';
 import { createAuthFixture } from './helpers/auth-fixture.js';
 import { AuthError } from '../src/lib/auth-errors.js';
+import { unavailableAuthServices } from '../src/lib/auth-services.js';
 import { signAccessToken, verifyAccessToken } from '../src/lib/auth-jwt.js';
 import { csrfToken, REFRESH_COOKIE } from '../src/lib/auth-http.js';
 import { resetEmail } from '../src/services/auth/email.js';
@@ -336,8 +337,8 @@ test('exact configured CORS origins allow credentials and preflight auth headers
   } finally { process.env.SPA_ORIGINS = 'http://localhost:5173,http://127.0.0.1:5173'; }
 });
 
-test('default app never grants fake authentication when A adapter is missing', async () => {
-  const response = await request(createApp()).post('/api/auth/login').set('Origin', origin).send({ email: fixture.user.email, password: 'password-test' });
+test('explicit unavailable adapter never grants fake authentication', async () => {
+  const response = await request(createApp(unavailableAuthServices)).post('/api/auth/login').set('Origin', origin).send({ email: fixture.user.email, password: 'password-test' });
   assert.equal(response.status, 503);
   assert.equal(response.body.error.code, 'AUTH_SERVICE_UNAVAILABLE');
   assert.equal(response.headers['set-cookie'], undefined);
