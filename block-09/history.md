@@ -78,3 +78,10 @@ Nhật ký này ghi quá trình làm việc, quyết định và thay đổi th�
 - Bản merge qua TypeScript build và 49/49 test tổng hợp (API/search/catalog + unit A + boundary auth B), không skip. Không chạy lại PostgreSQL vì schema/service DB không đổi về nghiệp vụ; 29 test PostgreSQL trước merge vẫn là bằng chứng riêng của A.
 - Cập nhật verifier snapshot cho auth schema/docs, cache và CRLF; đồng bộ hai file reference README/schema về source Block 8 hiện có. Manifest xác nhận không còn sai lệch ngoài phạm vi được ghi nhận.
 - Ghi rõ trong tài liệu A/B: factory service A và port B chưa được nối qua adapter production; app vẫn fail closed 503 cho service chưa nối. Không tự nhận việc merge đã hoàn thành tích hợp auth end-to-end.
+
+### Kết quả publish Git
+
+- Đã tạo merge commit `e574167` trên Thuyet sau khi giải quyết xung đột và kiểm chứng 49/49 test, build, verifier snapshot.
+- Đã push origin/Thuyet từ `1d0604a` lên `e574167`.
+- Đã cập nhật main local theo origin/main, fast-forward main tới Thuyet và push origin/main từ `44f41d6` lên `e574167` thành công; không force push và không viết lại commit cũ.
+- Bản ghi kết quả này được commit bổ sung trên Thuyet và đồng bộ tiếp sang main. Adapter production A–B vẫn là việc tích hợp tiếp theo đã nêu trong tài liệu bàn giao.
