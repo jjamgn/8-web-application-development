@@ -1,0 +1,219 @@
+
+> bep-nha-api@1.0.0 test
+> tsx --test tests/api.test.ts tests/menu-catalog.test.ts tests/auth.test.ts
+
+TAP version 13
+# Subtest: all 15 endpoints: CRUD, read after writes and successful deletion use HTTP 200 JSON
+ok 1 - all 15 endpoints: CRUD, read after writes and successful deletion use HTTP 200 JSON
+  ---
+  duration_ms: 257.4856
+  ...
+# Subtest: search trims q, binds case-insensitive SQL and returns a paginated result
+ok 2 - search trims q, binds case-insensitive SQL and returns a paginated result
+  ---
+  duration_ms: 49.4553
+  ...
+# Subtest: search binds filters and page offsets and preserves database result order
+ok 3 - search binds filters and page offsets and preserves database result order
+  ---
+  duration_ms: 9.5052
+  ...
+# Subtest: fulltext and fuzzy select distinct SQL modes without interpolating user text
+ok 4 - fulltext and fuzzy select distinct SQL modes without interpolating user text
+  ---
+  duration_ms: 37.0552
+  ...
+# Subtest: search rejects invalid, duplicated and unknown query parameters before database access
+ok 5 - search rejects invalid, duplicated and unknown query parameters before database access
+  ---
+  duration_ms: 61.762
+  ...
+# Subtest: basic search treats SQL wildcard characters literally
+ok 6 - basic search treats SQL wildcard characters literally
+  ---
+  duration_ms: 8.7104
+  ...
+# Subtest: serialize Decimal price and recipe quantity as numbers, with resolved imageUrl
+ok 7 - serialize Decimal price and recipe quantity as numbers, with resolved imageUrl
+  ---
+  duration_ms: 10.3785
+  ...
+# Subtest: price accepts zero and rejects missing, null, empty string, strings, negatives and decimals
+ok 8 - price accepts zero and rejects missing, null, empty string, strings, negatives and decimals
+  ---
+  duration_ms: 58.7738
+  ...
+# Subtest: PATCH preserves omitted image, chef, recipe, availability and bio; whitelist strips nested writes
+ok 9 - PATCH preserves omitted image, chef, recipe, availability and bio; whitelist strips nested writes
+  ---
+  duration_ms: 26.7247
+  ...
+# Subtest: create defaults are not applied to PATCH; boolean type and chef references validated
+ok 10 - create defaults are not applied to PATCH; boolean type and chef references validated
+  ---
+  duration_ms: 31.9412
+  ...
+# Subtest: invalid bodies, empty patches, required text and unknown-only patches are business validation
+ok 11 - invalid bodies, empty patches, required text and unknown-only patches are business validation
+  ---
+  duration_ms: 146.5946
+  ...
+# Subtest: invalid and nonexistent IDs return business NOT_FOUND for GET/PATCH/DELETE
+ok 12 - invalid and nonexistent IDs return business NOT_FOUND for GET/PATCH/DELETE
+  ---
+  duration_ms: 359.3075
+  ...
+# Subtest: unique and foreign-key failures are business validation; missing delete maps P2025
+ok 13 - unique and foreign-key failures are business validation; missing delete maps P2025
+  ---
+  duration_ms: 20.8674
+  ...
+# Subtest: technical 404/400/500 use JSON without business envelope and keep CORS headers
+ok 14 - technical 404/400/500 use JSON without business envelope and keep CORS headers
+  ---
+  duration_ms: 27.0884
+  ...
+# Subtest: CORS preflight allows exact SPA origin, JSON and required methods only
+ok 15 - CORS preflight allows exact SPA origin, JSON and required methods only
+  ---
+  duration_ms: 74.9237
+  ...
+# Subtest: GET does not write; SSR URLs and unsupported methods never redirect/render
+ok 16 - GET does not write; SSR URLs and unsupported methods never redirect/render
+  ---
+  duration_ms: 42.9476
+  ...
+# Subtest: login issues only access JWT/CSRF/user JSON and a secure host-only refresh cookie
+ok 17 - login issues only access JWT/CSRF/user JSON and a secure host-only refresh cookie
+  ---
+  duration_ms: 148.5008
+  ...
+# Subtest: invalid credentials and pending accounts are HTTP 200 business errors without tokens
+ok 18 - invalid credentials and pending accounts are HTTP 200 business errors without tokens
+  ---
+  duration_ms: 19.1645
+  ...
+# Subtest: CAPTCHA is verified before registration service and unknown role/invitation fields are stripped
+ok 19 - CAPTCHA is verified before registration service and unknown role/invitation fields are stripped
+  ---
+  duration_ms: 86.9295
+  ...
+# Subtest: Block 8 password policy keeps 8 characters, 72 UTF-8 bytes and confirmation
+ok 20 - Block 8 password policy keeps 8 characters, 72 UTF-8 bytes and confirmation
+  ---
+  duration_ms: 6.3916
+  ...
+# Subtest: login delegates conditional CAPTCHA through context and preserves lock/rate status
+ok 21 - login delegates conditional CAPTCHA through context and preserves lock/rate status
+  ---
+  duration_ms: 20.6331
+  ...
+# Subtest: cookie endpoints require exact Origin including on logout without a cookie
+ok 22 - cookie endpoints require exact Origin including on logout without a cookie
+  ---
+  duration_ms: 112.2442
+  ...
+# Subtest: reload csrf is read-only; refresh rotates cookie in the same family and keeps absolute expiry
+ok 23 - reload csrf is read-only; refresh rotates cookie in the same family and keeps absolute expiry
+  ---
+  duration_ms: 36.6482
+  ...
+# Subtest: CSRF is mandatory for live refresh/logout and failure does not consume or clear cookie
+ok 24 - CSRF is mandatory for live refresh/logout and failure does not consume or clear cookie
+  ---
+  duration_ms: 43.5215
+  ...
+# Subtest: replayed refresh revokes the entire family and invalidates issued access immediately
+ok 25 - replayed refresh revokes the entire family and invalidates issued access immediately
+  ---
+  duration_ms: 28.1599
+  ...
+# Subtest: rotation race error from A propagates 401, clears cookie and leaves family revoked
+ok 26 - rotation race error from A propagates 401, clears cookie and leaves family revoked
+  ---
+  duration_ms: 27.4349
+  ...
+# Subtest: logout revokes sid; repeated logout and absent/invalid cookies are idempotent
+ok 27 - logout revokes sid; repeated logout and absent/invalid cookies are idempotent
+  ---
+  duration_ms: 28.7793
+  ...
+# Subtest: access middleware rechecks current user, email activation, passwordVersion and family expiry
+ok 28 - access middleware rechecks current user, email activation, passwordVersion and family expiry
+  ---
+  duration_ms: 45.685
+  ...
+# Subtest: csrf and refresh reject inactive or password-changed users and clear/revoke their family
+ok 29 - csrf and refresh reject inactive or password-changed users and clear/revoke their family
+  ---
+  duration_ms: 55.886
+  ...
+# Subtest: missing/malformed/duplicate/unknown/expired refresh cookies return 401 and clear cookie
+ok 30 - missing/malformed/duplicate/unknown/expired refresh cookies return 401 and clear cookie
+  ---
+  duration_ms: 37.1756
+  ...
+# Subtest: protected resources reject unauthenticated requests before handler/validation
+ok 31 - protected resources reject unauthenticated requests before handler/validation
+  ---
+  duration_ms: 79.4304
+  ...
+# Subtest: JWT rejects expired, tampered, wrong issuer/audience/algorithm and missing claims
+ok 32 - JWT rejects expired, tampered, wrong issuer/audience/algorithm and missing claims
+  ---
+  duration_ms: 22.6315
+  ...
+# Subtest: middleware rejects stale JWT passwordVersion even when the returned DB session is current
+ok 33 - middleware rejects stale JWT passwordVersion even when the returned DB session is current
+  ---
+  duration_ms: 15.5374
+  ...
+# Subtest: activation/reset preserve prescribed HTTP 200 business error codes; no auto-login
+ok 34 - activation/reset preserve prescribed HTTP 200 business error codes; no auto-login
+  ---
+  duration_ms: 41.5129
+  ...
+# Subtest: reset success does not login and calls A so all old device tokens become invalid
+ok 35 - reset success does not login and calls A so all old device tokens become invalid
+  ---
+  duration_ms: 37.053
+  ...
+# Subtest: resend/forgot use generic results; forgot still requires CAPTCHA
+ok 36 - resend/forgot use generic results; forgot still requires CAPTCHA
+  ---
+  duration_ms: 30.5655
+  ...
+# Subtest: all auth POST routes delegate IP limiting before business operations
+ok 37 - all auth POST routes delegate IP limiting before business operations
+  ---
+  duration_ms: 45.8235
+  ...
+# Subtest: exact configured CORS origins allow credentials and preflight auth headers only
+ok 38 - exact configured CORS origins allow credentials and preflight auth headers only
+  ---
+  duration_ms: 15.432
+  ...
+# Subtest: default app never grants fake authentication when A adapter is missing
+ok 39 - default app never grants fake authentication when A adapter is missing
+  ---
+  duration_ms: 18.3831
+  ...
+# Subtest: reset email targets the SPA /reset and secrets have no session fallback
+ok 40 - reset email targets the SPA /reset and secrets have no session fallback
+  ---
+  duration_ms: 6.0069
+  ...
+# Subtest: catalog contains enough distinct recipes to supplement the original menu
+ok 41 - catalog contains enough distinct recipes to supplement the original menu
+  ---
+  duration_ms: 54.1522
+  ...
+1..41
+# tests 41
+# suites 0
+# pass 41
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3222.5258
