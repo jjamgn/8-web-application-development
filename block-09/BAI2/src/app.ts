@@ -49,7 +49,17 @@ app.use((_req,res,next)=>{res.locals.access={canCreate:(kind:Kind)=>canCreate(re
 app.use('/auth/account',requireFullSession);
 app.use('/auth',createAuthRouter(demo,csrf));
 function writable(_req:Request,res:Response,next:NextFunction){if(demo)return res.status(503).render('error',{title:'Chế độ xem thử',message:'Thao tác ghi chưa bật. Hãy cấu hình Supabase và tài khoản quản trị trong .env, sau đó đặt DEMO_MODE=false.'});next();}
-const upload=multer({storage:multer.memoryStorage(),limits:{fileSize:5*1024*1024,files:1,fields:80}});
+function multipartMessage(error:multer.MulterError){
+  switch(error.code){
+    case 'LIMIT_FILE_SIZE':return 'Ảnh tối đa 5 MB. Vui lòng chọn ảnh nhỏ hơn.';
+    case 'LIMIT_FILE_COUNT':
+    case 'LIMIT_UNEXPECTED_FILE':return 'Chỉ được gửi một file trong ô ảnh món ăn.';
+    case 'LIMIT_FIELD_COUNT':
+    case 'LIMIT_PART_COUNT':return 'Biểu mẫu có quá nhiều trường dữ liệu. Vui lòng tải lại trang và thử lại.';
+    case 'LIMIT_FIELD_VALUE':return 'Nội dung một trường trong biểu mẫu quá dài. Vui lòng rút gọn và thử lại.';
+    default:return 'Biểu mẫu không hợp lệ. Vui lòng tải lại trang và kiểm tra dữ liệu đã nhập.';
+  }
+}
 const chefInclude={specialties:{include:{specialty:true}}};
 const include={chef:{include:chefInclude},ingredients:{include:{ingredient:true}}};
 function chefView(chef:any):any {return chef?{...chef,specialty:Array.isArray(chef.specialties)?chef.specialties.map((row:any)=>row.specialty.name).join(', '):chef.specialty||''}:null;}
@@ -129,7 +139,14 @@ app.get('/admin/dishes/:id',async(req,res)=>{
 });
 // Parse multipart before method override and CSRF. Only POST may override, and only to PATCH/DELETE.
 app.use('/admin', (req,res,next)=>['POST','PATCH','DELETE'].includes(req.method)?writable(req,res,next):next());
-app.use('/admin',(req,res,next)=>upload.single('image')(req,res,async(err:any)=>{
+app.use('/admin',async(req,res,next)=>{
+  // Every ingredient renders a quantity input, including unused/empty inputs.
+  // Keep room for the full SSR form as the ingredient catalogue grows.
+  const dishMultipart=req.is('multipart/form-data')&&/^\/dishes(?:\/[1-9]\d*)?\/?$/.test(req.path);
+  const ingredientCount=dishMultipart?(demo?ingredients.length:await prisma.ingredient.count()):0;
+  const fields=Math.max(80,ingredientCount+16);
+  const upload=multer({storage:multer.memoryStorage(),limits:{fileSize:5*1024*1024,files:1,fields,parts:fields+1,fieldSize:64*1024}});
+  return upload.single('image')(req,res,async(err:any)=>{
   if(!err)return next();
   const match=req.path.match(/^\/(dishes|chefs|ingredients)(?:\/([1-9]\d*))?\/?$/);
   if(!(err instanceof multer.MulterError)||!match)return next(err);
@@ -140,9 +157,10 @@ app.use('/admin',(req,res,next)=>upload.single('image')(req,res,async(err:any)=>
     if(!(editing?canEdit(res.locals.currentUser,kind,current):canCreate(res.locals.currentUser,kind)))return forbidden(res);
     const options=await choices();
     const values={...req.body,id:current?.id,imagePath:current?.imagePath,available:req.body?.available==='on',ingredients:options.ingredients.map((i:any)=>({ingredientId:i.id,quantity:req.body?.[`qty_${i.id}`]||''}))};
-    return res.status(400).render('form',{title:`${editing?'Sửa':'Thêm'} ${metadata[kind].label}`,kind,meta:metadata[kind],editing,values,error:'Ảnh tối đa 5 MB, chỉ một file cho mỗi món. Vui lòng chọn lại ảnh hợp lệ.',...options});
+    return res.status(400).render('form',{title:`${editing?'Sửa':'Thêm'} ${metadata[kind].label}`,kind,meta:metadata[kind],editing,values,error:multipartMessage(err),...options});
   }catch(e){next(e);}
-}));
+  });
+});
 app.use('/admin',methodOverride((req)=>req.method==='POST'&&['PATCH','DELETE'].includes(String(req.body?._method))?req.body._method:undefined,{methods:['POST']}));
 app.use('/admin',(req,res,next)=>['POST','PATCH','DELETE'].includes(req.method)?csrf(req,res,next):next());
 
@@ -235,7 +253,7 @@ app.use((err:any,req:Request,res:Response,_next:NextFunction)=>{
   if(res.headersSent){res.end();return;}
   const bad=err instanceof multer.MulterError||err.status===400||err.status===413;
   const title=bad?'Biểu mẫu không hợp lệ':'Chưa thể tải dữ liệu';
-  const message=bad?'File tối đa 5 MB; kiểm tra biểu mẫu và thử lại.':'Vui lòng kiểm tra cấu hình Supabase và kết nối mạng, sau đó thử lại.';
+  const message=err instanceof multer.MulterError?multipartMessage(err):bad?'Biểu mẫu quá lớn hoặc không đúng định dạng. Vui lòng kiểm tra dữ liệu và thử lại.':'Vui lòng kiểm tra cấu hình Supabase và kết nối mạng, sau đó thử lại.';
   // Session/parser failures can happen before the normal locals middleware.
   // Always give the error template a safe, unauthenticated rendering context.
   Object.assign(res.locals,{path:req.path,demo,currentUser:null,admin:false,csrf:'',notice:''});

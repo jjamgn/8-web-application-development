@@ -110,3 +110,44 @@ test('dish creation uploads image on server and persists recipe with a storage o
   const row=state.dishes.at(-1);assert.match(row.imagePath,/^uploads\/[a-f0-9]+\.png$/);assert.equal(row.ingredients.create[0].quantity,150);
   const deleted=await agent.post(`/admin/dishes/${row.id}`).type('form').send({_csrf:csrf,_method:'DELETE'});assert.equal(deleted.status,303);assert.ok(storageRequests.some(x=>x.startsWith('DELETE /storage/v1/object/')));
 });
+
+test('full dish forms with 110 ingredient inputs can create and edit, including empty quantities',async()=>{
+  const previous=state.ingredients;
+  state.ingredients=Array.from({length:110},(_,i)=>({id:5000+i,name:`Nguyên liệu ${i}`,unit:'g'}));
+  try{
+    const {agent,csrf}=await login();
+    const data={name:'Món đủ 110 ô nguyên liệu',description:'Biểu mẫu đầy đủ như trên trình duyệt',price:'99000',category:'Món chính',chefId:'1',available:'on'};
+    const fill=(r:any)=>{
+      r=r.field('_csrf',csrf).field(data);
+      for(const [i,ingredient]of state.ingredients.entries())r=r.field(`qty_${ingredient.id}`,i===0?'25.5':'');
+      return r;
+    };
+    const edit=await fill(agent.post('/admin/dishes/1').field('_method','PATCH'));
+    assert.equal(edit.status,303);
+    const write=[...calls].reverse().find(x=>x.kind==='dishes'&&x.op==='update');
+    assert.deepEqual(write?.args.data.ingredients.create,[{ingredientId:5000,quantity:25.5}]);
+    const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=','base64');
+    const created=await fill(agent.post('/admin/dishes')).attach('image',png,{filename:'dish.png',contentType:'image/png'});
+    assert.equal(created.status,303);
+    const direct=await fill(agent.patch('/admin/dishes/1'));
+    assert.equal(direct.status,303);
+  }finally{state.ingredients=previous;}
+});
+
+test('multipart limits report field errors separately from image errors without DB/Storage writes',async()=>{
+  const {agent,csrf}=await login();
+  const beforeWrites=calls.filter(x=>['create','update','delete','deleteMany'].includes(x.op)).length;
+  const beforeStorage=storageRequests.length;
+  const longText=await agent.patch('/admin/dishes/1').field('_csrf',csrf).field('description','x'.repeat(64*1024+1));
+  assert.equal(longText.status,400);assert.match(longText.text,/Nội dung một trường/);assert.doesNotMatch(longText.text,/Ảnh tối đa 5 MB/);
+  let manyFields=agent.patch('/admin/dishes/1').field('_csrf',csrf);
+  for(let i=0;i<81;i++)manyFields=manyFields.field(`extra_${i}`,'');
+  const fields=await manyFields;
+  assert.equal(fields.status,400);assert.match(fields.text,/quá nhiều trường dữ liệu/);assert.doesNotMatch(fields.text,/Ảnh tối đa 5 MB/);
+  const bigImage=await agent.patch('/admin/dishes/1').field('_csrf',csrf).attach('image',Buffer.alloc(5*1024*1024+1),{filename:'large.png',contentType:'image/png'});
+  assert.equal(bigImage.status,400);assert.match(bigImage.text,/Ảnh tối đa 5 MB/);
+  const files=await agent.patch('/admin/dishes/1').field('_csrf',csrf).attach('image',Buffer.from('a'),'a.png').attach('image',Buffer.from('b'),'b.png');
+  assert.equal(files.status,400);assert.match(files.text,/Chỉ được gửi một file/);
+  assert.equal(storageRequests.length,beforeStorage);
+  assert.equal(calls.filter(x=>['create','update','delete','deleteMany'].includes(x.op)).length,beforeWrites);
+});
