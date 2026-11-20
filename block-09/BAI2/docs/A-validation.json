@@ -1,0 +1,17 @@
+{
+  "build": "passed",
+  "automated": {
+    "tests": 117,
+    "passed": 117,
+    "failed": 0
+  },
+  "policyTests": 8,
+  "sourceMain": "7b61a0fa152fb679be60d9a3b4ae30126725ca9c",
+  "branch": "codex/block09-a-data-access",
+  "migration": "docs/migration-verification.json",
+  "liveHTTP": "docs/demo-http-verification.json",
+  "pendingIntegration": [
+    "B: MFA/session/login redirect for editor",
+    "C: role-aware EJS controls/status field and Playwright"
+  ]
+}

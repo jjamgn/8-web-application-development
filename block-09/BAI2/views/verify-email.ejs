@@ -1,0 +1,29 @@
+<%- include('partials/header') %>
+<main class="login-page">
+  <section class="login-card" aria-labelledby="verification-title">
+    <span class="eyebrow">XÁC MINH EMAIL</span>
+    <h1 id="verification-title"><%= verified ? 'Email đã được xác minh' : 'Kiểm tra hộp thư' %></h1>
+    <% if(notice){ %><div class="alert" role="status"><%= notice %></div><% } %>
+    <% if(error){ %><div class="alert" role="alert"><%= error %></div><% } %>
+    <% if(verified){ %>
+      <p>Tài khoản đã được kích hoạt. Hãy đăng nhập để tiếp tục.</p>
+      <a class="button primary" href="/auth/login">Đến trang đăng nhập →</a>
+    <% } else { %>
+      <p>Nhập mã 6 chữ số từ email. Mã có hiệu lực 5 phút và chỉ dùng một lần.</p>
+      <form method="post" action="/auth/verify-email">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <label>Mã xác minh
+          <input type="text" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required>
+        </label>
+        <button class="button primary" type="submit">Xác minh email →</button>
+      </form>
+      <p>Chưa nhận được? Kiểm tra cả mục Spam. Gửi lại cách ít nhất 60 giây. Nếu nhập sai 5 lần, hãy chờ 15 phút rồi yêu cầu mã mới.</p>
+      <form method="post" action="/auth/verify-email/resend">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="button outline" type="submit">Yêu cầu mã mới</button>
+      </form>
+      <a class="text-link" href="/auth/register">Quay lại đăng ký →</a>
+    <% } %>
+  </section>
+</main>
+<%- include('partials/footer') %>

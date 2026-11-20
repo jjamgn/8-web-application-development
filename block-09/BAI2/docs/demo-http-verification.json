@@ -1,0 +1,148 @@
+{
+  "passed": true,
+  "timestamp": "2026-11-20T03:00:39.583Z",
+  "results": [
+    {
+      "request": "GET /dishes/1009",
+      "role": "guest",
+      "status": 404
+    },
+    {
+      "request": "GET /dishes/1010",
+      "role": "guest",
+      "status": 404
+    },
+    {
+      "request": "GET /dishes/1011",
+      "role": "guest",
+      "status": 200
+    },
+    {
+      "request": "GET /admin/dishes",
+      "role": "viewer",
+      "status": 200
+    },
+    {
+      "request": "GET /admin/dishes/1009/edit",
+      "role": "viewer",
+      "chefId": null,
+      "status": 403
+    },
+    {
+      "request": "PATCH /admin/dishes/1009",
+      "role": "viewer",
+      "status": 403
+    },
+    {
+      "request": "GET /admin/dishes/1010/edit",
+      "role": "viewer",
+      "chefId": null,
+      "status": 403
+    },
+    {
+      "request": "PATCH /admin/dishes/1010",
+      "role": "viewer",
+      "status": 403
+    },
+    {
+      "request": "GET /admin/dishes/1011/edit",
+      "role": "viewer",
+      "chefId": null,
+      "status": 403
+    },
+    {
+      "request": "PATCH /admin/dishes/1011",
+      "role": "viewer",
+      "status": 403
+    },
+    {
+      "request": "GET /admin/dishes",
+      "role": "editor",
+      "status": 200
+    },
+    {
+      "request": "GET /admin/dishes/1009/edit",
+      "role": "editor",
+      "chefId": 7,
+      "status": 200
+    },
+    {
+      "request": "GET /admin/dishes/1010/edit",
+      "role": "editor",
+      "chefId": 7,
+      "status": 403
+    },
+    {
+      "request": "PATCH /admin/dishes/1010",
+      "role": "editor",
+      "status": 403
+    },
+    {
+      "request": "GET /admin/dishes/1011/edit",
+      "role": "editor",
+      "chefId": 7,
+      "status": 403
+    },
+    {
+      "request": "PATCH /admin/dishes/1011",
+      "role": "editor",
+      "status": 403
+    },
+    {
+      "request": "GET /admin/dishes",
+      "role": "editor",
+      "status": 200
+    },
+    {
+      "request": "GET /admin/dishes/1009/edit",
+      "role": "editor",
+      "chefId": 8,
+      "status": 403
+    },
+    {
+      "request": "PATCH /admin/dishes/1009",
+      "role": "editor",
+      "status": 403
+    },
+    {
+      "request": "GET /admin/dishes/1010/edit",
+      "role": "editor",
+      "chefId": 8,
+      "status": 200
+    },
+    {
+      "request": "GET /admin/dishes/1011/edit",
+      "role": "editor",
+      "chefId": 8,
+      "status": 403
+    },
+    {
+      "request": "PATCH /admin/dishes/1011",
+      "role": "editor",
+      "status": 403
+    },
+    {
+      "request": "GET /admin/dishes",
+      "role": "admin",
+      "status": 200
+    },
+    {
+      "request": "GET /admin/dishes/1009/edit",
+      "role": "admin",
+      "chefId": null,
+      "status": 200
+    },
+    {
+      "request": "GET /admin/dishes/1010/edit",
+      "role": "admin",
+      "chefId": null,
+      "status": 200
+    },
+    {
+      "request": "GET /admin/dishes/1011/edit",
+      "role": "admin",
+      "chefId": null,
+      "status": 200
+    }
+  ]
+}

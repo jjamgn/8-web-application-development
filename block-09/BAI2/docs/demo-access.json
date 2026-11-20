@@ -1,0 +1,58 @@
+{
+  "users": [
+    {
+      "id": 18,
+      "email": "b9b2-demo-viewer@example.test",
+      "role": "viewer",
+      "chefId": null
+    },
+    {
+      "id": 19,
+      "email": "b9b2-demo-editor-1@example.test",
+      "role": "editor",
+      "chefId": 7
+    },
+    {
+      "id": 20,
+      "email": "b9b2-demo-editor-2@example.test",
+      "role": "editor",
+      "chefId": 8
+    },
+    {
+      "id": 21,
+      "email": "b9b2-demo-admin@example.test",
+      "role": "admin",
+      "chefId": null
+    }
+  ],
+  "chefs": [
+    {
+      "id": 7,
+      "name": "B9B2-DEMO-Chef-1"
+    },
+    {
+      "id": 8,
+      "name": "B9B2-DEMO-Chef-2"
+    }
+  ],
+  "dishes": [
+    {
+      "id": 1009,
+      "name": "B9B2-DEMO-Draft-1",
+      "chefId": 7,
+      "status": "draft"
+    },
+    {
+      "id": 1010,
+      "name": "B9B2-DEMO-Draft-2",
+      "chefId": 8,
+      "status": "draft"
+    },
+    {
+      "id": 1011,
+      "name": "B9B2-DEMO-Published",
+      "chefId": 7,
+      "status": "published"
+    }
+  ]
+}

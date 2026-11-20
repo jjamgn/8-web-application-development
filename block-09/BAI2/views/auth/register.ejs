@@ -1,0 +1,23 @@
+<%- include('../partials/header') %>
+<main class="auth-page">
+  <%- include('_intro', { introTitle: 'Cùng chăm chút từng hương vị.', introCopy: 'Không gian dành cho đội ngũ Bếp Nhà. Đăng ký bằng mã mời từ người quản lý và xác minh email để kích hoạt tài khoản.' }) %>
+  <section class="auth-card" aria-labelledby="auth-title">
+    <span class="eyebrow">DÀNH CHO ĐỘI NGŨ BẾP NHÀ</span>
+    <h1 id="auth-title">Đăng ký tài khoản đội ngũ</h1>
+    <p class="auth-lead">Chúng mình sẽ gửi mã xác minh đến email của bạn. Đăng ký và xác minh email không tự cấp quyền quản trị; người quản lý sẽ cấp quyền riêng.</p>
+    <%- include('_messages') %>
+    <form class="auth-form" method="post" action="/auth/register">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="auth-field"><label for="name">Họ và tên</label><input id="name" name="name" autocomplete="name" value="<%= values.name || '' %>" required minlength="1" maxlength="120" aria-invalid="<%= errors.name ? 'true' : 'false' %>" <%- errors.name ? 'aria-describedby="name-error"' : '' %>><%- include('_field-error', { field: 'name' }) %></div>
+      <div class="auth-field"><label for="email">Địa chỉ email</label><input id="email" type="email" name="email" autocomplete="email" value="<%= values.email || '' %>" required maxlength="200" aria-invalid="<%= errors.email ? 'true' : 'false' %>" <%- errors.email ? 'aria-describedby="email-error"' : '' %>><%- include('_field-error', { field: 'email' }) %></div>
+      <div class="auth-field"><label for="invitationCode">Mã mời quản trị</label><input id="invitationCode" type="password" name="invitationCode" autocomplete="off" required maxlength="256" aria-invalid="<%= errors.invitationCode ? 'true' : 'false' %>" aria-describedby="invitationCode-help<%= errors.invitationCode ? ' invitationCode-error' : '' %>"><small class="auth-field-help" id="invitationCode-help">Nhập mã mời do người quản lý cung cấp.</small><%- include('_field-error', { field: 'invitationCode' }) %></div>
+      <div class="auth-field"><label for="password">Mật khẩu</label><input id="password" type="password" name="password" autocomplete="new-password" required minlength="8" maxlength="72" aria-invalid="<%= errors.password ? 'true' : 'false' %>" aria-describedby="password-help<%= errors.password ? ' password-error' : '' %>"><small class="auth-field-help" id="password-help">Sử dụng ít nhất 8 ký tự; tránh mật khẩu quá dài.</small><%- include('_field-error', { field: 'password' }) %></div>
+      <div class="auth-field"><label for="confirmPassword">Nhập lại mật khẩu</label><input id="confirmPassword" type="password" name="confirmPassword" autocomplete="new-password" required minlength="8" maxlength="72" aria-invalid="<%= errors.confirmPassword ? 'true' : 'false' %>" <%- errors.confirmPassword ? 'aria-describedby="confirmPassword-error"' : '' %>><%- include('_field-error', { field: 'confirmPassword' }) %></div>
+      <%- include('_captcha', { refreshPath: '/auth/register' }) %>
+      <button class="button primary auth-submit" type="submit">Tạo tài khoản</button>
+    </form>
+    <p class="auth-switch">Đã có tài khoản đội ngũ? <a href="/auth/login">Đăng nhập</a></p>
+    <a class="auth-secondary-link" href="/auth/verify-email">Đã đăng ký và cần xác minh email?</a>
+  </section>
+</main>
+<%- include('../partials/footer') %>

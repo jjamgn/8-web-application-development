@@ -1,0 +1,48 @@
+<%- include('../partials/header') %>
+<main class="auth-page">
+  <%- include('_intro', { introTitle: 'Cùng giữ căn bếp luôn chỉn chu.', introCopy: 'Kiểm tra thông tin tài khoản và quyền truy cập của bạn tại Bếp Nhà. Quyền quản trị do người quản lý cấp.' }) %>
+  <section class="auth-card" aria-labelledby="auth-title">
+    <span class="eyebrow">THÔNG TIN TRUY CẬP</span>
+    <h1 id="auth-title">Tài khoản của bạn</h1>
+    <%- include('_messages') %>
+    <% if (currentUser) { %>
+      <p class="auth-lead">Chào <strong><%= currentUser.name %></strong>, đây là thông tin tài khoản Bếp Nhà của bạn.</p>
+      <dl class="auth-account-details">
+        <div class="auth-account-editable"><dt>Họ và tên</dt><dd><span class="auth-account-value"><%= currentUser.name %></span>
+          <details class="auth-settings" <%= editSection === 'profile' ? 'open' : '' %>>
+          <summary aria-label="Sửa họ và tên" title="Sửa họ và tên"><%- include('_edit-icon') %></summary>
+          <form class="auth-form" method="post" action="/auth/account/profile">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <div class="auth-field"><label for="profile-name">Họ và tên</label><input id="profile-name" name="name" autocomplete="name" required maxlength="120" value="<%= values.name %>" aria-invalid="<%= errors.name ? 'true' : 'false' %>" <%- errors.name ? 'aria-describedby="name-error"' : '' %>><%- include('_field-error', { field: 'name' }) %></div>
+            <button class="button primary auth-submit" type="submit">Lưu họ tên</button>
+          </form>
+        </details>
+        </dd></div>
+        <div><dt>Địa chỉ email</dt><dd><%= currentUser.email %></dd></div>
+        <div class="auth-account-editable"><dt>Mật khẩu</dt><dd><span class="auth-account-value auth-account-secret" aria-label="Mật khẩu được ẩn">••••••••</span>
+          <details class="auth-settings" <%= editSection === 'password' ? 'open' : '' %>>
+          <summary aria-label="Đổi mật khẩu" title="Đổi mật khẩu"><%- include('_edit-icon') %></summary>
+          <p class="auth-settings-help">Sau khi đổi mật khẩu, bạn cần đăng nhập lại trên tất cả thiết bị.</p>
+          <form class="auth-form" method="post" action="/auth/account/password">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <div class="auth-field"><label for="current-password">Mật khẩu cũ</label><input id="current-password" type="password" name="currentPassword" autocomplete="current-password" required maxlength="72" aria-invalid="<%= errors.currentPassword ? 'true' : 'false' %>" <%- errors.currentPassword ? 'aria-describedby="currentPassword-error"' : '' %>><%- include('_field-error', { field: 'currentPassword' }) %></div>
+            <div class="auth-field"><label for="new-password">Mật khẩu mới</label><input id="new-password" type="password" name="password" autocomplete="new-password" required minlength="8" maxlength="72" aria-invalid="<%= errors.password ? 'true' : 'false' %>" aria-describedby="new-password-help<%= errors.password ? ' password-error' : '' %>"><small class="auth-field-help" id="new-password-help">Ít nhất 8 ký tự, tối đa 72 byte UTF-8. Mật khẩu mới cần khác mật khẩu hiện tại.</small><%- include('_field-error', { field: 'password' }) %></div>
+            <div class="auth-field"><label for="confirm-new-password">Nhập lại mật khẩu mới</label><input id="confirm-new-password" type="password" name="confirmPassword" autocomplete="new-password" required minlength="8" maxlength="72" aria-invalid="<%= errors.confirmPassword ? 'true' : 'false' %>" <%- errors.confirmPassword ? 'aria-describedby="confirmPassword-error"' : '' %>><%- include('_field-error', { field: 'confirmPassword' }) %></div>
+            <button class="button primary auth-submit" type="submit">Lưu mật khẩu mới</button>
+          </form>
+        </details>
+        </dd></div>
+        <div><dt>Trạng thái email</dt><dd><span class="status <%= currentUser.emailVerifiedAt ? '' : 'off' %>"><%= currentUser.emailVerifiedAt ? 'Đã xác minh' : 'Chưa xác minh' %></span></dd></div>
+        <div><dt>Quyền truy cập</dt><dd><span class="status <%= currentUser.role === 'admin' ? '' : 'off' %>"><%= currentUser.role === 'admin' ? 'Quyền quản trị' : 'Chờ cấp quyền quản trị' %></span></dd></div>
+      </dl>
+      <% if (!currentUser.emailVerifiedAt) { %><a class="auth-secondary-link" href="/auth/verify-email">Xác minh địa chỉ email của bạn</a><% } %>
+      <% if (currentUser.role === 'admin') { %>
+        <a class="button primary auth-submit" href="/admin/dishes">Về trang quản trị</a>
+      <% } else { %>
+        <p class="notice" role="status">Tài khoản đã xác minh nhưng chưa được cấp quyền quản trị. Vui lòng liên hệ người quản lý.</p>
+      <% } %>
+      <form method="post" action="/auth/logout"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="button outline auth-submit" type="submit">Đăng xuất</button></form>
+    <% } %>
+  </section>
+</main>
+<%- include('../partials/footer') %>

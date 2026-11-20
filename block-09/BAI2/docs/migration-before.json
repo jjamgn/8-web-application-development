@@ -1,0 +1,21 @@
+{
+  "migration": "202611200001_bai2_access_mfa",
+  "sourceMain": "7b61a0fa152fb679be60d9a3b4ae30126725ca9c",
+  "timestamp": "2026-11-20T02:54:40.242Z",
+  "isolatedSchema": "b9b2_verify_77424afc4c4d921a",
+  "isolated": {
+    "passed": true,
+    "checks": [
+      "old data/defaults",
+      "role/chef constraints",
+      "status constraint",
+      "4 real PostgreSQL lock races"
+    ]
+  },
+  "before": {
+    "users": 14,
+    "dishes": 999,
+    "digest": "adbfea18e29a77db4da42eabf0042ce03b49913f9809c5e8b08bfa4e9021b214"
+  },
+  "recovery": "docs/A-HANDOFF.md"
+}
