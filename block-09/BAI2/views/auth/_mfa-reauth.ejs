@@ -1,0 +1,12 @@
+<details class="mfa-action">
+  <summary><span><strong><%= actionTitle %></strong><small><%= actionCopy %></small></span><span aria-hidden="true">⌄</span></summary>
+  <form class="auth-form" method="post" action="<%= actionPath %>">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <div class="auth-field">
+      <label for="<%= fieldPrefix %>-password">Mật khẩu hiện tại</label>
+      <input id="<%= fieldPrefix %>-password" name="currentPassword" type="password" autocomplete="current-password" required maxlength="72">
+    </div>
+    <%- include('_mfa-credential', { fieldPrefix, selectedMethod: 'totp' }) %>
+    <button class="button <%= actionDanger ? 'outline mfa-danger' : 'primary' %> auth-submit" type="submit"><%= actionButton %></button>
+  </form>
+</details>

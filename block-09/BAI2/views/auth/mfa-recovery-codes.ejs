@@ -1,0 +1,15 @@
+<%- include('../partials/header') %>
+<main class="auth-page">
+  <%- include('_intro', { introTitle: 'Giữ lại lối vào dự phòng.', introCopy: 'Nếu mất điện thoại, mỗi mã dự phòng giúp bạn đăng nhập một lần. Hãy cất chúng ở nơi riêng tư.' }) %>
+  <section class="auth-card" aria-labelledby="auth-title">
+    <span class="eyebrow">MÃ DỰ PHÒNG</span>
+    <h1 id="auth-title">Lưu các mã của bạn</h1>
+    <p class="auth-lead">Các mã này <strong>chỉ hiển thị một lần</strong>. Hãy lưu chúng trước khi rời trang. Bộ mã cũ, nếu có, đã hết hiệu lực.</p>
+    <ol class="mfa-recovery-list" aria-label="Mã dự phòng dùng một lần">
+      <% codes.forEach(code => { %><li><code><%= code %></code></li><% }); %>
+    </ol>
+    <p class="auth-field-help">Bạn có thể sao chép hoặc dùng Ctrl+P để lưu bản in. Tránh chia sẻ màn hình hoặc ảnh chứa các mã này.</p>
+    <a class="button primary auth-submit" href="/auth/account/mfa">Tôi đã lưu mã</a>
+  </section>
+</main>
+<%- include('../partials/footer') %>

@@ -1,0 +1,25 @@
+<%- include('../partials/header') %>
+<main class="auth-page">
+  <%- include('_intro', { introTitle: 'Một mã mới cho tài khoản an toàn hơn.', introCopy: 'Dùng ứng dụng Authenticator trên điện thoại để quét QR hoặc nhập mã thiết lập thủ công.' }) %>
+  <section class="auth-card" aria-labelledby="auth-title">
+    <span class="eyebrow">THIẾT LẬP XÁC MINH</span>
+    <h1 id="auth-title"><%= mode === 'replace' ? 'Thay ứng dụng xác minh' : 'Bật xác minh hai bước' %></h1>
+    <p class="auth-lead">Thiết lập này hết hạn sau 5 phút. Chỉ xác nhận khi ứng dụng của bạn đã hiển thị mã 6 số.</p>
+    <%- include('_messages') %>
+    <div class="mfa-setup-code">
+      <img src="<%= qrDataUrl %>" width="260" height="260" alt="Mã QR để thêm tài khoản Bếp Nhà vào ứng dụng Authenticator">
+      <div><p>Không quét được QR? Nhập mã này vào ứng dụng:</p><code class="mfa-manual-secret"><%= manualSecret %></code><small>Không chia sẻ mã thiết lập này với người khác.</small></div>
+    </div>
+    <form class="auth-form" method="post" action="<%= confirmPath %>">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="auth-field">
+        <label for="setup-code">Mã 6 số đầu tiên</label>
+        <input id="setup-code" class="auth-otp" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required aria-describedby="setup-code-help">
+        <small class="auth-field-help" id="setup-code-help">Mã trong ứng dụng thay đổi sau mỗi 30 giây.</small>
+      </div>
+      <button class="button primary auth-submit" type="submit"><%= mode === 'replace' ? 'Xác nhận ứng dụng mới' : 'Bật xác minh hai bước' %></button>
+    </form>
+    <a class="auth-secondary-link" href="/auth/account/mfa">Hủy thiết lập</a>
+  </section>
+</main>
+<%- include('../partials/footer') %>

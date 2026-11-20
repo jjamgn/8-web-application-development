@@ -18,6 +18,7 @@ const {authClock} = await import('../src/auth/tokens.js');
 const {captchaProvider} = await import('../src/auth/captcha.js');
 const {PrismaSessionStore} = await import('../src/auth/session-store.js');
 const {LOGIN_LOCK_MS, SESSION_TTL_MS} = await import('../src/auth/login.js');
+const {MFA_PENDING_TTL_MS} = await import('../src/auth/mfa.js');
 const {app} = await import('../src/app.js');
 const p = prisma as any;
 const sessions = stubSession(p);
@@ -97,7 +98,27 @@ test('login requires both active status and verified email before issuing an aut
   assert.equal((await agent.get('/admin')).headers.location, '/admin/dishes');
 });
 
-test('server guards every direct CRUD URL and ignores a role submitted by a viewer', async () => {
+test('an MFA-enabled password login persists only a short pending session', async () => {
+  const agent = request.agent(app);
+  users[0].mfaEnabled = true;
+  const response = await submit(agent, users[0].email);
+  assert.equal(response.status, 303);
+  assert.equal(response.headers.location, '/auth/mfa');
+  const pending = [...sessions.values()].find(row => row.sess.mfaPendingUserId === users[0].id);
+  assert.ok(pending);
+  assert.equal(pending.userId, null, 'pending sessions must not become full sessions');
+  assert.equal(pending.sess.mfaPendingPasswordVersion, users[0].passwordVersion);
+  assert.ok(pending.expiresAt.getTime() > Date.now());
+  assert.ok(pending.expiresAt.getTime() <= Date.now() + MFA_PENDING_TTL_MS);
+  assert.ok([...sessions.values()].every(row => row.userId !== users[0].id));
+  assert.notEqual((await agent.get('/admin/dishes')).status, 200);
+  users[0].passwordVersion++;
+  const stale = await agent.get('/auth/mfa');
+  assert.equal(stale.status, 303, 'a password reset must invalidate the pending MFA step');
+  assert.equal(stale.headers.location, '/auth/login');
+});
+
+test('server guards guest CRUD URLs and ignores a role submitted by a viewer', async () => {
   for (const method of ['get', 'post', 'patch', 'delete'] as const) {
     const response = await request(app)[method]('/admin/dishes/1');
     assert.equal(response.status, 303, method);
@@ -107,8 +128,10 @@ test('server guards every direct CRUD URL and ignores a role submitted by a view
   const response = await submit(agent, users[1].email, password, undefined, {role: 'admin', admin: 'true'});
   assert.equal(response.status, 303);
   assert.equal(response.headers.location, '/auth/account');
-  for (const method of ['post', 'patch', 'delete'] as const) assert.equal((await agent[method]('/admin/dishes/1')).status, 403, method);
-  assert.equal((await agent.get('/admin')).headers.location, '/admin/dishes');
+  const admin = await agent.get('/admin');
+  assert.equal(admin.status, 302);
+  assert.equal(admin.headers.location, '/admin/dishes');
+  assert.equal((await agent.get('/admin/dishes/new')).status, 403);
 });
 
 test('login rotates the session, a fresh store can restore it, and logout invalidates replayed cookies', async () => {
@@ -192,7 +215,9 @@ test('server immediately applies role changes and revokes sessions after deactiv
   const agent = request.agent(app);
   assert.equal((await submit(agent, users[0].email)).status, 303);
   users[0].role = 'viewer';
-  assert.equal((await agent.get('/admin')).headers.location, '/admin/dishes');
+  const viewer = await agent.get('/admin');
+  assert.equal(viewer.status, 302);
+  assert.equal(viewer.headers.location, '/admin/dishes');
   users[0].role = 'admin';
   users[0].passwordVersion++;
   assert.equal((await agent.get('/auth/account')).headers.location, '/auth/login');

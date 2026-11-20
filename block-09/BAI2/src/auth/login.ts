@@ -6,6 +6,7 @@ import { prisma } from '../db.js';
 import { authClock, authTransaction, tokenHash } from './tokens.js';
 import { loginSchema } from './validation.js';
 import { consumeCaptcha } from './captcha.js';
+import { MFA_PENDING_TTL_MS, mfaLockState, verifyMfaCredential } from './mfa.js';
 
 export const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 export const LOGIN_LOCK_MS = 15 * 60 * 1000;
@@ -100,10 +101,53 @@ export function createLoginRouter(demo: boolean, csrf: RequestHandler) {
     const authenticated: User = result.user;
     req.session.regenerate(error => {
       if (error) return next(error);
+      if (authenticated.mfaEnabled) {
+        const expiresAt = Date.now() + MFA_PENDING_TTL_MS;
+        req.session.mfaPendingUserId = authenticated.id;
+        req.session.mfaPendingPasswordVersion = authenticated.passwordVersion;
+        req.session.mfaPendingExpiresAt = expiresAt;
+        req.session.absoluteExpiresAt = expiresAt;
+        req.session.cookie.expires = new Date(expiresAt);
+        return req.session.save(error => error ? next(error) : res.redirect(303, '/auth/mfa'));
+      }
       req.session.userId = authenticated.id;
       req.session.passwordVersion = authenticated.passwordVersion;
       req.session.absoluteExpiresAt = Date.now() + SESSION_TTL_MS;
-      req.session.save(error => error ? next(error) : res.redirect(303, authenticated.role === 'admin' ? '/admin/dishes' : '/auth/account'));
+      req.session.save(error => error ? next(error) : res.redirect(303, ['admin', 'editor'].includes(authenticated.role) ? '/admin/dishes' : '/auth/account'));
+    });
+  });
+  async function pendingUser(req: Request) {
+    const userId = req.session.mfaPendingUserId;
+    if (!userId || typeof req.session.mfaPendingPasswordVersion !== 'number' || !req.session.mfaPendingExpiresAt || req.session.mfaPendingExpiresAt <= Date.now()) return null;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    return user?.status === 'active' && user.emailVerifiedAt && user.mfaEnabled && user.passwordVersion === req.session.mfaPendingPasswordVersion ? user : null;
+  }
+  function renderMfa(res: Response, status = 200, error = '', method = 'totp', retryAfter = 0) {
+    if (retryAfter) res.set('Retry-After', String(retryAfter));
+    return res.status(status).render('auth/mfa', { title: 'Xác minh hai bước · Bếp Nhà', error, errors: {}, method });
+  }
+  router.get('/mfa', async (req, res) => {
+    const user = await pendingUser(req);
+    if (!user) return res.redirect(303, '/auth/login');
+    const retryAfter = await mfaLockState(user.id);
+    return retryAfter ? renderMfa(res, 429, 'Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau.', 'totp', retryAfter) : renderMfa(res);
+  });
+  const mfaIpLimit = rateLimit({ windowMs: MFA_PENDING_TTL_MS, limit: 30, standardHeaders: 'draft-7', legacyHeaders: false, handler: (_req, res) => renderMfa(res, 429, 'Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau.') });
+  router.post('/mfa', writable, mfaIpLimit, async (req, res, next) => {
+    const user = await pendingUser(req);
+    if (!user) return res.redirect(303, '/auth/login');
+    const method = req.body?.method === 'recovery' ? 'recovery' : 'totp';
+    const result = await verifyMfaCredential(user.id, user.email, req.body?.method, req.body?.code);
+    if (result.status === 'locked') return renderMfa(res, 429, 'Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau.', method, result.retryAfter);
+    if (result.status === 'unavailable') return res.redirect(303, '/auth/login');
+    if (result.status !== 'ok') return renderMfa(res, 400, 'Mã xác minh không hợp lệ hoặc đã sử dụng.', method);
+    req.session.regenerate(error => {
+      if (error) return next(error);
+      req.session.userId = user.id;
+      req.session.passwordVersion = user.passwordVersion;
+      req.session.absoluteExpiresAt = Date.now() + SESSION_TTL_MS;
+      req.session.cookie.expires = new Date(req.session.absoluteExpiresAt);
+      req.session.save(error => error ? next(error) : res.redirect(303, ['admin', 'editor'].includes(user.role) ? '/admin/dishes' : '/auth/account'));
     });
   });
   router.post('/logout', csrf, (req, res, next) => req.session.destroy(error => {

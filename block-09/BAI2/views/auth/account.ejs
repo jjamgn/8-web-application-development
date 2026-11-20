@@ -33,14 +33,11 @@
         </details>
         </dd></div>
         <div><dt>Trạng thái email</dt><dd><span class="status <%= currentUser.emailVerifiedAt ? '' : 'off' %>"><%= currentUser.emailVerifiedAt ? 'Đã xác minh' : 'Chưa xác minh' %></span></dd></div>
-        <div><dt>Quyền truy cập</dt><dd><span class="status <%= currentUser.role === 'admin' ? '' : 'off' %>"><%= currentUser.role === 'admin' ? 'Quyền quản trị' : 'Chờ cấp quyền quản trị' %></span></dd></div>
+        <div><dt>Quyền truy cập</dt><dd><span class="status"><%= currentUser.role === 'admin' ? 'Quản trị viên' : currentUser.role === 'editor' ? 'Biên tập viên' : 'Người xem' %></span></dd></div>
       </dl>
       <% if (!currentUser.emailVerifiedAt) { %><a class="auth-secondary-link" href="/auth/verify-email">Xác minh địa chỉ email của bạn</a><% } %>
-      <% if (currentUser.role === 'admin') { %>
-        <a class="button primary auth-submit" href="/admin/dishes">Về trang quản trị</a>
-      <% } else { %>
-        <p class="notice" role="status">Tài khoản đã xác minh nhưng chưa được cấp quyền quản trị. Vui lòng liên hệ người quản lý.</p>
-      <% } %>
+      <a class="button outline auth-submit" href="/auth/account/mfa">Cài đặt xác minh hai bước</a>
+      <a class="button primary auth-submit" href="/admin/dishes">Vào khu vực quản trị</a>
       <form method="post" action="/auth/logout"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="button outline auth-submit" type="submit">Đăng xuất</button></form>
     <% } %>
   </section>

@@ -1,0 +1,26 @@
+<%- include('../partials/header') %>
+<main class="auth-page">
+  <%- include('_intro', { introTitle: 'Bảo vệ tài khoản của bạn.', introCopy: 'Mã từ ứng dụng xác minh giúp bảo vệ quyền truy cập vào căn bếp, kể cả khi mật khẩu bị lộ.' }) %>
+  <section class="auth-card" aria-labelledby="auth-title">
+    <span class="eyebrow">BẢO MẬT TÀI KHOẢN</span>
+    <h1 id="auth-title">Xác minh hai bước</h1>
+    <%- include('_messages') %>
+    <p class="auth-lead">Trạng thái: <span class="status <%= mfaEnabled ? '' : 'off' %>"><%= mfaEnabled ? 'Đang bật' : 'Chưa bật' %></span></p>
+    <% if (!mfaEnabled) { %>
+      <p class="auth-lead mfa-intro">Khi bật, lần đăng nhập tiếp theo cần thêm mã 6 số từ ứng dụng Authenticator hoặc mã dự phòng.</p>
+      <form method="post" action="/auth/account/mfa/setup" class="auth-form">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="button primary auth-submit" type="submit">Bắt đầu thiết lập</button>
+      </form>
+    <% } else { %>
+      <p class="auth-lead mfa-intro">Hãy giữ các mã dự phòng ở nơi an toàn. Mỗi mã chỉ dùng được một lần.</p>
+      <div class="mfa-actions">
+        <%- include('_mfa-reauth', { actionTitle: 'Cấp lại mã dự phòng', actionCopy: 'Bộ mã cũ sẽ hết hiệu lực.', actionPath: '/auth/account/mfa/recovery/regenerate', actionButton: 'Cấp bộ mã mới', actionDanger: false, fieldPrefix: 'regenerate' }) %>
+        <%- include('_mfa-reauth', { actionTitle: 'Thay ứng dụng xác minh', actionCopy: 'Ứng dụng cũ vẫn hoạt động cho đến khi bạn xác nhận mã mới.', actionPath: '/auth/account/mfa/replace', actionButton: 'Tiếp tục thay ứng dụng', actionDanger: false, fieldPrefix: 'replace' }) %>
+        <%- include('_mfa-reauth', { actionTitle: 'Tắt xác minh hai bước', actionCopy: 'Tài khoản sẽ chỉ cần mật khẩu khi đăng nhập.', actionPath: '/auth/account/mfa/disable', actionButton: 'Tắt xác minh hai bước', actionDanger: true, fieldPrefix: 'disable' }) %>
+      </div>
+    <% } %>
+    <a class="auth-secondary-link" href="/auth/account">Về tài khoản</a>
+  </section>
+</main>
+<%- include('../partials/footer') %>

@@ -7,3 +7,5 @@ dist/
 coverage/
 *.log
 tmp/
+test-results/
+playwright-report/

@@ -313,7 +313,9 @@ test('valid OTP activates a viewer once and login preserves the server-assigned 
   assert.equal(loggedIn.status, 303);
   assert.equal(loggedIn.headers.location, '/auth/account');
   assert.equal((await agent.get('/auth/account')).status, 200);
-  assert.equal((await agent.get('/admin')).headers.location, '/admin/dishes');
+  const admin = await agent.get('/admin');
+  assert.equal(admin.status, 302);
+  assert.equal(admin.headers.location, '/admin/dishes');
   const token = await form(agent, '/auth/account');
   assert.equal((await agent.post('/auth/logout').type('form').send({_csrf: token})).status, 303);
   assert.equal((await agent.get('/auth/account')).status, 303);
@@ -434,6 +436,10 @@ test('SMTP failure leaves a pending account recoverable through resend', async (
 test('password-reset tokens are hashed, one-use, expire, and invalidate existing sessions', async () => {
   const {agent, email} = await activeMember();
   assert.equal((await login(agent, email)).status, 303);
+  // A reset must revoke sessions without removing the account's MFA enrollment.
+  rows.user[0].mfaEnabled = true;
+  rows.user[0].mfaSecretEncrypted = 'encrypted-secret-fixture';
+  rows.user[0].mfaLastUsedStep = 123n;
   const unknown = await requestReset('unknown@example.test');
   const reset = await requestReset(email);
   assert.equal(unknown.response.status, 303);
@@ -452,11 +458,16 @@ test('password-reset tokens are hashed, one-use, expire, and invalidate existing
   assert.ok(stored.usedAt instanceof Date);
   assert.equal(rows.user[0].passwordVersion, 1);
   assert.ok(await bcrypt.compare(replacement, rows.user[0].passwordHash));
+  assert.equal(rows.user[0].mfaEnabled, true);
+  assert.equal(rows.user[0].mfaSecretEncrypted, 'encrypted-secret-fixture');
+  assert.equal(rows.user[0].mfaLastUsedStep, 123n);
   assert.equal((await agent.get('/auth/account')).status, 303, 'password reset invalidates a session created with the old password version');
   const replayCsrf = await form(reset.requester, `/auth/reset-password?token=${rawToken}`);
   assert.equal((await reset.requester.post('/auth/reset-password').type('form').send({_csrf: replayCsrf, token: rawToken, password, confirmPassword: password})).status, 400);
   assert.equal((await login(agent, email)).status, 400);
-  assert.equal((await login(agent, email, replacement)).status, 303);
+  const afterResetLogin = await login(agent, email, replacement);
+  assert.equal(afterResetLogin.status, 303);
+  assert.equal(afterResetLogin.headers.location, '/auth/mfa');
 
   now = new Date(now.getTime() + 60_001);
   const expired = await requestReset(email);

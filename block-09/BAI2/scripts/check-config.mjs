@@ -40,6 +40,9 @@ for (const key of ['DATABASE_URL', 'DIRECT_URL', 'SUPABASE_URL', 'SUPABASE_SERVI
 
 const tokenSecret = value('AUTH_TOKEN_SECRET');
 report('AUTH_TOKEN_SECRET (hoặc SESSION_SECRET)', tokenSecret ? tokenSecret.length >= 32 : value('SESSION_SECRET').length >= 32);
+const mfaKey = value('MFA_ENCRYPTION_KEY');
+const mfaBytes = Buffer.from(mfaKey, 'base64');
+report('MFA_ENCRYPTION_KEY', mfaBytes.length === 32 && mfaBytes.toString('base64') === mfaKey);
 
 let appUrlOk = false;
 try {

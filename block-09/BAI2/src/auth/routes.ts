@@ -9,6 +9,7 @@ import { emailSchema, registerSchema } from './validation.js';
 import { createLoginRouter } from './login.js';
 import { createPasswordRecoveryRouter } from './password-recovery.js';
 import { createAccountRouter } from './account.js';
+import { createMfaAccountRouter } from './mfa-routes.js';
 import { authClock, authTransaction, AuthError, tokenHash, newOtp, OTP_TTL_MS, RESEND_COOLDOWN_MS, MAX_SENDS_PER_HOUR, MAX_OTP_ATTEMPTS } from './tokens.js';
 
 const emailOf = (value: unknown) => typeof value === 'string' ? value.trim().toLowerCase().slice(0, 254) : '';
@@ -145,6 +146,7 @@ export function createAuthRouter(demo: boolean, csrf: RequestHandler) {
   });
 
   router.use(createAccountRouter());
+  router.use(createMfaAccountRouter(demo));
   router.use(createPasswordRecoveryRouter());
   return router;
 }

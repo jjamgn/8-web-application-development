@@ -1,0 +1,20 @@
+<%- include('../partials/header') %>
+<main class="auth-page">
+  <%- include('_intro', { introTitle: 'Thêm một bước an tâm cho căn bếp.', introCopy: 'Mật khẩu của bạn đã đúng. Hoàn tất xác minh hai bước để vào tài khoản.' }) %>
+  <section class="auth-card" aria-labelledby="auth-title">
+    <span class="eyebrow">XÁC MINH HAI BƯỚC</span>
+    <h1 id="auth-title">Nhập mã xác minh</h1>
+    <p class="auth-lead">Mở ứng dụng Authenticator và nhập mã 6 số đang hiển thị. Bạn cũng có thể dùng một mã dự phòng chưa sử dụng.</p>
+    <%- include('_messages') %>
+    <form class="auth-form" method="post" action="/auth/mfa">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <%- include('_mfa-credential', { fieldPrefix: 'login-mfa', selectedMethod: method }) %>
+      <button class="button primary auth-submit" type="submit">Xác minh và tiếp tục</button>
+    </form>
+    <form method="post" action="/auth/logout">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <button class="auth-text-button" type="submit">Hủy đăng nhập</button>
+    </form>
+  </section>
+</main>
+<%- include('../partials/footer') %>
