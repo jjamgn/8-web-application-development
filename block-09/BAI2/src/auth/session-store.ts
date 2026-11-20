@@ -1,5 +1,6 @@
 import { Store, type SessionData } from 'express-session';
 import type { Prisma, PrismaClient } from '@prisma/client';
+import { MFA_CODES_FIELD } from './session-mfa.js';
 
 export type PrismaSessionStoreOptions = { ttlMs?: number };
 type StoreCallback = (error?: unknown) => void;
@@ -38,6 +39,9 @@ export class PrismaSessionStore extends Store {
       const sess = JSON.parse(JSON.stringify(data)) as Record<string, unknown>;
       const persisted = (data as PersistedSessionData)._persistedSid === sid;
       delete sess._persistedSid;
+      // Only publishMfaCodes/claimMfaCodes may change the one-time payload.
+      // A request loaded before a claim must never restore it on a later save.
+      delete sess[MFA_CODES_FIELD];
       const cookieExpiry: unknown = data.cookie?.expires;
       const cookieTime = cookieExpiry instanceof Date ? cookieExpiry.getTime()
         : typeof cookieExpiry === 'string' ? Date.parse(cookieExpiry) : Number.NaN;
@@ -56,7 +60,19 @@ export class PrismaSessionStore extends Store {
       if (persisted) {
         // A concurrent logout may already have removed this row. Updating only
         // existing, unexpired sessions prevents stale requests recreating it.
-        await this.db.session.updateMany({ where: { sid, expiresAt: { gt: new Date() } }, data: record });
+        for (let attempt = 0; attempt < 5; attempt++) {
+          const current = await this.db.session.findUnique({ where: { sid } });
+          if (!current || current.expiresAt <= new Date()) return;
+          const next = { ...sess };
+          const currentData = current.sess as Record<string, Prisma.JsonValue>;
+          if (typeof currentData[MFA_CODES_FIELD] === 'string') next[MFA_CODES_FIELD] = currentData[MFA_CODES_FIELD];
+          const updated = await this.db.session.updateMany({
+            where: { sid, expiresAt: { gt: new Date() }, sess: { equals: current.sess as Prisma.InputJsonValue } },
+            data: { ...record, sess: next as Prisma.InputJsonObject },
+          });
+          if (updated.count === 1) return;
+        }
+        throw new Error('Concurrent session update; retry the request');
       } else {
         await this.db.session.create({ data: { sid, ...record } });
         (data as PersistedSessionData)._persistedSid = sid;

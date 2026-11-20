@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
 import { prisma } from '../db.js';
+import { claimMfaCodes, publishMfaCodes } from './session-mfa.js';
 import {
   MFA_PENDING_TTL_MS, assertMfaConfiguration, disableMfa, enableMfa,
   mfaSetupQr, newMfaSecret, openMfaValue, regenerateRecoveryCodes,
@@ -29,13 +30,15 @@ function setupValid(req: Request, user: FullUser, mode: 'enable' | 'replace') {
   return req.session.mfaSetupMode === mode && req.session.mfaSetupUserId === user.id
     && req.session.mfaSetupPasswordVersion === user.passwordVersion
     && typeof req.session.mfaSetupExpiresAt === 'number' && req.session.mfaSetupExpiresAt > Date.now()
-    && typeof req.session.mfaSetupSecretEncrypted === 'string';
+    && typeof req.session.mfaSetupSecretEncrypted === 'string'
+    && (mode !== 'replace' || typeof req.session.mfaSetupPreviousSecretEncrypted === 'string');
 }
 
 function clearSetup(req: Request) {
   delete req.session.mfaSetupUserId;
   delete req.session.mfaSetupPasswordVersion;
   delete req.session.mfaSetupSecretEncrypted;
+  delete req.session.mfaSetupPreviousSecretEncrypted;
   delete req.session.mfaSetupExpiresAt;
   delete req.session.mfaSetupMode;
 }
@@ -64,12 +67,11 @@ async function reauthenticate(req: Request, user: FullUser): Promise<MfaResult> 
   return verifyMfaCredential(user.id, user.email, req.body?.method, req.body?.code);
 }
 
-function putOneTimeCodes(req: Request, res: Response, codes: string[]) {
-  req.session.mfaOneTimeCodesEncrypted = sealMfaValue(JSON.stringify(codes));
-  req.session.save(error => {
-    if (error) return res.status(500).render('error', { title: 'Chưa lưu được mã dự phòng', message: 'Vui lòng thử lại.' });
-    return res.redirect(303, '/auth/account/mfa/recovery-codes');
-  });
+async function putOneTimeCodes(req: Request, res: Response, codes: string[]) {
+  delete req.session.mfaOneTimeCodesEncrypted;
+  await new Promise<void>((resolve, reject) => req.session.save(error => error ? reject(error) : resolve()));
+  const published = await publishMfaCodes(prisma, req.sessionID, req.session.userId!, sealMfaValue(JSON.stringify(codes)));
+  return res.redirect(303, published ? '/auth/account/mfa/recovery-codes' : '/auth/login');
 }
 
 // Mounted after the common CSRF and demo-mode middleware in routes.ts.
@@ -121,13 +123,11 @@ export function createMfaAccountRouter(demo: boolean) {
   router.get('/account/mfa/recovery-codes', async (req, res) => {
     const user = await fullUser(req);
     if (!user) return res.redirect(303, '/auth/login');
-    const encrypted = req.session.mfaOneTimeCodesEncrypted;
-    if (!encrypted) return res.redirect(303, '/auth/account/mfa');
     delete req.session.mfaOneTimeCodesEncrypted;
+    const encrypted = await claimMfaCodes(prisma, req.sessionID, user.id);
+    if (!encrypted) return res.redirect(303, '/auth/account/mfa');
     const codes = JSON.parse(openMfaValue(encrypted)) as string[];
-    return req.session.save(error => error
-      ? res.status(500).render('error', { title: 'Chưa hiển thị được mã', message: 'Vui lòng thử lại.' })
-      : res.status(200).render('auth/mfa-recovery-codes', { title: 'Mã dự phòng · Bếp Nhà', error: '', errors: {}, codes }));
+    return res.status(200).render('auth/mfa-recovery-codes', { title: 'Mã dự phòng · Bếp Nhà', error: '', errors: {}, codes });
   });
 
   router.post('/account/mfa/recovery/regenerate', async (req, res) => {
@@ -153,6 +153,7 @@ export function createMfaAccountRouter(demo: boolean) {
     req.session.mfaSetupSecretEncrypted = sealMfaValue(newMfaSecret());
     req.session.mfaSetupExpiresAt = Date.now() + MFA_PENDING_TTL_MS;
     req.session.mfaSetupMode = 'replace';
+    req.session.mfaSetupPreviousSecretEncrypted = user.mfaSecretEncrypted!;
     req.session.save(error => error ? res.status(500).render('error', { title: 'Chưa lưu được thiết lập', message: 'Vui lòng thử lại.' }) : res.redirect(303, '/auth/account/mfa/replace'));
   });
 
@@ -167,7 +168,7 @@ export function createMfaAccountRouter(demo: boolean) {
     const user = await fullUser(req);
     if (!user) return res.redirect(303, '/auth/login');
     if (!setupValid(req, user, 'replace') || !user.mfaEnabled) return res.redirect(303, '/auth/account/mfa');
-    const result = await replaceMfaSecret(user.id, user.passwordVersion, user.email, req.session.mfaSetupSecretEncrypted!, req.body?.code, req.sessionID);
+    const result = await replaceMfaSecret(user.id, user.passwordVersion, user.email, req.session.mfaSetupSecretEncrypted!, req.body?.code, req.sessionID, req.session.mfaSetupPreviousSecretEncrypted!);
     if (result.status === 'locked') return renderSetup(req, res, user, 'replace', 429, 'Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau.', result.retryAfter);
     if (result.status === 'invalid') return renderSetup(req, res, user, 'replace', 400, 'Mã xác minh không hợp lệ hoặc đã sử dụng.');
     if (result.status !== 'ok' || !result.codes) return res.redirect(303, '/auth/account/mfa');

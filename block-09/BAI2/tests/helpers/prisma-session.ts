@@ -1,3 +1,5 @@
+import { isDeepStrictEqual } from 'node:util';
+
 type Row = Record<string, any>;
 
 function matches(row: Row, where: Row = {}): boolean {
@@ -12,6 +14,7 @@ function matches(row: Row, where: Row = {}): boolean {
         if (operator === 'lte') return row[key] <= operand;
         if (operator === 'in') return operand.includes(row[key]);
         if (operator === 'not') return row[key] !== operand;
+        if (operator === 'equals') return isDeepStrictEqual(row[key], operand);
         throw new Error(`Unsupported fixture filter ${operator}`);
       });
     }

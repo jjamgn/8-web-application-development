@@ -7,7 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
     "build": "tsc --noEmit",
-    "test": "tsx --test tests/ssr.test.ts tests/mutations.test.ts tests/auth.test.ts tests/email.test.ts tests/captcha.test.ts tests/login.test.ts tests/session-store.test.ts tests/password-recovery.test.ts tests/account.test.ts tests/registration-captcha.test.ts tests/email-verification.test.ts tests/mailer.test.ts tests/registration-validation.test.ts tests/registration.test.ts tests/access.test.ts tests/mfa.test.ts tests/mfa-views.test.ts",
+    "test": "tsx --test tests/ssr.test.ts tests/mutations.test.ts tests/auth.test.ts tests/email.test.ts tests/captcha.test.ts tests/login.test.ts tests/session-store.test.ts tests/password-recovery.test.ts tests/account.test.ts tests/registration-captcha.test.ts tests/email-verification.test.ts tests/mailer.test.ts tests/registration-validation.test.ts tests/registration.test.ts tests/access.test.ts tests/mfa.test.ts tests/mfa-views.test.ts tests/mfa-races.test.ts",
     "test:auth": "tsx --test tests/auth.test.ts",
     "test:recovery": "tsx --test tests/auth.test.ts tests/password-recovery.test.ts tests/email.test.ts",
     "test:account": "tsx --test tests/account.test.ts",

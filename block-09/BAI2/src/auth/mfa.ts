@@ -13,6 +13,7 @@ declare module 'express-session' {
     mfaSetupUserId?: number;
     mfaSetupPasswordVersion?: number;
     mfaSetupSecretEncrypted?: string;
+    mfaSetupPreviousSecretEncrypted?: string;
     mfaSetupExpiresAt?: number;
     mfaSetupMode?: 'enable' | 'replace';
     mfaOneTimeCodesEncrypted?: string;
@@ -168,18 +169,23 @@ export async function enableMfa(userId: number, passwordVersion: number, email: 
   });
 }
 
-export async function replaceMfaSecret(userId: number, passwordVersion: number, email: string, encryptedSecret: string, code: unknown, currentSid: string): Promise<MfaCodesResult> {
+export async function replaceMfaSecret(userId: number, passwordVersion: number, email: string, encryptedSecret: string, code: unknown, currentSid: string, previousSecretEncrypted: string, db: PrismaClient = prisma): Promise<MfaCodesResult> {
   const secret = openMfaValue(encryptedSecret);
-  return authTransaction(prisma, async tx => {
+  return authTransaction(db, async tx => {
     const now = authClock.now(), retryAfter = await lockState(tx, userId, now);
     if (retryAfter) return { status: 'locked', retryAfter };
+    const user = await tx.user.findUnique({ where: { id: userId } });
+    if (!user || user.status !== 'active' || !user.emailVerifiedAt || user.passwordVersion !== passwordVersion || !user.mfaEnabled) return { status: 'unavailable' };
+    // Bind the pending setup to the configuration that was reauthenticated.
+    // A retry (even in a later TOTP step) or another configuration change loses.
+    if (encryptedSecret === previousSecretEncrypted || user.mfaSecretEncrypted !== previousSecretEncrypted) return { status: 'invalid' };
     const step = totpStep(secret, email, code, now);
     if (step === null) return failedMfa(tx, userId, now);
     const changed = await tx.user.updateMany({
-      where: { id: userId, passwordVersion, status: 'active', emailVerifiedAt: { not: null }, mfaEnabled: true },
+      where: { id: userId, passwordVersion, status: 'active', emailVerifiedAt: { not: null }, mfaEnabled: true, mfaSecretEncrypted: previousSecretEncrypted },
       data: { mfaSecretEncrypted: encryptedSecret, mfaLastUsedStep: step },
     });
-    if (changed.count !== 1) return { status: 'unavailable' };
+    if (changed.count !== 1) return { status: 'invalid' };
     const codes = await replaceRecoveryCodes(tx, userId);
     await tx.session.deleteMany({ where: { userId, sid: { not: currentSid } } });
     await tx.loginAttempt.deleteMany({ where: { key: attemptKey(userId) } });
