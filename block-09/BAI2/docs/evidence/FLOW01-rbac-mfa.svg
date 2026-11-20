@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1380" viewBox="0 0 1800 1380" role="img" aria-labelledby="title desc">
+  <title id="title">Luồng RBAC, ABAC và MFA — Bài 2 Block 9</title>
+  <desc id="desc">Sơ đồ phân quyền quản trị và quy trình xác thực hai bước theo source BAI2.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M1 1 L11 6 L1 11 Z" fill="#54736b"/></marker>
+    <style>
+      text{font-family:Segoe UI,Arial,sans-serif;fill:#173d32} .title{font-size:40px;font-weight:700}.sub{font-size:20px;fill:#59756d}.lane{font-size:26px;font-weight:700}.head{font-size:22px;font-weight:700}.body{font-size:18px}.small{font-size:16px;fill:#49665d}.edge{fill:none;stroke:#54736b;stroke-width:3;marker-end:url(#arrow)}.box{fill:#fffefa;stroke:#b8c9bd;stroke-width:2}.green{fill:#e7f2e9;stroke:#6d9b7b;stroke-width:2}.amber{fill:#fff1d8;stroke:#d19a40;stroke-width:2}.red{fill:#ffebe7;stroke:#ca7868;stroke-width:2}.blue{fill:#e9f0fa;stroke:#7896bf;stroke-width:2}.lane-bg{fill:#f5f7f1;stroke:#d7e0d6;stroke-width:2}.label{font-size:16px;font-weight:700;fill:#587168}
+    </style>
+  </defs>
+  <rect width="1800" height="1380" fill="#fbfaf6"/>
+  <text x="900" y="64" text-anchor="middle" class="title">BÀI 2 BLOCK 9 · PHÂN QUYỀN SSR &amp; MFA</text>
+  <text x="900" y="98" text-anchor="middle" class="sub">Theo source block-09/BAI2 · session cookie phía server · chính sách được kiểm tra lại khi ghi</text>
+  <rect x="55" y="130" width="830" height="1200" rx="24" class="lane-bg"/>
+  <rect x="915" y="130" width="830" height="1200" rx="24" class="lane-bg"/>
+  <text x="470" y="174" text-anchor="middle" class="lane">A · RBAC / ABAC tại /admin</text>
+  <text x="1330" y="174" text-anchor="middle" class="lane">B · Đăng nhập có MFA</text>
+
+  <rect x="280" y="205" width="380" height="76" rx="14" class="box"/><text x="470" y="238" text-anchor="middle" class="head">Request /admin/*</text><text x="470" y="263" text-anchor="middle" class="small">GET trang hoặc gửi thao tác</text>
+  <path d="M470 281 V315" class="edge"/>
+  <polygon points="470,315 625,375 470,435 315,375" class="blue"/><text x="470" y="369" text-anchor="middle" class="head">Full session hợp lệ?</text><text x="470" y="395" text-anchor="middle" class="small">userId + passwordVersion</text>
+  <path d="M315 375 H190 V469" class="edge"/><text x="230" y="359" class="label">Không</text>
+  <rect x="90" y="469" width="200" height="82" rx="14" class="amber"/><text x="190" y="503" text-anchor="middle" class="head">303 → /auth/login</text><text x="190" y="530" text-anchor="middle" class="small">pending MFA cũng bị chặn</text>
+  <path d="M625 375 H740 V469" class="edge"/><text x="680" y="359" class="label">Có</text>
+  <rect x="640" y="469" width="200" height="82" rx="14" class="box"/><text x="740" y="503" text-anchor="middle" class="head">Đọc user mới</text><text x="740" y="530" text-anchor="middle" class="small">từ database</text>
+  <path d="M740 551 V585 H470 V600" class="edge"/>
+  <polygon points="470,600 625,655 470,710 315,655" class="blue"/><text x="470" y="650" text-anchor="middle" class="head">Được đọc?</text><text x="470" y="676" text-anchor="middle" class="small">active · verified · role · chefId</text>
+  <path d="M315 655 H190 V735" class="edge"/><text x="230" y="639" class="label">Không</text>
+  <rect x="90" y="735" width="200" height="76" rx="14" class="red"/><text x="190" y="781" text-anchor="middle" class="head">403 · từ chối</text>
+  <path d="M470 710 V735" class="edge"/><text x="485" y="729" class="label">Có</text>
+  <polygon points="470,735 625,790 470,845 315,790" class="blue"/><text x="470" y="785" text-anchor="middle" class="head">Đọc hay ghi?</text><text x="470" y="811" text-anchor="middle" class="small">list/detail · create/edit/delete</text>
+  <path d="M315 790 H735 V865" class="edge"/><text x="674" y="774" class="label">Đọc</text>
+  <rect x="625" y="865" width="220" height="76" rx="14" class="green"/><text x="735" y="895" text-anchor="middle" class="head">Đọc được</text><text x="735" y="922" text-anchor="middle" class="body">Viewer · Editor · Admin</text>
+  <path d="M470 845 V940" class="edge"/><text x="485" y="918" class="label">Ghi</text>
+  <polygon points="470,940 570,990 470,1040 370,990" class="blue"/><text x="470" y="996" text-anchor="middle" class="head">Role?</text>
+  <path d="M370 990 H200 V1080" class="edge"/><text x="267" y="974" class="label">Viewer</text>
+  <path d="M470 1040 V1080" class="edge"/><text x="485" y="1065" class="label">Editor</text>
+  <path d="M570 990 H735 V1080" class="edge"/><text x="657" y="974" class="label">Admin</text>
+  <rect x="90" y="1080" width="220" height="80" rx="14" class="red"/><text x="200" y="1128" text-anchor="middle" class="head">403 · không ghi</text>
+  <rect x="350" y="1080" width="240" height="98" rx="14" class="green"/><text x="470" y="1112" text-anchor="middle" class="head">Chỉ dishes</text><text x="470" y="1138" text-anchor="middle" class="small">Tạo draft của mình</text><text x="470" y="1162" text-anchor="middle" class="small">Sửa draft cùng chef</text>
+  <rect x="625" y="1080" width="220" height="98" rx="14" class="green"/><text x="735" y="1112" text-anchor="middle" class="head">CRUD toàn bộ</text><text x="735" y="1138" text-anchor="middle" class="small">đổi chef / status món</text>
+  <rect x="90" y="1190" width="755" height="60" rx="14" class="amber"/><text x="467" y="1214" text-anchor="middle" class="head">PATCH kiểm tra lại trong transaction</text><text x="467" y="1238" text-anchor="middle" class="small">Đọc role, chefId, Dish.chefId, status từ DB; hidden field không cấp quyền.</text>
+
+  <rect x="1110" y="205" width="440" height="78" rx="14" class="box"/><text x="1330" y="239" text-anchor="middle" class="head">POST /auth/login</text><text x="1330" y="265" text-anchor="middle" class="small">Mật khẩu đúng · tài khoản active/verified</text>
+  <path d="M1330 283 V322" class="edge"/>
+  <polygon points="1330,322 1485,383 1330,444 1175,383" class="blue"/><text x="1330" y="378" text-anchor="middle" class="head">MFA đã bật?</text><text x="1330" y="405" text-anchor="middle" class="small">đọc trạng thái hiện tại từ DB</text>
+  <path d="M1175 383 H1035 V490" class="edge"/><text x="1090" y="366" class="label">Chưa</text>
+  <rect x="940" y="490" width="190" height="94" rx="14" class="green"/><text x="1035" y="528" text-anchor="middle" class="head">Regenerate SID</text><text x="1035" y="556" text-anchor="middle" class="body">Full session · 2 giờ</text>
+  <path d="M1485 383 H1625 V490" class="edge"/><text x="1550" y="366" class="label">Rồi</text>
+  <rect x="1530" y="490" width="190" height="105" rx="14" class="amber"/><text x="1625" y="527" text-anchor="middle" class="head">Pending · 5 phút</text><text x="1625" y="555" text-anchor="middle" class="small">mfaPendingUserId</text><text x="1625" y="578" text-anchor="middle" class="small">chưa có userId</text>
+  <path d="M1625 595 V635" class="edge"/>
+  <rect x="1450" y="635" width="350" height="90" rx="14" class="box"/><text x="1625" y="672" text-anchor="middle" class="head">GET/POST /auth/mfa</text><text x="1625" y="701" text-anchor="middle" class="body">Nhập TOTP hoặc recovery code</text>
+  <path d="M1625 725 V770" class="edge"/>
+  <polygon points="1625,770 1730,830 1625,890 1520,830" class="blue"/><text x="1625" y="825" text-anchor="middle" class="head">Mã hợp lệ?</text><text x="1625" y="850" text-anchor="middle" class="small">đọc lại user / passwordVersion</text>
+  <path d="M1520 830 H1320 V936" class="edge"/><text x="1400" y="814" class="label">Sai</text>
+  <rect x="1190" y="936" width="260" height="100" rx="14" class="red"/><text x="1320" y="974" text-anchor="middle" class="head">Từ chối</text><text x="1320" y="1003" text-anchor="middle" class="body">5 lỗi / 15 phút → 429</text>
+  <path d="M1625 890 V936" class="edge"/><text x="1642" y="916" class="label">Đúng</text>
+  <rect x="1490" y="936" width="270" height="100" rx="14" class="green"/><text x="1625" y="974" text-anchor="middle" class="head">Regenerate SID</text><text x="1625" y="1003" text-anchor="middle" class="body">Full session · 2 giờ</text>
+  <rect x="940" y="1070" width="790" height="60" rx="14" class="blue"/><text x="1335" y="1107" text-anchor="middle" class="body">TOTP không dùng lại cùng step · recovery code chỉ dùng một lần · password reset không tắt MFA</text>
+</svg>
