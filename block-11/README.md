@@ -1,5 +1,7 @@
 # Block 11 — Khoảnh khắc / Photo Gallery
 
+**Video demo để nộp:** [Danh mục 6 video MP4](docs/evidence/video-demo/README.md) — bản nén, giữ độ phân giải và thời lượng; video 03 đã che vùng cookie trong Request Headers.
+
 Báo cáo kỹ thuật phục vụ nộp bài: [02-kiem-chung-ky-thuat.md](docs/evidence/02-kiem-chung-ky-thuat.md). Có dữ liệu HTTP/DB/SeaweedFS thật và ghi rõ giới hạn kiểm chứng.
 
 **Cập nhật upload/profile 27/11/2026:** so sánh trước/sau mặc định đóng, title/alt có dấu bắt buộc; nút avatar chuyển cạnh chỉnh sửa hồ sơ. Localhost/127.0.0.1 được cho phép explicit trong env development để sửa lỗi Origin/CSRF khi APP_ORIGIN là LAN; production vẫn chỉ một origin. Xem [quy cách và kiểm chứng](docs/evidence/compact-upload-profile/README.md).

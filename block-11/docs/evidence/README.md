@@ -1,5 +1,7 @@
 # Theo dõi bằng chứng nghiệm thu
 
+**Video demo để nộp:** [Danh mục 6 video MP4](video-demo/README.md) — bản nén, giữ độ phân giải và thời lượng; video 03 đã che vùng cookie trong Request Headers.
+
 **Báo cáo kỹ thuật để nộp:** [02-kiem-chung-ky-thuat.md](02-kiem-chung-ky-thuat.md), lượt live bắt đầu 27/11/2026: HTTP, DB/key/hash, EXIF/alpha, file lỗi, FK lỗi thật sau PUT, restart Express thử và owner delete. Build đạt; backend 76/76, UI mock 47/47. Báo cáo ghi rõ phần chưa kiểm và không thay video Network/DOM.
 
 **Cập nhật upload/profile 27/11/2026:** so sánh trước/sau mặc định đóng, title/alt có dấu bắt buộc; nút avatar chuyển cạnh chỉnh sửa hồ sơ. Localhost/127.0.0.1 được cho phép explicit trong env development để sửa lỗi Origin/CSRF khi APP_ORIGIN là LAN; production vẫn chỉ một origin. Xem [quy cách và kiểm chứng](compact-upload-profile/README.md).
