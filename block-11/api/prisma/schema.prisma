@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PhotoStatus {
+  PUBLISHED
+  DELETING
+}
+
+enum CleanupStatus {
+  PENDING
+  DONE
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String    @db.VarChar(120)
+  email        String    @unique @db.VarChar(254)
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  photos       Photo[]
+  sessions     Session[]
+}
+
+model Session {
+  sid       String   @id
+  userId    String?  @db.Uuid
+  data      Json
+  expiresAt DateTime
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Photo {
+  id         String         @id @default(uuid()) @db.Uuid
+  uploaderId String         @db.Uuid
+  title      String         @db.VarChar(120)
+  alt        String         @db.VarChar(300)
+  width      Int
+  height     Int
+  status     PhotoStatus    @default(PUBLISHED)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  uploader   User           @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+  variants   PhotoVariant[]
+
+  @@index([status, createdAt, id])
+  @@index([uploaderId])
+}
+
+model PhotoVariant {
+  id            String       @id @default(uuid()) @db.Uuid
+  photoId       String       @db.Uuid
+  width         Int
+  height        Int
+  mime          String       @default("image/webp")
+  bytes         Int
+  sha256        String       @db.VarChar(64)
+  chunkSize     Int          @default(1048576)
+  chunkCount    Int
+  storagePrefix String       @unique
+  photo         Photo        @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  chunks        PhotoChunk[]
+
+  @@unique([photoId, width])
+}
+
+model PhotoChunk {
+  id         String       @id @default(uuid()) @db.Uuid
+  variantId  String       @db.Uuid
+  partNumber Int
+  offset     Int
+  bytes      Int
+  sha256     String       @db.VarChar(64)
+  storageKey String       @unique
+  variant    PhotoVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([variantId, partNumber])
+}
+
+model StorageCleanupTask {
+  id            String        @id @default(uuid()) @db.Uuid
+  storageKey    String        @unique
+  status        CleanupStatus @default(PENDING)
+  attempts      Int           @default(0)
+  lastErrorCode String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([status, createdAt])
+}

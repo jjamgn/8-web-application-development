@@ -18,7 +18,7 @@ Mỗi Block là một bài tập độc lập, được tổ chức trong thư m
 ├── block-07/
 ├── block-08/
 ├── block-09/
-└── block-10/
+└── block-11/
 ```
 
 - `README.md`: Hướng dẫn chung về repository và workflow làm việc nhóm.
@@ -238,6 +238,6 @@ Khi làm việc với coding agent, nhóm thống nhất:
 | Block 07 | To be updated | Not started |
 | Block 08 | To be updated | Not started |
 | Block 09 | To be updated | Not started |
-| Block 10 | To be updated | Not started |
+| Block 11 | To be updated | Not started |
 
 Thông tin yêu cầu, phân công và trạng thái từng bài tập sẽ được cập nhật trong thư mục Block tương ứng.

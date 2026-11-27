@@ -1,0 +1,17 @@
+name: block11-storage
+services:
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.55
+    command: ["mini", "-dir=/data", "-ip.bind=0.0.0.0", "-s3.port=8333"]
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?Set S3_ACCESS_KEY_ID in .env}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?Set S3_SECRET_ACCESS_KEY in .env}
+      S3_BUCKET: ${S3_BUCKET:-block11-gallery}
+    ports:
+      - "127.0.0.1:8333:8333"
+    volumes:
+      - seaweed-data:/data
+    restart: unless-stopped
+    stop_grace_period: 30s
+volumes:
+  seaweed-data:

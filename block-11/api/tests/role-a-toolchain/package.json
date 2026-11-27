@@ -1,0 +1,22 @@
+{
+  "name": "block11-role-a-test-toolchain",
+  "private": true,
+  "type": "module",
+  "description": "Isolated verification tools for A; B owns api/package.json and app.ts.",
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.1178.0",
+    "@prisma/client": "6.12.0",
+    "express": "5.1.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.6.0",
+    "@types/express": "5.0.1",
+    "@types/node": "22.15.30",
+    "@types/supertest": "6.0.3",
+    "prisma": "6.12.0",
+    "sharp": "0.34.5",
+    "supertest": "7.1.4",
+    "tsx": "4.19.3",
+    "typescript": "5.8.3"
+  }
+}

@@ -1,0 +1,8 @@
+**/node_modules/
+**/.env
+**/.env.local
+**/dist/
+**/coverage/
+api/tests/role-a-toolchain/.generated/
+infra/seaweedfs/.env
+*.tsbuildinfo

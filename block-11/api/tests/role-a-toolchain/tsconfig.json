@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["../../src/storage/**/*.ts", "../../src/repositories/**/*.ts", "../../src/services/photo-service.ts", "../../src/routes/media.ts", "../role-a/**/*.ts", "../../scripts/role-a-*.ts"]
+}
