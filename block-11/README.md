@@ -25,6 +25,8 @@ Tài liệu: [API](api/README.md), [SeaweedFS](infra/seaweedfs/README.md), [bàn
 - Lượt kiểm chứng mới nhất dùng Node **26.13.0**, npm **11.20.0**; đã sửa module boundary ESM của `contracts/`, timeout transaction Supabase và watcher Vite Windows. Kết quả Node 22 bên trên là lịch sử bàn giao C, không phải phiên bản Node duy nhất được hỗ trợ.
 - Dependency trực tiếp khóa phiên bản trong `web/package.json`; `web/package-lock.json` dùng cho `npm ci`. Giữ các major đã chốt trong contract.
 
+**Chế độ LAN hiện tại:** tại `web/` dùng `npm run dev:lan`, mở `http://192.168.100.154:5173/photos`, API đặt APP_ORIGIN trùng origin này. Xem [LAN_SETUP.md](docs/LAN_SETUP.md). Các lệnh localhost bên dưới chỉ dùng sau khi đổi APP_ORIGIN về localhost và restart API. Khi chạy live tests qua LAN, đặt LIVE_BASE_URL theo URL LAN đang dùng.
+
 ## Chạy web
 
 Tại `block-11/web/`, sau khi chọn Node phù hợp:

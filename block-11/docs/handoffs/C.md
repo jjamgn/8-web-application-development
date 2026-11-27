@@ -4,6 +4,8 @@
 
 Ngày: 27/11/2026. C dựng ban đầu trên `codex/block11-c`; đã ghép vào `main` từ nền A+B `223c6e9`. Source tại `web/**`, README và bằng chứng tại `docs/evidence/**`. Contract giữ nguyên byte; SHA-256 `A372866885DDB50EC70B556E97AB79D01E75AB8E38DD8DB4E6CC1066DC8CF6F1`. Báo cáo hiện tại: [ABC-integration.md](../evidence/ABC-integration.md).
 
+**Cập nhật sau bàn giao — 27/11/2026:** upload đã có so sánh pixels chưa áp dụng EXIF và WebP server trả về; xem [bằng chứng EXIF](../evidence/exif-comparison/README.md). LAN dùng `npm run dev:lan`, Vite giữ Origin LAN, backend phải đặt APP_ORIGIN tương ứng; xem [LAN_SETUP.md](../LAN_SETUP.md). Số liệu và SHA-256 contract trong snapshot bên trên chỉ mô tả bản bàn giao ban đầu, không phải hash contract sau bổ sung LAN.
+
 ## Đã triển khai
 
 - React 19, Vite 7, React Router 7, TypeScript; npm lockfile riêng. Proxy `/api` và `/media`, không đổi Origin. `/` về `/photos`; deep link xử lý bằng BrowserRouter.

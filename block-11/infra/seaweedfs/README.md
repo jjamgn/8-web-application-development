@@ -4,6 +4,8 @@
 
 SeaweedFS chạy độc lập với Express. Image được khóa `chrislusf/seaweedfs:4.55`, dùng `weed mini`; gateway S3 ở localhost:8333. Chỉ port S3 được publish, không publish Filer/Master/Admin UI. Volume `block11-storage_seaweed-data` giữ dữ liệu qua restart/recreate. Phiên bản và câu lệnh theo [release 4.55](https://github.com/seaweedfs/seaweedfs/releases/tag/4.55) và [quick start](https://github.com/seaweedfs/seaweedfs/wiki/Quick-Start-with-weed-mini); Docker thực tế cần được nghiệm thu trên máy có Docker.
 
+**Demo LAN:** SeaweedFS giữ `127.0.0.1:8333`; máy khác nhận ảnh qua Vite → API → SeaweedFS. Helper `configure-lan-firewall.ps1` chỉ mở TCP 5173 cho LocalSubnet, chạy bằng Administrator khi cập nhật IP. Dùng `start-native.ps1` với data directory hiện có; nếu dịch vụ đã chạy thì không khởi động thêm bản thứ hai. Xem [LAN_SETUP.md](../../docs/LAN_SETUP.md).
+
 ## Khởi động và cấu hình
 
 Chạy tại thư mục này:

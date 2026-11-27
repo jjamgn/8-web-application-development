@@ -8,6 +8,8 @@
 >
 > Nguồn yêu cầu: [slide Block 11](<./docs/Upload, xử lý, lưu trữ và.html>), đặc biệt slide 9, 11–16, 18, 22–24, 28–30 và 31–37. Đề bài là chuẩn cuối cùng; các lựa chọn triển khai của nhóm được ghi rõ bên dưới. Thay đổi baseline phải được thống nhất và cập nhật contract trước khi code.
 
+**Bổ sung demo LAN — 27/11/2026, theo yêu cầu người dùng:** frontend có `npm run dev:lan` để listen `0.0.0.0:5173`; API và SeaweedFS giữ loopback. APP_ORIGIN trùng origin LAN, HTTP LAN dùng NODE_ENV development. Firewall chỉ cho Node.js nhận TCP 5173 từ LocalSubnet trên IP/adapter đã chọn. Không thay đổi API, schema, phân công A/B/C hoặc tiêu chí nghiệm thu. Cấu hình, khởi động và đổi IP: [LAN_SETUP.md](docs/LAN_SETUP.md).
+
 ## 1. Các quyết định đã chốt
 
 | Mã | Hạng mục | Quyết định |

@@ -27,6 +27,8 @@
 
 Các bài kiểm tra A/B có fault injection, decoder, chunk và migration đã chạy sau ghép; log `ABC-api-tests.txt` và `abc-browser-results.json` giữ lịch sử lượt controlled. Lượt live mới ở `review-20261127/REVIEW.md` và `gallery-live.png`. [Bộ demo EXIF](../demo-assets/exif/README.md) có JPEG Orientation=6, bản raw preview và WebP expected; không chứa dữ liệu cá nhân.
 
+**Kiểm chứng bổ sung:** so sánh EXIF đạt **30 UI mock tests và 2 controlled browser tests**; xem [báo cáo riêng](exif-comparison/README.md). Các số 28/1 trong báo cáo cũ giữ kết quả lượt trước. LAN đã kiểm API/gallery/media/CSRF qua IP Wi-Fi tại máy chủ; Origin sai bị từ chối, frontend listen LAN, API/S3 giữ loopback. Xem [LAN_SETUP.md](../LAN_SETUP.md). Chưa kiểm từ thiết bị thứ hai; kết quả này không chứng minh Internet/HTTPS hoặc ký đạt thêm E01–E20.
+
 ## Artefact mock hiện có
 
 - `mock-browser/gallery-<viewport>-dpr<dpr>.png`: gallery 375/DPR 1–2, 600/1, 1024/1, 1440/1–2.
