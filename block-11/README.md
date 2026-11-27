@@ -1,5 +1,7 @@
 # Block 11 — Khoảnh khắc / Photo Gallery
 
+Báo cáo kỹ thuật phục vụ nộp bài: [02-kiem-chung-ky-thuat.md](docs/evidence/02-kiem-chung-ky-thuat.md). Có dữ liệu HTTP/DB/SeaweedFS thật và ghi rõ giới hạn kiểm chứng.
+
 **Cập nhật upload/profile 27/11/2026:** so sánh trước/sau mặc định đóng, title/alt có dấu bắt buộc; nút avatar chuyển cạnh chỉnh sửa hồ sơ. Localhost/127.0.0.1 được cho phép explicit trong env development để sửa lỗi Origin/CSRF khi APP_ORIGIN là LAN; production vẫn chỉ một origin. Xem [quy cách và kiểm chứng](docs/evidence/compact-upload-profile/README.md).
 
 **Cập nhật tác giả/tải ảnh 27/11/2026:** avatar + tên người đăng nằm trong lớp hover, chi tiết luôn hiện avatar/tên; Tải WebP có dropdown gắn liền, chọn size tải ngay. DTO uploader bổ sung avatarUrl công khai/null; không đổi schema/env. Xem [quy cách và kiểm chứng](docs/evidence/author-download/README.md). Các mô tả bố cục cũ bên dưới được thay thế bởi bản cập nhật này.
