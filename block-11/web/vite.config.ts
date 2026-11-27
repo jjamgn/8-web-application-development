@@ -5,6 +5,9 @@ import { fileURLToPath } from 'node:url';
 export default defineConfig({
   plugins: [react()],
   server: {
+    // Playwright rewrites these files during live runs; watching them can reload the app
+    // or crash Windows fs.watch with EBUSY while the report is being replaced.
+    watch: { ignored: ['**/playwright-report/**', '**/test-results/**'] },
     fs: { allow: [
       fileURLToPath(new URL('.', import.meta.url)),
       fileURLToPath(new URL('../contracts', import.meta.url)),

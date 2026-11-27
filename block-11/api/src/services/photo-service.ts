@@ -66,6 +66,10 @@ export class PhotoService {
       }
       return dto(await this.repository.commit(photo));
     } catch (error) {
+      const databaseCode = (error as { code?: unknown } | null)?.code;
+      if (typeof databaseCode === 'string' && /^P\d{4}$/.test(databaseCode)) {
+        this.options.warn?.(`PUBLICATION_FAILED_${databaseCode}`);
+      }
       if (journaled && photoId) {
         // Commit may have succeeded even when the DB response was lost. Unknown state => retain journal, never delete blindly.
         try {

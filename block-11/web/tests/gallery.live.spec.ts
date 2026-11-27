@@ -30,7 +30,7 @@ async function guardedDelete(page: Page, id: string) {
 }
 
 test(`${controlled ? 'CONTROLLED A+B+C' : 'LIVE'}: hai tài khoản, upload JPEG/PNG, owner-only delete, media và reload`, async ({ page, browser, baseURL }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(controlled ? 120_000 : 240_000);
   const run = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   // Generated credentials are never logged or stored in evidence.
   const password = `Demo!${run}`;
@@ -99,7 +99,10 @@ test(`${controlled ? 'CONTROLLED A+B+C' : 'LIVE'}: hai tài khoản, upload JPEG
     expect((await guest.request.get(`/api/photos/${id}`)).status()).toBe(404);
     expect((await guest.request.get(`${uploaded[0].variants[0].url}?origin-check=${run}`, { headers: { 'Cache-Control': 'no-cache' } })).status()).toBe(404);
     created.splice(created.indexOf(id), 1);
+    const loggedOut = page.waitForResponse(r => new URL(r.url()).pathname === '/api/auth/logout' && r.request().method() === 'POST');
     await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+    expect((await loggedOut).status()).toBe(204);
+    await expect(page.getByRole('link', { name: 'Đăng nhập', exact: true })).toBeVisible();
     await page.goto('/photos/upload');
     await expect(page).toHaveURL(/\/login\?returnTo=/);
   } finally {

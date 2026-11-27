@@ -30,7 +30,7 @@ export class PrismaPhotoRepository implements PhotoRepository {
       const completed = await tx.storageCleanupTask.updateMany({ where: { storageKey: { in: keys }, status: 'PENDING' }, data: { status: 'DONE', lastErrorCode: null } });
       if (completed.count !== keys.length) throw new Error('Missing publication journal');
       return map(created);
-    });
+    }, { maxWait: 10_000, timeout: 30_000 });
   }
   async find(id: string): Promise<StoredPhoto | null> {
     const row = await this.db.photo.findUnique({ where: { id }, include: includePhoto });
@@ -42,7 +42,7 @@ export class PrismaPhotoRepository implements PhotoRepository {
       const total = await tx.photo.count({ where });
       const rows = await tx.photo.findMany({ where, skip: (page - 1) * 12, take: 12, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], include: includePhoto });
       return { total, items: rows.map(map) };
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, maxWait: 10_000, timeout: 30_000 });
   }
   async markDeleting(id: string, actorId: string): Promise<StoredPhoto> {
     // Conditional write rechecks ownership at mutation time; status never returns to PUBLISHED.

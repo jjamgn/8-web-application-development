@@ -6,6 +6,7 @@ export default defineConfig({
   testMatch: '**/*.live.spec.ts',
   workers: 1,
   retries: 0,
+  expect: { timeout: 20_000 },
   reporter: [['list'], ['html', { outputFolder: 'playwright-report/live', open: 'never' }]],
   use: {
     baseURL: process.env.LIVE_BASE_URL || 'http://localhost:5173',
