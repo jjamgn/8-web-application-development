@@ -103,5 +103,6 @@ export async function chooseFiles(page: Page, count = 1) {
     await page.getByLabel(`Tiêu đề ảnh ${index + 1}`, { exact: true }).fill(`Ảnh ${index + 1}`);
     await page.getByLabel(`Mô tả thay thế ảnh ${index + 1}`, { exact: true }).fill(`Mô tả ảnh ${index + 1}`);
   }
+  await page.getByText('Xem so sánh trước/sau xử lý', { exact: true }).first().click();
   await expect(page.getByAltText('Xem trước photo-0.png')).toBeVisible();
 }

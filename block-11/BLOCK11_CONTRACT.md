@@ -42,6 +42,10 @@ Theo yêu cầu người dùng: tim/lưu SVG và Tải WebP nằm trên ảnh, h
 
 Theo yêu cầu người dùng: avatar/tên tác giả nằm trong lớp hover/focus góc trái dưới ảnh, không nằm dưới caption; chi tiết luôn có avatar/tên, không tiền tố “Ảnh của”. DTO uploader bổ sung avatarUrl công khai/null, không lộ thông tin đăng nhập. Nút Tải WebP tích hợp dropdown: bấm phần chữ tải variant lớn nhất hiện có, bấm chevron chọn size thì tải ngay size đó; không đổi mặc định sau khi chọn. Menu không bị cắt trong modal và hỗ trợ bàn phím/Esc. Quy cách, privacy và kiểm chứng: [author-download/README.md](docs/evidence/author-download/README.md).
 
+## Bổ sung upload gọn và Origin dev — 27/11/2026
+
+Theo yêu cầu người dùng: so sánh EXIF trước/sau mặc định đóng, có nút mở/ẩn kể cả sau upload; chỉ tạo preview khi mở. Title/alt vẫn bắt buộc và có dấu *. Nút chọn avatar nằm cạnh chỉnh sửa hồ sơ, chọn file mở editor và chỉ lưu khi submit. Sửa lỗi localhost bị chặn bởi APP_ORIGIN LAN bằng ADDITIONAL_APP_ORIGINS explicit ở development (localhost và 127.0.0.1); production chỉ APP_ORIGIN. Token/phiên/quyền vẫn bắt buộc; origin lạ trả ORIGIN_NOT_ALLOWED, token sai trả CSRF_INVALID, không tự retry ghi. Xem [quy cách và kiểm chứng](docs/evidence/compact-upload-profile/README.md).
+
 ## 1. Các quyết định đã chốt
 
 | Mã | Hạng mục | Quyết định |
@@ -132,7 +136,7 @@ block-11/
 - Dùng `express-session`, session lưu PostgreSQL qua Prisma store riêng trong `api/src/auth/`; có thể tham chiếu logic Block 8/9 nhưng không sao chép schema nghiệp vụ hoặc MFA. Session cookie `block11.sid`: HttpOnly, SameSite=Lax, Path=/, không Domain, Secure khi production HTTPS. `resave:false`, `saveUninitialized:false`, không MemoryStore trong nghiệm thu.
 - Login regenerate session ID và CSRF token, lưu userId, hạn tuyệt đối 2 giờ; không rolling. Logout hủy DB session và xóa cookie. Reload `/me` đọc lại DB, không giữ credential trong localStorage/sessionStorage. Không trả passwordHash hoặc email trong DTO ảnh.
 - Store kiểm tra expiry ở mỗi lần đọc, không gia hạn absolute expiry khi touch; request cũ không được tạo lại session đã bị logout. Auth JSON body tối đa 16 KiB, validate bằng Zod; session middleware không tạo cookie cho request media/gallery chỉ đọc.
-- CSRF synchronizer token ngẫu nhiên lưu session, lấy qua `GET /api/auth/csrf`; mọi POST/DELETE yêu cầu `X-CSRF-Token` và Origin đúng APP_ORIGIN. Token login được xoay, frontend nhận token mới; response auth/CSRF là `Cache-Control: no-store`.
+- CSRF synchronizer token ngẫu nhiên lưu session, lấy qua `GET /api/auth/csrf`; mọi POST/DELETE yêu cầu `X-CSRF-Token` và Origin trong danh sách tin cậy (APP_ORIGIN, thêm origin dev nếu cấu hình; production chỉ APP_ORIGIN). Token login được xoay, frontend nhận token mới; response auth/CSRF là `Cache-Control: no-store`.
 - Upload: requireSession → kiểm tra Origin/CSRF → busboy. Khách/session hết hạn trả 401 trước ghi staging/PUT; CSRF sai trả 403. Sau nhận multipart, kiểm tra lại session còn hạn/chưa logout trước khi bắt đầu công bố. File nào đã commit vẫn thuộc userId đã xác thực, không bị đổi chủ khi phiên hết hạn sau đó.
 - `uploaderId` luôn lấy server-side từ session, truyền vào service công bố; không nhận từ metadata/header/query client. UserId giả trong payload bị từ chối theo quy tắc metadata.
 - DELETE cũng cần session/CSRF và server so Photo.uploaderId ngay lúc đổi trạng thái; ảnh người khác trả 403, không sửa DB/object. UI ẩn nút chỉ hỗ trợ trải nghiệm, không thay guard.

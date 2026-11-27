@@ -1,5 +1,7 @@
 # Bàn giao C — React và kiểm chứng trình duyệt
 
+**Cập nhật upload/profile 27/11/2026:** so sánh trước/sau mặc định đóng, title/alt có dấu bắt buộc; nút avatar chuyển cạnh chỉnh sửa hồ sơ. Localhost/127.0.0.1 được cho phép explicit trong env development để sửa lỗi Origin/CSRF khi APP_ORIGIN là LAN; production vẫn chỉ một origin. Xem [quy cách và kiểm chứng](../evidence/compact-upload-profile/README.md).
+
 **Cập nhật tác giả/tải ảnh 27/11/2026:** avatar + tên người đăng nằm trong lớp hover, chi tiết luôn hiện avatar/tên; Tải WebP có dropdown gắn liền, chọn size tải ngay. DTO uploader bổ sung avatarUrl công khai/null; không đổi schema/env. Xem [quy cách và kiểm chứng](../evidence/author-download/README.md). Các mô tả bố cục cũ bên dưới được thay thế bởi bản cập nhật này.
 
 **Cập nhật bố cục 27/11/2026:** tim/lưu/tải chỉ hiện trên ảnh khi hover hoặc focus (cảm ứng vẫn hiện); modal có panel bo góc, nút ×/chevron ở nền tối, nhóm size/tải căn phải và bỏ mũi tên tải xuống. Web build và 42 UI tests đạt. Xem [chi tiết và bằng chứng](../evidence/hover-modal/README.md).

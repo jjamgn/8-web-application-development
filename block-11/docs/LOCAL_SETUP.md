@@ -1,10 +1,12 @@
 # Hướng dẫn local và nguồn tài liệu hiện hành
 
+**Cập nhật upload/profile 27/11/2026:** so sánh trước/sau mặc định đóng, title/alt có dấu bắt buộc; nút avatar chuyển cạnh chỉnh sửa hồ sơ. Localhost/127.0.0.1 được cho phép explicit trong env development để sửa lỗi Origin/CSRF khi APP_ORIGIN là LAN; production vẫn chỉ một origin. Xem [quy cách và kiểm chứng](evidence/compact-upload-profile/README.md).
+
 **Mở rộng đã duyệt 27/11/2026:** tìm kiếm, modal có slug/URL, download WebP, yêu thích, bộ sưu tập riêng tư, hồ sơ công khai, follow và sửa avatar đã tích hợp. Avatar dùng SeaweedFS qua PhotoKind AVATAR và không xuất hiện trong gallery. Các bảng xã hội mới thuộc Block 11. Migration bổ sung `202611270003_social_profiles`; không cần đổi env hoặc cài thư viện frontend mới. Xem [API, cách dùng và kiểm chứng](evidence/social-profile/README.md). Các kết quả cũ trong tài liệu này là lịch sử trước mở rộng.
 
 Cập nhật 27/11/2026. **Block 11 đã tích hợp A+B+C**, không còn ở trạng thái “chỉ có Role A”. CSR React/Vite gọi Express API; Prisma/PostgreSQL giữ metadata và SeaweedFS giữ các mảnh ảnh.
 
-> **Cấu hình hiện tại trên máy: LAN.** APP_ORIGIN đã đổi sang `http://192.168.100.154:5173`, web đang dùng `npm run dev:lan`. Xem [hướng dẫn LAN](LAN_SETUP.md) trước khi chạy lại. Các bước localhost bên dưới là chế độ local; muốn dùng phải đổi APP_ORIGIN tương ứng.
+> **Cấu hình hiện tại trên máy: LAN.** APP_ORIGIN đã đổi sang `http://192.168.100.154:5173`, web đang dùng `npm run dev:lan`. Xem [hướng dẫn LAN](LAN_SETUP.md) trước khi chạy lại. localhost/127.0.0.1 cũng đã được cho phép explicit qua ADDITIONAL_APP_ORIGINS ở development; xem bản sửa Origin/CSRF bên dưới.
 
 ## Source trên máy này
 

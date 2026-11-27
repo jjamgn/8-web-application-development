@@ -4,6 +4,10 @@
 
 Ngày 27/11/2026. IP Wi-Fi tại lúc cấu hình: **192.168.100.154**, gateway 192.168.100.1. Link dùng chung: **http://192.168.100.154:5173/photos**.
 
+## Origin localhost bổ sung
+
+Theo [bản sửa avatar/Origin](evidence/compact-upload-profile/README.md), env development có `ADDITIONAL_APP_ORIGINS=http://localhost:5173,http://127.0.0.1:5173`. Chỉ địa chỉ trong danh sách cụ thể và token đúng mới được ghi; origin khác trả ORIGIN_NOT_ALLOWED. Production phải để danh sách này rỗng.
+
 ## Đã thực hiện
 
 - `.env` API chính và worktree review có APP_ORIGIN `http://192.168.100.154:5173`, NODE_ENV development. Credential/S3 endpoint/session secret giữ nguyên, env được Git bỏ qua.
@@ -19,7 +23,7 @@ Ngày 27/11/2026. IP Wi-Fi tại lúc cấu hình: **192.168.100.154**, gateway 
 | GET media một ảnh có sẵn | 200, image/webp |
 | GET /api/auth/csrf | 200, có session cookie |
 | POST login body thiếu trường nhưng đúng CSRF và LAN Origin | 400 validation — đã qua kiểm tra Origin/CSRF |
-| Cùng request nhưng Origin localhost | 403 — origin ngoài cấu hình bị từ chối |
+| Cùng request nhưng Origin localhost, token đúng | 400 validation — localhost đã được thêm explicit vào danh sách dev |
 | Listener frontend | 0.0.0.0:5173 |
 | Listener API/S3 | Chỉ 127.0.0.1:3000 / 127.0.0.1:8333 |
 
@@ -47,7 +51,7 @@ cd block-11/web
 npm run dev:lan
 ```
 
-Cả máy chủ và máy xem dùng **http://192.168.100.154:5173**, không dùng localhost để đăng nhập/upload trong cấu hình này. Máy khác chỉ cần trình duyệt, không cần source, Docker, Supabase key hoặc S3 credential. Máy chủ phải bật và có Internet để tới Supabase.
+Máy khác dùng **http://192.168.100.154:5173**. Máy chủ có thể dùng URL LAN, `http://localhost:5173` hoặc `http://127.0.0.1:5173` nhờ ADDITIONAL_APP_ORIGINS trong env development. Mỗi địa chỉ có phiên/cookie riêng. Máy khác chỉ cần trình duyệt, không cần source, Docker, Supabase key hoặc S3 credential. Máy chủ phải bật và có Internet để tới Supabase.
 
 ## Khi thay Wi-Fi hoặc IP thay đổi
 

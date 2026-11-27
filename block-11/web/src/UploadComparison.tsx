@@ -4,6 +4,13 @@ import { createRawPreview, type RawPreview } from './lib/raw-preview';
 import type { PhotoDto } from './types';
 
 export function UploadComparison({ file, photo }: { file: File; photo?: PhotoDto }) {
+  const [open, setOpen] = useState(false);
+  return <details className="comparison-disclosure" onToggle={e => setOpen(e.currentTarget.open)}>
+    <summary>{open ? 'Ẩn so sánh trước/sau xử lý' : 'Xem so sánh trước/sau xử lý'}</summary>
+    {open && <ComparisonContent file={file} photo={photo} />}
+  </details>;
+}
+function ComparisonContent({ file, photo }: { file: File; photo?: PhotoDto }) {
   const [preview, setPreview] = useState<(Omit<RawPreview, 'blob'> & { url: string }) | null>(null);
   const [error, setError] = useState('');
   useEffect(() => {

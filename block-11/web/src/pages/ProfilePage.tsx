@@ -23,6 +23,7 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
   const [preview, setPreview] = useState('');
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
+  const avatarInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     setProfile(null); setError(''); setMissing(false); setEditing(false);
     if (!id) return;
@@ -41,10 +42,12 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
   async function save(event: FormEvent) {
     event.preventDefault();
     if (lock.current || !profile) return;
+    let profileSaved = false;
     lock.current = true; setBusy(true); setError('');
     try {
       if (avatar && (avatar.size > 10_485_760 || !['image/jpeg', 'image/png'].includes(avatar.type))) throw new Error('Avatar cần JPEG hoặc PNG, tối đa 10 MiB.');
       const updated = await api.updateProfile(name.trim(), bio.trim());
+      profileSaved = true;
       setProfile(old => old ? { ...old, ...updated } : old);
       setUser({ id: updated.id, name: updated.name });
       if (avatar) {
@@ -52,7 +55,7 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
         setProfile(old => old ? { ...old, ...uploaded } : old); setAvatar(null);
       }
       refreshSocialFeed(''); setEditing(false);
-    } catch (e) { setError(errorMessage(e)); }
+    } catch (e) { setError((profileSaved && avatar ? 'Tên/giới thiệu đã lưu, nhưng avatar chưa được cập nhật. ' : '') + errorMessage(e)); }
     finally { lock.current = false; setBusy(false); }
   }
   async function follow() {
@@ -78,7 +81,7 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
     <div className="profile-heading">
       <div className="profile-avatar">{profile.avatarUrl ? <img src={profile.avatarUrl} alt={'Ảnh đại diện ' + profile.name} /> : <span aria-hidden="true">{Array.from(profile.name)[0]?.toUpperCase()}</span>}</div>
       <div className="profile-info"><p className="eyebrow">{own ? 'KHÔNG GIAN CỦA BẠN' : 'NGƯỜI CHIA SẺ KHOẢNH KHẮC'}</p><h1>{profile.name}</h1><p className="profile-bio">{profile.bio || 'Mỗi bức ảnh, một câu chuyện.'}</p><p className="profile-stats">{profile.photoCount} ảnh · {profile.followers} người theo dõi · Đang theo dõi {profile.following}</p></div>
-      {mine ? <div className="profile-buttons">{!own && <Link className="button secondary" to="/profile">Quản lý hồ sơ</Link>}<button className="button secondary" onClick={() => setEditing(!editing)} disabled={busy}>Chỉnh sửa hồ sơ</button></div>
+      {mine ? <div className="profile-buttons">{!own && <Link className="button secondary" to="/profile">Quản lý hồ sơ</Link>}<button className="button secondary" type="button" disabled={busy} onClick={() => avatarInput.current?.click()}>Tải avatar mới</button><input ref={avatarInput} className="sr-only" aria-label="Chọn avatar" type="file" accept="image/jpeg,image/png" disabled={busy} onClick={e => { e.currentTarget.value = ''; }} onChange={e => { setAvatar(e.target.files?.[0] ?? null); setEditing(true); }} /><button className="button secondary" onClick={() => setEditing(!editing)} disabled={busy}>Chỉnh sửa hồ sơ</button></div>
         : user ? <button className="button" disabled={busy} onClick={() => void follow()}>{profile.isFollowing ? 'Bỏ theo dõi' : 'Theo dõi'}</button> : <Link className="button" to={'/login?returnTo=/users/' + profile.id}>Đăng nhập để theo dõi</Link>}
     </div>
     {error && <Notice error>{error}</Notice>}
@@ -87,9 +90,9 @@ export function ProfilePage({ own = false }: { own?: boolean }) {
       <fieldset disabled={busy}>
         <label>Tên hiển thị<input value={name} onChange={e => setName(e.target.value)} maxLength={120} required /></label>
         <label>Giới thiệu<textarea value={bio} onChange={e => setBio(e.target.value)} maxLength={300} rows={3} /></label>
-        <label>Ảnh đại diện<input aria-label="Chọn avatar" type="file" accept="image/jpeg,image/png" onChange={e => setAvatar(e.target.files?.[0] ?? null)} /></label>
+
         <p className="field-help">JPEG/PNG, tối đa 10 MiB. Ảnh được cắt vuông ở giữa, tối đa 512px và bỏ EXIF/GPS trên máy chủ.</p>
-        {preview && <img className="avatar-preview" src={preview} alt="Xem trước avatar mới" />}
+        {preview && <div className="avatar-pending"><img className="avatar-preview" src={preview} alt="Xem trước avatar mới" /><p>{avatar?.name} · Ảnh mới chưa lưu.</p></div>}
         <button className="button" disabled={busy}>{busy ? 'Đang lưu hồ sơ…' : 'Lưu thay đổi'}</button><button type="button" className="text-button" onClick={() => { setEditing(false); setAvatar(null); setName(profile.name); setBio(profile.bio); }}>Hủy</button>
       </fieldset>
     </form>}

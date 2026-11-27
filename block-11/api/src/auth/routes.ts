@@ -29,7 +29,7 @@ export function authRouter(config: Config, users: UserRepository, sessions: Sess
     if (!user) throw new AppError('AUTH_REQUIRED', 401, 'Vui lòng đăng nhập.');
     res.json({ ok: true, data: { user: { id: user.id, name: user.name } } });
   });
-  router.post('/register', limiter(60 * 60 * 1000), csrfGuard(config.APP_ORIGIN), json({ limit: '16kb' }), async (req, res) => {
+  router.post('/register', limiter(60 * 60 * 1000), csrfGuard(config.APP_ORIGIN, config.ADDITIONAL_APP_ORIGINS), json({ limit: '16kb' }), async (req, res) => {
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) throw new AppError('VALIDATION_ERROR', 400, 'Thông tin đăng ký không hợp lệ.');
     const { name, email: address, password: secret } = parsed.data;
@@ -44,7 +44,7 @@ export function authRouter(config: Config, users: UserRepository, sessions: Sess
       throw error;
     }
   });
-  router.post('/login', limiter(15 * 60 * 1000, true), csrfGuard(config.APP_ORIGIN), json({ limit: '16kb' }), async (req, res) => {
+  router.post('/login', limiter(15 * 60 * 1000, true), csrfGuard(config.APP_ORIGIN, config.ADDITIONAL_APP_ORIGINS), json({ limit: '16kb' }), async (req, res) => {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) throw new AppError('VALIDATION_ERROR', 400, 'Thông tin đăng nhập không hợp lệ.');
     const user = await users.byEmail(parsed.data.email);
@@ -56,7 +56,7 @@ export function authRouter(config: Config, users: UserRepository, sessions: Sess
     await initializeSession(req, sessions, user.id);
     res.json({ ok: true, data: { user: { id: user.id, name: user.name }, csrfToken: req.session.csrfToken } });
   });
-  router.post('/logout', requireSession(sessions), csrfGuard(config.APP_ORIGIN), async (req, res) => {
+  router.post('/logout', requireSession(sessions), csrfGuard(config.APP_ORIGIN, config.ADDITIONAL_APP_ORIGINS), async (req, res) => {
     await assertActiveSession(req, sessions);
     await new Promise<void>((resolve, reject) => req.session.destroy(err => err ? reject(err) : resolve()));
     res.clearCookie('block11.sid', { httpOnly: true, sameSite: 'lax', secure: config.NODE_ENV === 'production', path: '/' });

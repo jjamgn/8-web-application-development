@@ -53,6 +53,7 @@ export function UploadPage() {
     <Link className="back-link" to="/photos">Về thư viện</Link>
     <div className="page-heading"><p className="eyebrow">CHIA SẺ GÓC NHÌN CỦA BẠN</p><h1>Thêm một khoảnh khắc<span className="accent">.</span></h1><p className="intro">Chọn ảnh, đặt tên và viết một mô tả để mọi người cùng cảm nhận.</p></div>
     <p className="upload-limits" id="upload-help">JPEG hoặc PNG tĩnh · 1–5 ảnh/lượt · Tối đa 10 MiB và 40 triệu pixel/ảnh. Máy chủ sẽ kiểm tra ảnh trước khi lưu.</p>
+    <p className="field-help"><span className="required-marker" aria-hidden="true">*</span> là trường bắt buộc.</p>
     {error && <Notice error>{error}</Notice>}
     {expired && <Notice>Phiên đăng nhập đã hết hạn. <Link to="/login?returnTo=/photos/upload">Đăng nhập lại</Link> để tạo lượt gửi mới.</Notice>}
     <form onSubmit={submit}>
@@ -72,8 +73,8 @@ export function UploadPage() {
           const uploaded = result?.results.find(item => item.index === i);
           return <article className="upload-entry" key={`${i}-${entry.file.name}`}>
           <div className="upload-fields"><h2>Ảnh {i + 1}</h2><p className="file-name">{entry.file.name} · {(entry.file.size / 1_048_576).toFixed(2)} MiB</p>
-            <label htmlFor={`title-${i}`}>Tiêu đề ảnh {i + 1}<input id={`title-${i}`} value={entry.title} onChange={e => update(i, 'title', e.target.value)} required aria-describedby={`title-count-${i}`} /></label><p className="field-help" id={`title-count-${i}`}>{[...entry.title.trim()].length}/120 ký tự</p>
-            <label htmlFor={`alt-${i}`}>Mô tả thay thế ảnh {i + 1}<textarea id={`alt-${i}`} rows={3} value={entry.alt} onChange={e => update(i, 'alt', e.target.value)} required aria-describedby={`alt-count-${i}`} /></label><p className="field-help" id={`alt-count-${i}`}>{[...entry.alt.trim()].length}/300 ký tự · Mô tả nội dung ảnh cho người dùng trình đọc màn hình.</p>
+            <label htmlFor={`title-${i}`}>Tiêu đề ảnh {i + 1}<span className="required-marker" aria-hidden="true"> *</span><input aria-label={`Tiêu đề ảnh ${i + 1}`} id={`title-${i}`} value={entry.title} onChange={e => update(i, 'title', e.target.value)} required aria-describedby={`title-count-${i}`} /></label><p className="field-help" id={`title-count-${i}`}>{[...entry.title.trim()].length}/120 ký tự</p>
+            <label htmlFor={`alt-${i}`}>Mô tả thay thế ảnh {i + 1}<span className="required-marker" aria-hidden="true"> *</span><textarea aria-label={`Mô tả thay thế ảnh ${i + 1}`} id={`alt-${i}`} rows={3} value={entry.alt} onChange={e => update(i, 'alt', e.target.value)} required aria-describedby={`alt-count-${i}`} /></label><p className="field-help" id={`alt-count-${i}`}>{[...entry.alt.trim()].length}/300 ký tự · Mô tả nội dung ảnh cho người dùng trình đọc màn hình.</p>
           </div>
           <UploadComparison file={entry.file} photo={uploaded?.ok ? uploaded.photo : undefined} />
         </article>; })}</div>

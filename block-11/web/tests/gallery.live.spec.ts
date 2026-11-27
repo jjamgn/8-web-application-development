@@ -133,7 +133,8 @@ test(`${controlled ? 'CONTROLLED A+B+C' : 'LIVE'}: EXIF comparison uses raw pixe
     await register(page, email, password, `EXIF demo ${run}`);
     await login(page, email, password);
     await page.getByLabel('Chọn ảnh', { exact: true }).setInputFiles(fileURLToPath(new URL('../../docs/demo-assets/exif-gps/test-sideways-orientation6-gps.jpg', import.meta.url)));
-    const comparison = page.getByRole('region', { name: 'So sánh ảnh test-sideways-orientation6-gps.jpg' });
+    await page.getByText('Xem so sánh trước/sau xử lý', { exact: true }).first().click();
+  const comparison = page.getByRole('region', { name: 'So sánh ảnh test-sideways-orientation6-gps.jpg' });
     const before = comparison.getByAltText('Xem trước test-sideways-orientation6-gps.jpg');
     await expect(before).toHaveJSProperty('naturalWidth', 600);
     await expect(before).toHaveJSProperty('naturalHeight', 1000);

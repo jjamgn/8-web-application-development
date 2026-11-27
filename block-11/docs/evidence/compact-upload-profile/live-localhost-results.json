@@ -1,0 +1,10 @@
+{
+  "localhost": true,
+  "checks": [
+    "localhost login accepted with valid Origin and CSRF",
+    "localhost UI profile PATCH and avatar POST succeeded; square stripped WebP displayed",
+    "bad token and unlisted Origin both rejected without profile mutation"
+  ],
+  "cleaned": true,
+  "avatarWidth": 512
+}

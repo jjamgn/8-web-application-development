@@ -31,7 +31,7 @@ export function photosRouter(config: Config, dependencies: Dependencies) {
     if (!uuid.safeParse(req.params.id).success) throw notFound();
     res.json({ ok: true, data: await photos.getPhoto(req.params.id!) });
   });
-  router.post('/', requireSession(sessions), csrfGuard(config.APP_ORIGIN), async (req, res) => {
+  router.post('/', requireSession(sessions), csrfGuard(config.APP_ORIGIN, config.ADDITIONAL_APP_ORIGINS), async (req, res) => {
     // No disk operations occur until authentication and Origin/CSRF checks succeed.
     await mkdir(config.UPLOAD_TMP_DIR, { recursive: true });
     const staged = await stageUpload(req, config.UPLOAD_TMP_DIR);
@@ -60,7 +60,7 @@ export function photosRouter(config: Config, dependencies: Dependencies) {
     } finally { await staged.dispose(); }
     if (data && !res.destroyed) res.json({ ok: true, data });
   });
-  router.delete('/:id', requireSession(sessions), csrfGuard(config.APP_ORIGIN), async (req, res) => {
+  router.delete('/:id', requireSession(sessions), csrfGuard(config.APP_ORIGIN, config.ADDITIONAL_APP_ORIGINS), async (req, res) => {
     if (!uuid.safeParse(req.params.id).success) throw notFound();
     const userId = await assertActiveSession(req, sessions);
     const outcome = await photos.deletePhoto(String(req.params.id), { userId });

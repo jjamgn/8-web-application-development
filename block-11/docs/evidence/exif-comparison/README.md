@@ -1,5 +1,7 @@
 # Preview pixels gốc và kết quả EXIF sau upload
 
+**Cập nhật upload/profile 27/11/2026:** so sánh trước/sau mặc định đóng, title/alt có dấu bắt buộc; nút avatar chuyển cạnh chỉnh sửa hồ sơ. Localhost/127.0.0.1 được cho phép explicit trong env development để sửa lỗi Origin/CSRF khi APP_ORIGIN là LAN; production vẫn chỉ một origin. Xem [quy cách và kiểm chứng](../compact-upload-profile/README.md).
+
 Ngày 27/11/2026. Đã thêm so sánh vào mỗi ảnh trên trang upload, không đổi API hoặc file gốc gửi qua multipart.
 
 - Khung trái đọc JPEG SOF/PNG IHDR để lấy kích thước pixels gốc, đọc Orientation và dấu hiệu GPS IFD. Tạo Blob chỉ dùng hiển thị đã bỏ EXIF APP1/eXIf, để browser không tự áp dụng orientation. Có giới hạn dung lượng/pixel trước khi tạo preview; không đọc ảnh vượt giới hạn để demo.

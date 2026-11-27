@@ -23,7 +23,7 @@ const profileDto = (user: { id: string; name: string; bio: string; avatarPhoto: 
 export function socialRouter(config: Config, dependencies: Dependencies, db: PrismaClient) {
   const router = Router();
   const { sessions, photos } = dependencies;
-  const auth = requireSession(sessions), csrf = csrfGuard(config.APP_ORIGIN);
+  const auth = requireSession(sessions), csrf = csrfGuard(config.APP_ORIGIN, config.ADDITIONAL_APP_ORIGINS);
   const body = json({ limit: '16kb' });
   const actor = (req: Request) => assertActiveSession(req, sessions);
   router.use((_req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });

@@ -34,6 +34,7 @@ test('EXIF preview shows stored sideways pixels, uploads original bytes and only
   await page.route('**/media/photos/exif-test/1000.webp', route => route.fulfill({ contentType: 'image/webp', body: webp }));
   await page.goto('/photos/upload');
   await page.getByLabel('Chọn ảnh', { exact: true }).setInputFiles(fixture);
+  await page.getByText('Xem so sánh trước/sau xử lý', { exact: true }).first().click();
   const comparison = page.getByRole('region', { name: 'So sánh ảnh test-sideways-orientation6-gps.jpg' });
   const before = comparison.getByAltText('Xem trước test-sideways-orientation6-gps.jpg');
   await expect(before).toHaveJSProperty('naturalWidth', 600);
@@ -64,6 +65,7 @@ test('a sideways PNG without EXIF stays sideways in the raw preview, and mobile 
   await page.setViewportSize({ width: 375, height: 900 });
   await page.goto('/photos/upload');
   await page.getByLabel('Chọn ảnh', { exact: true }).setInputFiles(fileURLToPath(new URL('../../docs/demo-assets/exif-gps/raw-pixels-before-exif.png', import.meta.url)));
+  await page.getByText('Xem so sánh trước/sau xử lý', { exact: true }).first().click();
   const before = page.getByAltText('Xem trước raw-pixels-before-exif.png');
   await expect(before).toHaveJSProperty('naturalWidth', 600);
   await expect(before).toHaveJSProperty('naturalHeight', 1000);

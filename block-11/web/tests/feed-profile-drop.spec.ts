@@ -56,6 +56,7 @@ test('kéo thả giữ file gốc, nhập metadata và chặn quá 5 ảnh', asy
   };
   await drop(2);
   await expect(page.locator('.upload-entry')).toHaveCount(2);
+  await page.getByText('Xem so sánh trước/sau xử lý', { exact: true }).first().click();
   await expect(page.getByAltText('Xem trước drop-0.png')).toBeVisible();
   await page.getByLabel('Tiêu đề ảnh 1', { exact: true }).fill('Ảnh kéo thả');
   await expect(page.getByLabel('Tiêu đề ảnh 1', { exact: true })).toHaveValue('Ảnh kéo thả');

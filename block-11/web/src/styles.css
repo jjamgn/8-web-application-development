@@ -890,3 +890,10 @@ dialog.photo-modal::backdrop { background:rgba(8,22,17,.85); }
 .download-menu small { display:block; font-size:11px; color:var(--muted); }
 .download-bytes { flex-shrink:0; color:var(--muted); font-size:12px; }
 @media(max-width:599px) { .photo-byline { gap:10px; } .card-actions .card-author { gap:6px; font-size:12px; max-width:calc(100% - 126px); } }
+
+.required-marker { color:#ac3545; font-weight:700; }
+.comparison-disclosure { margin-top:16px; }
+.comparison-disclosure summary { cursor:pointer; display:list-item; width:fit-content; color:var(--green); padding:10px 16px; border:1px solid var(--border); border-radius:10px; background:white; font-weight:500; }
+.comparison-disclosure summary:focus-visible { outline:2px solid var(--green); outline-offset:3px; }
+.comparison-disclosure[open] summary { margin-bottom:20px; }
+.avatar-pending { display:flex; align-items:center; flex-wrap:wrap; gap:14px; }

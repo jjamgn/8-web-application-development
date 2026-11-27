@@ -60,11 +60,13 @@ export async function assertActiveSession(req: Request, repository: SessionRepos
 export function requireSession(repository: SessionRepository): RequestHandler {
   return async (req, _res, next) => { try { await assertActiveSession(req, repository); next(); } catch (error) { next(error); } };
 }
-export function csrfGuard(origin: string): RequestHandler {
+export function csrfGuard(origin: string, additionalOrigins: string[] = []): RequestHandler {
+  const allowedOrigins = new Set([origin, ...additionalOrigins]);
   return (req, _res, next) => {
     const provided = req.get('X-CSRF-Token');
     const expected = req.session.csrfToken;
-    if (req.get('Origin') !== origin || !provided || !expected ||
+    if (!allowedOrigins.has(req.get('Origin') ?? '')) return next(new AppError('ORIGIN_NOT_ALLOWED', 403, 'Địa chỉ mở trang chưa được máy chủ cho phép. Hãy mở đúng địa chỉ ứng dụng.'));
+    if (!provided || !expected ||
       !req.session.absoluteExpiresAt || req.session.absoluteExpiresAt <= Date.now() ||
       Buffer.byteLength(provided) !== Buffer.byteLength(expected) ||
       !timingSafeEqual(Buffer.from(provided), Buffer.from(expected))) {
