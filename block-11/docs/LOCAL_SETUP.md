@@ -33,7 +33,7 @@ npm run dev
 
 Mở `http://localhost:5173/photos`. Dùng nhất quán localhost cho browser để Origin/session đúng; Vite proxy API/media sang 127.0.0.1:3000.
 
-Database của máy này đã áp dụng migration Block 11. Với môi trường mới, kiểm tra target trước rồi dùng `npm run db:migrate`; không reset hoặc seed DB hiện có. [Rà soát bảng legacy](database/OUT_OF_SCOPE_REVIEW.md) giải thích vì sao còn Chef/Dish/Ingredient.
+Database của máy này đã áp dụng cả migration Photo Gallery và migration `202611270002_remove_legacy_restaurant`. Với môi trường mới, kiểm tra target trước rồi dùng `npm run db:migrate`; không reset/seed DB hiện có. [Kết quả dọn legacy](database/LEGACY_REMOVAL.md) xác nhận Chef/Dish/Ingredient đã được backup và xóa, không còn trong public.
 
 ## SeaweedFS: chọn một trong hai cách
 

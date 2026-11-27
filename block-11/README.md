@@ -12,7 +12,7 @@ Tài liệu: [API](api/README.md), [SeaweedFS](infra/seaweedfs/README.md), [bàn
 - Đã chạy thực tế trên Windows/Node 26.13.0, Supabase project mới qua Session pooler và SeaweedFS 4.55 Windows: build API/web đạt, **71/71 backend**, **28/28 UI mock**, **1/1 controlled browser**, HTTP live, browser live hai tài khoản và smoke chia/ghép/hash/xóa mảnh đều đạt. Xem [báo cáo chạy thật](docs/evidence/review-20261127/REVIEW.md).
 - Chưa ký đạt toàn bộ E01–E20: restart có ảnh tồn tại, fault matrix trên cloud, Docker và HTTPS/multi-instance vẫn cần minh chứng riêng. Xem [ma trận bằng chứng hiện tại](docs/evidence/README.md).
 - [Hướng dẫn local thống nhất](docs/LOCAL_SETUP.md) phân biệt source chính `block-11/` với worktree kiểm tra `.block11-review/block-11/`; không còn dùng README thời điểm chỉ có Role A để kết luận chưa tích hợp.
-- [Rà soát bảng ngoài phạm vi](docs/database/OUT_OF_SCOPE_REVIEW.md): Chef/Dish/Ingredient có dữ liệu, không được app dùng; chưa xóa/chuyển bảng. Bản SQL lưu trữ chỉ là phương án chờ quyết định, không phải migration đã chạy.
+- [Dọn bảng ngoài phạm vi đã hoàn tất](docs/database/LEGACY_REMOVAL.md): Chef/Dish/Ingredient đã được backup, kiểm chứng phục hồi và xóa theo yêu cầu người dùng bằng migration riêng; giữ nguyên dữ liệu Photo Gallery và lịch sử migration. [Bản rà soát cũ](docs/database/OUT_OF_SCOPE_REVIEW.md) chỉ là lịch sử trước khi quyết định xóa.
 
 ## Nền và phiên bản
 

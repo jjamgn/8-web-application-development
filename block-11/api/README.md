@@ -68,7 +68,7 @@ Test tạo một tài khoản riêng, đăng nhập, upload PNG + file giả, đ
 
 PhotoRepository dùng interactive transaction `maxWait=10s`, `timeout=30s` để tránh P2028 do giới hạn mặc định 5s trên Session pooler; không bỏ transaction/rollback. `contracts/package.json` xác định ESM để output TypeScript có thể chạy bằng `npm start`, không chỉ qua tsx.
 
-Schema Prisma chỉ có User, Session, Photo, PhotoVariant, PhotoChunk, StorageCleanupTask. DB mới có thêm bảng legacy không được API truy vấn; xem [rà soát DB](../docs/database/OUT_OF_SCOPE_REVIEW.md). Không dùng `prisma db push`, reset hoặc xóa `_prisma_migrations` để làm sạch các bảng này.
+Schema Prisma chỉ có User, Session, Photo, PhotoVariant, PhotoChunk, StorageCleanupTask. Ba bảng legacy đã được xóa theo yêu cầu người dùng bằng migration `202611270002_remove_legacy_restaurant`, sau backup và thử phục hồi; xem [kết quả dọn DB](../docs/database/LEGACY_REMOVAL.md). Public còn sáu bảng app và `_prisma_migrations`; không dùng `prisma db push`, reset hoặc xóa lịch sử migration để làm sạch DB.
 
 ## Gọi API từ C
 

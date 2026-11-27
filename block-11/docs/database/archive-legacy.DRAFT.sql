@@ -1,4 +1,6 @@
 -- DRAFT: NOT EXECUTED. Not a Prisma auto-deploy migration.
+-- SUPERSEDED: user chose deletion; see LEGACY_REMOVAL.md and migration
+-- 202611270002_remove_legacy_restaurant. This historical archive draft was NOT run.
 -- Target: dedicated Block 11 Supabase project swuswowkpsffkrvvyblo.
 -- Back up and test restore first. Recheck external consumers and dependencies.
 -- Only after approval, set this session's explicit opt-in before running:

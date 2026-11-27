@@ -1,5 +1,7 @@
 # Rà soát database ngoài phạm vi Block 11
 
+> **CẬP NHẬT SAU RÀ SOÁT:** người dùng đã yêu cầu xóa hẳn; ba bảng đã được backup, kiểm chứng phục hồi và xóa bằng migration `202611270002_remove_legacy_restaurant`. Xem [kết quả thực hiện](LEGACY_REMOVAL.md). Nội dung dưới đây là snapshot trước khi được phép xóa, không phải trạng thái DB hiện tại.
+
 Ngày rà soát: **27/11/2026**. Chỉ đọc số dòng, schema, constraint/dependency và migration; không xuất nội dung record, không xóa/chuyển dữ liệu.
 
 ## Kết quả xác minh
