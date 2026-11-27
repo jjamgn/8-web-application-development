@@ -2,6 +2,8 @@
 
 Cập nhật 27/11/2026. **Block 11 đã tích hợp A+B+C**, không còn ở trạng thái “chỉ có Role A”. CSR React/Vite gọi Express API; Prisma/PostgreSQL giữ metadata và SeaweedFS giữ các mảnh ảnh.
 
+> **Cấu hình hiện tại trên máy: LAN.** APP_ORIGIN đã đổi sang `http://192.168.100.154:5173`, web đang dùng `npm run dev:lan`. Xem [hướng dẫn LAN](LAN_SETUP.md) trước khi chạy lại. Các bước localhost bên dưới là chế độ local; muốn dùng phải đổi APP_ORIGIN tương ứng.
+
 ## Source trên máy này
 
 - `block-11/` ở gốc repo được đồng bộ từ bản A+B+C đã chạy thử, gồm các sửa ESM/transaction/Vite của commit local `f3d2172` và tài liệu cập nhật sau đó. `.env` local được giữ nguyên, không đưa lên GitHub.
@@ -22,7 +24,7 @@ npm run build
 npm start
 ```
 
-Hoặc `npm run dev` để watch TypeScript. `npm start` dùng output đã compile; sửa source phải build lại. `.env` phát triển trên máy này có APP_ORIGIN `http://localhost:5173`, NODE_ENV development; Vite phục vụ giao diện.
+Hoặc `npm run dev` để watch TypeScript. `npm start` dùng output đã compile; sửa source phải build lại. NODE_ENV development; Vite phục vụ giao diện. APP_ORIGIN phải khớp chế độ đang dùng: localhost hoặc IP LAN, không tự thay đổi khi chạy npm.
 
 Terminal frontend, từ `block-11/web/`:
 

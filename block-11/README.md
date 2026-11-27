@@ -13,6 +13,7 @@ Tài liệu: [API](api/README.md), [SeaweedFS](infra/seaweedfs/README.md), [bàn
 - Chưa ký đạt toàn bộ E01–E20: restart có ảnh tồn tại, fault matrix trên cloud, Docker và HTTPS/multi-instance vẫn cần minh chứng riêng. Xem [ma trận bằng chứng hiện tại](docs/evidence/README.md).
 - [Hướng dẫn local thống nhất](docs/LOCAL_SETUP.md) phân biệt source chính `block-11/` với worktree kiểm tra `.block11-review/block-11/`; không còn dùng README thời điểm chỉ có Role A để kết luận chưa tích hợp.
 - Trang upload có so sánh pixels gốc chưa áp dụng EXIF với WebP thật sau khi server trả thành công. Lượt cập nhật giao diện này đạt **30 UI tests và 2 controlled browser tests**; xem [bằng chứng so sánh EXIF](docs/evidence/exif-comparison/README.md). Chạy SeaweedFS Windows bằng `infra/seaweedfs/start-native.ps1`, không bắt buộc Docker.
+- Máy người dùng đã cấu hình [demo LAN](docs/LAN_SETUP.md): dùng `npm run dev:lan` ở web, APP_ORIGIN trùng URL LAN và Firewall giới hạn LocalSubnet. IP hiện tại `192.168.100.154`; khi đổi mạng phải kiểm tra lại IP/origin/rule. Chỉ `npm run dev` vẫn bind localhost.
 - [Dọn bảng ngoài phạm vi đã hoàn tất](docs/database/LEGACY_REMOVAL.md): Chef/Dish/Ingredient đã được backup, kiểm chứng phục hồi và xóa theo yêu cầu người dùng bằng migration riêng; giữ nguyên dữ liệu Photo Gallery và lịch sử migration. [Bản rà soát cũ](docs/database/OUT_OF_SCOPE_REVIEW.md) chỉ là lịch sử trước khi quyết định xóa.
 
 ## Nền và phiên bản
