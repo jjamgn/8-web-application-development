@@ -4,7 +4,7 @@ export type Actor = { userId: string; purpose?: 'AVATAR' };
 export type PhotoFilter = { q?: string; favoritesBy?: string; followingBy?: string; collectionId?: string; viewerId?: string };
 export type VariantDto = { width: number; height: number; mime: 'image/webp'; bytes: number; url: string };
 export type PhotoDto = {
-  id: string; title: string; alt: string; uploader: { id: string; name: string };
+  id: string; title: string; alt: string; uploader: { id: string; name: string; avatarUrl?: string | null };
   width: number; height: number; createdAt: string; variants: VariantDto[];
 };
 export type StagedVariant = { tempPath: string; width: number; height: number; mime: 'image/webp'; bytes: number };
@@ -15,7 +15,7 @@ export type VariantManifest = {
   chunkSize: number; chunkCount: number; storagePrefix: string; chunks: ChunkManifest[];
 };
 export type StoredPhoto = {
-  id: string; uploaderId: string; uploader: { id: string; name: string };
+  id: string; uploaderId: string; uploader: { id: string; name: string; avatarUrl?: string | null };
   title: string; alt: string; width: number; height: number;
   kind?: 'PHOTO' | 'AVATAR'; status: 'PUBLISHED' | 'DELETING'; createdAt: Date; variants: VariantManifest[];
 };

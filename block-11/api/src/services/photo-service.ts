@@ -8,7 +8,7 @@ import { sweepTemporaryFiles } from '../storage/temp-cleanup.js';
 
 function dto(photo: StoredPhoto): PhotoDto {
   return {
-    id: photo.id, title: photo.title, alt: photo.alt, uploader: photo.uploader,
+    id: photo.id, title: photo.title, alt: photo.alt, uploader: { id: photo.uploader.id, name: photo.uploader.name, avatarUrl: photo.uploader.avatarUrl ?? null },
     width: photo.width, height: photo.height, createdAt: photo.createdAt.toISOString(),
     variants: [...photo.variants].sort((a, b) => a.width - b.width).map(v => ({
       width: v.width, height: v.height, mime: v.mime, bytes: v.bytes, url: `/media/photos/${photo.id}/${v.width}.webp`,

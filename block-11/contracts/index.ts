@@ -1,9 +1,10 @@
 export type ApiError = { code: string; message: string };
 export type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: ApiError };
 export type UserDto = { id: string; name: string };
+export type UploaderDto = UserDto & { avatarUrl?: string | null };
 export type VariantDto = { width: number; height: number; mime: 'image/webp'; bytes: number; url: string };
 export type PhotoDto = {
-  id: string; title: string; alt: string; uploader: UserDto;
+  id: string; title: string; alt: string; uploader: UploaderDto;
   width: number; height: number; createdAt: string; variants: VariantDto[];
 };
 export type UploadResult = { index: number; ok: true; photo: PhotoDto } | { index: number; ok: false; error: ApiError };

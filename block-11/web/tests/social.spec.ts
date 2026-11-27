@@ -34,6 +34,7 @@ test('public author profile, follow/unfollow and following feed', async ({ page 
   expect(state.following).toEqual([other.id]);
   await page.goto('/following');
   await expect(page.locator('.photo-card')).toHaveCount(1);
+  await page.locator('.photo-frame').first().hover();
   await page.locator('.card-author').click();
   await page.getByRole('button', { name: 'Bỏ theo dõi', exact: true }).click();
   await expect.poll(() => state.following).toEqual([]);
@@ -106,6 +107,10 @@ test('download selector uses existing WebP variants and old UUID URL redirects',
   await mockApi(page);
   await page.goto('/photos/' + photo(1).id);
   await expect(page).toHaveURL(/\/photos\/binh-yen-ben-suon-nui\//);
-  await page.getByLabel('Kích thước tải xuống').selectOption('320');
-  await expect(page.locator('.detail-actions a[download]')).toHaveAttribute('href', photo(1).variants[0].url + '?download=1');
+  await page.getByRole('button', { name: 'Chọn kích thước tải WebP' }).click();
+  const option = page.getByRole('menuitem', { name: /^320 ×/ });
+  await expect(option).toHaveAttribute('href', photo(1).variants[0].url + '?download=1');
+  const transfer = page.waitForEvent('download'); await option.click();
+  expect((await transfer).url()).toContain('/320.webp?download=1');
+  await expect(page.locator('.detail-actions .download-default')).toHaveAttribute('href', photo(1).variants.at(-1)!.url + '?download=1');
 });

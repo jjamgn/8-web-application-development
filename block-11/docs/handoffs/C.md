@@ -1,5 +1,7 @@
 # Bàn giao C — React và kiểm chứng trình duyệt
 
+**Cập nhật tác giả/tải ảnh 27/11/2026:** avatar + tên người đăng nằm trong lớp hover, chi tiết luôn hiện avatar/tên; Tải WebP có dropdown gắn liền, chọn size tải ngay. DTO uploader bổ sung avatarUrl công khai/null; không đổi schema/env. Xem [quy cách và kiểm chứng](../evidence/author-download/README.md). Các mô tả bố cục cũ bên dưới được thay thế bởi bản cập nhật này.
+
 **Cập nhật bố cục 27/11/2026:** tim/lưu/tải chỉ hiện trên ảnh khi hover hoặc focus (cảm ứng vẫn hiện); modal có panel bo góc, nút ×/chevron ở nền tối, nhóm size/tải căn phải và bỏ mũi tên tải xuống. Web build và 42 UI tests đạt. Xem [chi tiết và bằng chứng](../evidence/hover-modal/README.md).
 
 **Mở rộng đã duyệt 27/11/2026:** tìm kiếm, modal có slug/URL, download WebP, yêu thích, bộ sưu tập riêng tư, hồ sơ công khai, follow và sửa avatar đã tích hợp. Avatar dùng SeaweedFS qua PhotoKind AVATAR và không xuất hiện trong gallery. Các bảng xã hội mới thuộc Block 11. Migration bổ sung `202611270003_social_profiles`; không cần đổi env hoặc cài thư viện frontend mới. Xem [API, cách dùng và kiểm chứng](../evidence/social-profile/README.md). Các kết quả cũ trong tài liệu này là lịch sử trước mở rộng.
@@ -27,7 +29,7 @@ Ngày: 27/11/2026. C dựng ban đầu trên `codex/block11-c`; đã ghép vào 
 1. `web/src/types.ts` đã re-export DTO và LIMITS/codePoints trực tiếp từ `contracts/index.ts` của B, không định nghĩa DTO riêng. Vite chỉ cho phép web và contracts trong allowlist nguồn; không đưa Prisma/fs/S3 vào browser.
 2. `GET /api/auth/me` trả `{ok:true,data:{user:{id,name}}}` hoặc 401. CSRF `{csrfToken}`, login `{user,csrfToken}`, register `{user}` không tự login, logout 204. Ghi dữ liệu yêu cầu Origin chính xác và `X-CSRF-Token`; Vite giữ nguyên Origin `http://localhost:5173`.
 3. Upload gửi phần file lặp `photos` trước, rồi `metadata` JSON `{title,alt}[]`. B phải hỗ trợ text trước/sau theo contract. Không có uploaderId ở payload. Response 200 `{results,succeeded,failed}` trong envelope; mixed/all-failed đều hiển thị theo từng index.
-4. List data `{items,page,pageSize:12,total,totalPages}`, detail data là PhotoDto trực tiếp. variants sắp width tăng, URL tương đối `/media/photos/:id/:width.webp`, uploader chỉ `{id,name}`.
+4. List data `{items,page,pageSize:12,total,totalPages}`, detail data là PhotoDto trực tiếp. variants sắp width tăng, URL tương đối `/media/photos/:id/:width.webp`, uploader `{id,name,avatarUrl?:string|null}` (field avatar là bổ sung sau bàn giao).
 5. DELETE 204 không có body, hoặc 202 data `{id,status:'DELETING'}`. GET list/detail/media sau ẩn phải không còn ảnh. Lỗi envelope theo contract, không trả HTML cho `/api`.
 6. B đã mount media A và phục vụ `web/dist`. Theo yêu cầu ghép A/B/C của người dùng, đã sửa điểm ghép production trong app/server: đường dẫn web theo module, fallback hoạt động dưới thư mục có dấu chấm. Không đổi API/schema/contract hoặc hạ tầng.
 

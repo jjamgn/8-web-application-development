@@ -82,7 +82,6 @@ function FeedView({ cacheKey: key, profile, filter, heading, compact }: { cacheK
           <PhotoActions photo={photo} collectionId={filter.collection} />
         </div>
         <Link className="photo-title-link" to={photoUrl(photo)} state={{ background: location, feedKey: key, from: location.pathname + location.search }}><div className="card-caption"><h3>{photo.title}</h3></div></Link>
-        <Link className="card-author" to={'/users/' + photo.uploader.id}>{photo.uploader.name}</Link>
       </article>)}</div> : data && <div className="empty-state"><span aria-hidden="true" className="empty-icon">▧</span><h3>{profile ? 'Bạn chưa chia sẻ ảnh nào' : filter.q ? 'Không tìm thấy ảnh phù hợp' : filter.following ? 'Chưa có ảnh từ người bạn theo dõi' : filter.favorites ? 'Bạn chưa yêu thích ảnh nào' : filter.collection ? 'Bộ sưu tập chưa có ảnh' : 'Thư viện đang chờ khoảnh khắc đầu tiên'}</h3><p>Chia sẻ một bức ảnh và kể câu chuyện của bạn.</p><Link className="button secondary" to="/photos/upload">Đăng ảnh đầu tiên</Link></div>}
       {busy && <SkeletonGrid count={12} />}
       {error && <Notice error>{error} <button disabled={busy} onClick={() => data ? void more() : setRetry(v => v + 1)}>Thử lại</button></Notice>}

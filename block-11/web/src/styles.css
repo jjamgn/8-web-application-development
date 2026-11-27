@@ -864,3 +864,29 @@ dialog.photo-modal::backdrop { background:rgba(8,22,17,.85); }
   .detail-actions .download-size select { max-width:125px; }
   .detail-actions .action-button.button { padding:9px; font-size:13px; }
 }
+
+/* Author identity and a split download control. */
+.author-badge { display:inline-flex; align-items:center; gap:10px; min-width:0; color:inherit; text-decoration:none; }
+.author-badge:hover .author-name { text-decoration:underline; text-underline-offset:4px; }
+.author-avatar { flex:0 0 auto; width:36px; height:36px; display:grid; place-items:center; border-radius:50%; overflow:hidden; background:#d5e5db; color:#245d46; font-size:12px; font-weight:700; }
+.author-badge .author-avatar img { display:block; width:100%; height:100%; object-fit:cover; border-radius:50%; background:transparent; }
+.author-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+.card-actions .card-author { position:absolute; bottom:12px; left:12px; height:40px; max-width:calc(100% - 140px); margin:0; pointer-events:auto; color:white; font-size:14px; font-weight:600; text-shadow:0 1px 4px #000a; }
+.card-actions .card-author .author-avatar { width:32px; height:32px; border:1px solid #ffffffa0; text-shadow:none; }
+.card-actions .remove-from-collection { bottom:auto; top:12px; }
+.photo-byline { display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin:14px 0; }
+.detail-author { font-weight:600; }
+.detail-author .author-avatar { width:42px; height:42px; }
+.detail-author .author-name { white-space:normal; overflow-wrap:anywhere; }
+.photo-byline time { font-size:14px; }
+.download-split { position:relative; display:inline-flex; align-items:stretch; flex:0 0 auto; }
+.download-split.has-choices { border:1px solid var(--border); border-radius:12px; background:white; }
+.download-split.has-choices .download-default.button { border:0; border-radius:11px 0 0 11px; margin:0; }
+.download-toggle.button { display:grid; place-items:center; margin:0; min-width:40px; min-height:46px; padding:10px; border:0; border-left:1px solid var(--border); border-radius:0 11px 11px 0; }
+.download-menu[popover] { position:fixed; inset:auto; margin:0; padding:8px; width:min(290px,calc(100vw - 24px)); max-height:min(340px,calc(100dvh - 24px)); overflow:auto; background:white; color:#182b24; border:1px solid var(--border); border-radius:14px; box-shadow:0 12px 40px #0003; }
+.download-menu p { margin:6px 10px 10px; font-size:12px; color:var(--muted); }
+.download-menu a { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 10px; color:inherit; text-decoration:none; border-radius:8px; font-size:14px; }
+.download-menu a:hover, .download-menu a:focus-visible { background:#edf4ef; outline:2px solid #245d46; outline-offset:-2px; }
+.download-menu small { display:block; font-size:11px; color:var(--muted); }
+.download-bytes { flex-shrink:0; color:var(--muted); font-size:12px; }
+@media(max-width:599px) { .photo-byline { gap:10px; } .card-actions .card-author { gap:6px; font-size:12px; max-width:calc(100% - 126px); } }

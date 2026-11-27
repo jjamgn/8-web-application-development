@@ -40,7 +40,7 @@ test('A+B live HTTP: auth, mixed upload, public media, session identity and owne
   const upload=await call('/api/photos',{method:'POST',body:form});assert.equal(upload.status,200);
   const data=(await upload.json()).data;
   assert.equal(data.succeeded,1);assert.equal(data.failed,1);assert.equal(data.results[1].error.code,'UNSUPPORTED_IMAGE_TYPE');
-  const photo=data.results[0].photo;assert.equal(photo.uploader.id,user.id);assert.deepEqual(Object.keys(photo.uploader).sort(),['id','name']);
+  const photo=data.results[0].photo;assert.equal(photo.uploader.id,user.id);assert.deepEqual(Object.keys(photo.uploader).sort(),['avatarUrl','id','name']);
   try {
     assert.equal((await call(`/api/photos/${photo.id}`,{},false)).status,200);
     const media=await call(photo.variants[0].url,{},false);assert.equal(media.status,200);

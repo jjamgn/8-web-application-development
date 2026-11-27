@@ -48,7 +48,7 @@ export class TestPhotos implements PhotoService {
     if (this.failNext) { this.failNext = false; throw new Error('Controlled persistence fault'); }
     const id = randomUUID();
     const photo: PhotoDto = { id, title: input.title, alt: input.alt, width: input.width, height: input.height,
-      uploader: (await this.users.byId(actor.userId))!, createdAt: new Date().toISOString(),
+      uploader: { ...(await this.users.byId(actor.userId))!, avatarUrl: null }, createdAt: new Date().toISOString(),
       variants: input.variants.map(v => ({ width: v.width, height: v.height, bytes: v.bytes, mime: v.mime,
         url: `/media/photos/${id}/${v.width}.webp` })) };
     this.rows.set(id, photo);

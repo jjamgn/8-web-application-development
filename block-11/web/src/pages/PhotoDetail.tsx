@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { AuthorBadge } from '../AuthorBadge';
 import { PhotoActions } from '../PhotoActions';
 import { photoUrl, refreshSocialFeed } from '../lib/photo-url';
 import { invalidateFeeds } from '../lib/gallery-cache';
@@ -53,7 +54,7 @@ export function PhotoDetail({ modal = false }: { modal?: boolean }) {
   if (!photo) return <Loading />;
   return <article className="detail">
     {modal ? <button className="back-link text-button" onClick={() => navigate(-1)}>{back.startsWith('/profile') ? 'Về hồ sơ' : 'Về thư viện'}</button> : <Link className="back-link" to={back}>{back.startsWith('/profile') ? 'Về hồ sơ' : 'Về thư viện'}</Link>}
-    <div className="detail-heading"><div><p className="eyebrow">MỘT KHOẢNH KHẮC ĐƯỢC LƯU GIỮ</p><h1>{photo.title}</h1><p className="muted">Ảnh của <Link to={'/users/' + photo.uploader.id}>{photo.uploader.name}</Link> · <time dateTime={photo.createdAt}>{new Date(photo.createdAt).toLocaleDateString('vi-VN')}</time></p></div>
+    <div className="detail-heading"><div><p className="eyebrow">MỘT KHOẢNH KHẮC ĐƯỢC LƯU GIỮ</p><h1>{photo.title}</h1><div className="photo-byline"><AuthorBadge author={photo.uploader} className="detail-author" /><time className="muted" dateTime={photo.createdAt}>{new Date(photo.createdAt).toLocaleDateString('vi-VN')}</time></div></div>
       {user?.id === photo.uploader.id && <button className="button danger-outline" onClick={() => { setDeleteError(''); dialog.current?.showModal(); }}>Xóa ảnh</button>}
     </div>
     <PhotoActions photo={photo} detail />

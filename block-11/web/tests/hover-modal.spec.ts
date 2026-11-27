@@ -51,7 +51,7 @@ test('modal controls sit on the dark stage, download aligns right, sheet retains
   const quick = (await modal.locator('.quick-actions').boundingBox())!;
   const download = (await modal.locator('.download-actions').boundingBox())!;
   expect(download.x).toBeGreaterThan(quick.x + quick.width);
-  await expect(modal.locator('a[download]')).toHaveText('Tải WebP');
+  await expect(modal.locator('.download-default')).toHaveText('Tải WebP');
   await expect(modal.getByRole('button', { name: 'Ảnh trước', exact: true })).not.toContainText('Ảnh trước');
   await mkdir(evidence, { recursive: true });
   await page.screenshot({ path: evidence + 'modal-desktop.png' });

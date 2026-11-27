@@ -35,7 +35,7 @@ test('mixed JPEG/PNG/fake/truncated: ordered per-file outcomes; metadata may arr
   assert.deepEqual(res.body.data.results.map((r: {index:number;ok:boolean})=>[r.index,r.ok]),[[0,true],[1,false],[2,true],[3,false]]);
   assert.equal(res.body.data.succeeded,2); assert.equal(res.body.data.failed,2); assert.equal(ctx.photos.rows.size,2);
   assert.equal(res.body.data.results[0].photo.uploader.id,auth.user.id);
-  assert.deepEqual(Object.keys(res.body.data.results[0].photo.uploader).sort(),['id','name']);
+  assert.deepEqual(Object.keys(res.body.data.results[0].photo.uploader).sort(),['avatarUrl','id','name']);
   assert.equal(res.body.data.results[1].error.code,'UNSUPPORTED_IMAGE_TYPE');
   assert.equal(res.body.data.results[3].error.code,'INVALID_IMAGE');
   await assertClean(ctx);

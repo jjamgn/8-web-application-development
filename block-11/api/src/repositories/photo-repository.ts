@@ -3,12 +3,14 @@ import type { NewPhoto, PhotoFilter, PhotoRepository, StoredPhoto, CleanupTask }
 import { notFound, PhotoError, integrityError } from '../storage/errors.js';
 
 const includePhoto = {
-  uploader: { select: { id: true, name: true } },
+  uploader: { select: { id: true, name: true, avatarPhoto: { select: { id: true, status: true, variants: { select: { width: true }, orderBy: { width: 'desc' as const }, take: 1 } } } } },
   variants: { orderBy: { width: 'asc' }, include: { chunks: { orderBy: { partNumber: 'asc' } } } },
 } satisfies Prisma.PhotoInclude;
 type Row = Prisma.PhotoGetPayload<{ include: typeof includePhoto }>;
 function map(row: Row): StoredPhoto {
-  return { ...row, variants: row.variants.map(variant => {
+  const avatar = row.uploader.avatarPhoto;
+  const avatarUrl = avatar?.status === 'PUBLISHED' && avatar.variants[0] ? '/media/photos/' + avatar.id + '/' + avatar.variants[0].width + '.webp' : null;
+  return { ...row, uploader: { id: row.uploader.id, name: row.uploader.name, avatarUrl }, variants: row.variants.map(variant => {
     if (variant.mime !== 'image/webp') throw integrityError();
     return { ...variant, mime: 'image/webp' as const };
   }) };

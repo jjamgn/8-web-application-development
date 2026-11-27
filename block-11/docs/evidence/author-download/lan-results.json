@@ -1,0 +1,13 @@
+{
+  "lan": true,
+  "authorHiddenBeforeHover": true,
+  "publicAvatarField": true,
+  "detailIdentityVisible": true,
+  "defaultWidth": 1000,
+  "expectedDefaultWidth": 1000,
+  "selectedWidth": 320,
+  "expectedSelectedWidth": 320,
+  "downloadFormat": "webp",
+  "selectionDownloadsImmediately": true,
+  "javascriptErrors": 0
+}

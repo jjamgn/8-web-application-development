@@ -38,6 +38,10 @@ API, migration, privacy và cách demo phần mở rộng: [social-profile/READM
 
 Theo yêu cầu người dùng: tim/lưu SVG và Tải WebP nằm trên ảnh, hiện khi hover/focus, luôn thao tác được trên thiết bị cảm ứng; không đặt ba nút dưới caption. Trong chi tiết, tim/lưu bên trái, chọn size/tải bên phải, không có mũi tên xuống. Modal chia vùng tối toàn viewport và panel trắng bo bốn góc, chỉ nội dung panel cuộn; × trên nền tối trái trên, chevron hai bên ở giữa viewport, có nhãn truy cập và vô hiệu hóa ở đầu/cuối danh sách đã tải. Không đổi API/schema hoặc cơ chế bộ sưu tập riêng tư. Quy cách và kiểm chứng: [hover-modal/README.md](docs/evidence/hover-modal/README.md).
 
+## Bổ sung tác giả và split download — 27/11/2026
+
+Theo yêu cầu người dùng: avatar/tên tác giả nằm trong lớp hover/focus góc trái dưới ảnh, không nằm dưới caption; chi tiết luôn có avatar/tên, không tiền tố “Ảnh của”. DTO uploader bổ sung avatarUrl công khai/null, không lộ thông tin đăng nhập. Nút Tải WebP tích hợp dropdown: bấm phần chữ tải variant lớn nhất hiện có, bấm chevron chọn size thì tải ngay size đó; không đổi mặc định sau khi chọn. Menu không bị cắt trong modal và hỗ trợ bàn phím/Esc. Quy cách, privacy và kiểm chứng: [author-download/README.md](docs/evidence/author-download/README.md).
+
 ## 1. Các quyết định đã chốt
 
 | Mã | Hạng mục | Quyết định |
@@ -277,7 +281,7 @@ type VariantDto = {
 };
 type PhotoDto = {
   id: string; title: string; alt: string;
-  uploader: { id: string; name: string };
+  uploader: { id: string; name: string; avatarUrl?: string | null };
   width: number; height: number; createdAt: string;
   variants: VariantDto[];
 };

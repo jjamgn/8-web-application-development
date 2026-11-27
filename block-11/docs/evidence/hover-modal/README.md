@@ -1,5 +1,7 @@
 # Bố cục hover và cửa sổ chi tiết — 27/11/2026
 
+**Cập nhật tác giả/tải ảnh 27/11/2026:** avatar + tên người đăng nằm trong lớp hover, chi tiết luôn hiện avatar/tên; Tải WebP có dropdown gắn liền, chọn size tải ngay. DTO uploader bổ sung avatarUrl công khai/null; không đổi schema/env. Xem [quy cách và kiểm chứng](../author-download/README.md). Các mô tả bố cục cũ bên dưới được thay thế bởi bản cập nhật này.
+
 Theo yêu cầu người dùng, cập nhật giao diện sau phần [hồ sơ/xã hội](../social-profile/README.md). Không thay API, schema hoặc dữ liệu ảnh.
 
 ## Hành vi đã đổi
