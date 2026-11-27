@@ -1,5 +1,7 @@
 # Kết quả kiểm chứng phần A — 27/11/2026
 
+> **SNAPSHOT LỊCH SỬ:** báo cáo/bàn giao này giữ kết quả tại thời điểm lập. Trạng thái tích hợp và môi trường thật mới nhất xem [báo cáo chạy thật](../review-20261127/REVIEW.md) và [ma trận hiện hành](../README.md). Các câu “chưa chạy/chưa có môi trường thật” bên dưới không phải kết luận hiện tại.
+
 **Kết quả tự động: 29/29 test đạt, 0 fail, 0 skip.** Prisma validate/generate 6.12.0 và TypeScript strict noEmit đạt. Lệnh tái hiện từ root repository:
 
 ```powershell

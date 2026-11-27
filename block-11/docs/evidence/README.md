@@ -1,31 +1,31 @@
 # Theo dõi bằng chứng nghiệm thu
 
-Ngày 27/11/2026. A+B+C đã ghép từ main `223c6e9`; API và React build đã có. **Chưa có môi trường PostgreSQL/SeaweedFS thật**. Không có hàng nào dưới đây được đánh dấu đạt toàn bộ. “Mock đạt” chỉ là kiểm tra UI có kiểm soát; báo cáo sau ghép ở [ABC-integration.md](ABC-integration.md).
+**Cập nhật ngày 27/11/2026 sau lượt chạy thật.** Bản A+B+C tại main `e5a8492` cộng sửa lỗi local `f3d2172` đã chạy trên Supabase project mới và SeaweedFS Windows 4.55. Build API/web đạt, backend 71/71, UI mock 28/28, controlled browser 1/1, HTTP live và browser live đều đạt. [REVIEW.md](review-20261127/REVIEW.md) là báo cáo mới nhất; [ABC-integration.md](ABC-integration.md) là lịch sử ghép trước lượt live. “Đã thử một phần” không có nghĩa ký đạt toàn bộ hàng nghiệm thu.
 
 | Mã | Chủ trì | Trạng thái / bằng chứng hiện có | Còn cần |
 | --- | --- | --- | --- |
-| E01 | B + A | Chưa chạy thật; live suite có luồng upload JPEG/PNG | Multipart, response thật, SQL/key |
-| E02 | B | Mock UI có mixed/all-failed | Fixtures decoder và kiểm kê DB/kho thật |
-| E03 | B | UI chặn >10 MiB; fixture bytes client không dùng nghiệm thu decoder | Ảnh hợp lệ đúng 10 MiB và vượt ngưỡng, DB/kho |
-| E04 | B | Chưa kiểm tra | Body/chunked 55 MiB và >55 MiB |
-| E05 | B | UI cảnh báo >5 file | HTTP parser/metadata/boundary và staging thật |
-| E06 | B | Chưa kiểm tra | Decoder 40 triệu pixel và vượt ngưỡng |
-| E07 | B | Chưa kiểm tra | Orientation/EXIF/GPS đầu ra thật |
-| E08 | B + A | Chưa chạy thật; live suite kiểm tra width variants | WebP/alpha/manifest/hash thật |
-| E09 | A + B | Chưa kiểm tra | Fault injection, rollback/task thật |
+| E01 | B + A | Live đạt JPEG/PNG, response từng file, nhận diện chủ ảnh; xem REVIEW | Gom ảnh chụp multipart/SQL/key theo rubric |
+| E02 | B | HTTP live đạt ảnh tốt + JPEG giả; decoder hỏng có test backend | Kiểm kê DB/kho cho fixture hỏng/thiếu bytes trên cloud |
+| E03 | B | Backend đạt JPEG hợp lệ đúng 10 MiB và vượt ngưỡng, file sau vẫn xử lý | Lặp bộ ranh giới với DB/kho thật và lưu bằng chứng |
+| E04 | B | Backend đạt body 55 MiB và +1, chunked và Content-Length | Bằng chứng lượt cloud nếu rubric yêu cầu |
+| E05 | B | Backend đạt cấu trúc/metadata/số file, không gọi publisher và dọn staging | HTTP/DB/key của lượt live lỗi cấu trúc |
+| E06 | B | Backend đạt đúng/vượt 40 triệu pixel trước full decode | Bằng chứng live theo rubric |
+| E07 | B | Backend đạt orientation 2/3/5/6/7/8 và bỏ GPS; có bộ demo EXIF kiểm qua pipeline | Network/file metadata cho lượt upload fixture EXIF thật |
+| E08 | B + A | Live đạt variant và alpha; A smoke thật ghép khớp hash | Gom metadata/manifest của fixture theo hồ sơ nộp |
+| E09 | A + B | Backend đạt fault injection/unknown commit/rollback; đã quan sát P2028 trên cloud rồi sửa | Fault matrix cloud có kiểm soát, retry journal |
 | E10 | A + C | Có quy trình README, chưa chạy | HTTP trước/sau restart Express/SeaweedFS giữ volume |
-| E11 | C | Mock đạt; `mock-browser/responsive-*.json`, `gallery-*.png` | DOM/Network/currentSrc với WebP thật, cache có kiểm soát |
-| E12 | A | Chưa chạy thật; live suite kiểm tra MIME/cache thành công | Media security, S3 riêng tư và outage thật |
-| E13 | A + C | Mock đạt Hủy, 204, 202; screenshot dialog | DELETE/GET thật, SQL/key, cleanup và HEAD object |
-| E14 | C | Mock đạt pagination/empty/404/reload/upload/khóa gửi | Lặp trên API và fallback production thật |
-| E15 | A | Chưa kiểm tra | Cleanup/task/orphan phân trang, kiểm kê thật |
-| E16 | A + B + C | Web build + Playwright mock; xem `validation.md` | API build/test, cấu hình mẫu A/B, live integration |
-| E17 | B + C | Mock đạt public/auth/redirect/token rotation/logout | Cookie đã che, session SQL, CSRF/expiry/restart thật |
-| E18 | A + B + C | Mock UI owner-only, tên uploader, không gửi uploaderId | Hai tài khoản HTTP/DB/storage thật; live suite sẵn có |
-| E19 | A | Chưa kiểm tra | Chunk boundaries, manifest, GET/hash WebP thật |
-| E20 | A + B | Chưa kiểm tra | Integrity 502/no-store, rollback/disconnect/tmp thật |
+| E11 | C | Mock đạt 6 viewport/DPR; live browser tải WebP và ảnh decode được | Bộ Network/currentSrc/cache theo viewport với backend thật |
+| E12 | A | S3 probe thật đạt private bucket, MIME/cache qua live HTTP/browser | Outage/traversal/security matrix và minh chứng riêng |
+| E13 | A + C | Live đạt Hủy/owner DELETE 204, GET 404; A smoke HEAD mảnh vắng sau xóa | Lượt lỗi storage trả 202 và cleanup retry trên cloud |
+| E14 | C | Mock đạt pagination/empty/404; live đạt reload và UI upload/xóa; compiled server có regression test | Thử lại full production HTTPS/fallback khi triển khai |
+| E15 | A | Backend đạt pending/orphan/age/published protection và S3 pagination | Chạy maintenance thật có fixture lỗi rồi kiểm kê |
+| E16 | A + B + C | API/web build đạt, backend 71, mock 28, controlled 1, HTTP/browser live đạt | Giữ lockfile/env mẫu; kết quả không thay mọi E còn thiếu |
+| E17 | B + C | Live đạt public/auth/cookie/session/CSRF/login/logout; session expiry có test | Phiên còn hiệu lực sau restart process thật |
+| E18 | A + B + C | Live hai tài khoản đạt tên uploader, guest 401, khác chủ 403, chủ xóa; không lộ email/hash | Gom HTTP/SQL/key đã lọc vào hồ sơ demo |
+| E19 | A | Unit đạt ranh giới chunk; smoke SeaweedFS thật có chunkCounts 1/1/2 và hash khớp | Lưu manifest/key có chọn lọc cho hồ sơ nộp |
+| E20 | A + B | Backend đạt 502/no-store, corrupt/missing/hash và abort cleanup | Fault/disconnect trên hạ tầng thật, không chỉ test double |
 
-Các bài kiểm tra A/B có fault injection, decoder, chunk và migration đã được chạy lại sau ghép; bảng trên giữ trạng thái nghiệm thu **hạ tầng thật**, không phải đánh giá thiếu test source. Log API ở `ABC-api-tests.txt`; browser qua API có kiểm soát ở `abc-browser-results.json`.
+Các bài kiểm tra A/B có fault injection, decoder, chunk và migration đã chạy sau ghép; log `ABC-api-tests.txt` và `abc-browser-results.json` giữ lịch sử lượt controlled. Lượt live mới ở `review-20261127/REVIEW.md` và `gallery-live.png`. [Bộ demo EXIF](../demo-assets/exif/README.md) có JPEG Orientation=6, bản raw preview và WebP expected; không chứa dữ liệu cá nhân.
 
 ## Artefact mock hiện có
 

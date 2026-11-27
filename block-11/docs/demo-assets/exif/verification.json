@@ -1,0 +1,19 @@
+{
+  "input": {
+    "width": 600,
+    "height": 1000,
+    "orientation": 6
+  },
+  "output": {
+    "width": 1000,
+    "height": 600,
+    "exifRemoved": true
+  },
+  "manualRotation": {
+    "width": 600,
+    "height": 1000,
+    "orientation": null
+  },
+  "meanPixelDifferenceToUprightReference": 0.6648916666666667,
+  "verifiedBy": "actual prepareImage pipeline"
+}

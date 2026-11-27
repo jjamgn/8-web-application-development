@@ -1,5 +1,7 @@
 # Kiểm chứng role B — 27/11/2026
 
+> **SNAPSHOT LỊCH SỬ:** báo cáo/bàn giao này giữ kết quả tại thời điểm lập. Trạng thái tích hợp và môi trường thật mới nhất xem [báo cáo chạy thật](review-20261127/REVIEW.md) và [ma trận hiện hành](README.md). Các câu “chưa chạy/chưa có môi trường thật” bên dưới không phải kết luận hiện tại.
+
 Build/test B độc lập trên Windows, Node 26.12.1, npm 11.20.0. Log lệnh ở `B-build.txt` và `B-tests.txt`. Không dùng test double làm bằng chứng PostgreSQL/SeaweedFS thật.
 
 | Contract | B đã kiểm chứng | Còn cần tích hợp |

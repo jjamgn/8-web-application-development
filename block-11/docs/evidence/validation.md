@@ -1,5 +1,7 @@
 # Kết quả kiểm tra phần C
 
+> **SNAPSHOT LỊCH SỬ:** báo cáo/bàn giao này giữ kết quả tại thời điểm lập. Trạng thái tích hợp và môi trường thật mới nhất xem [báo cáo chạy thật](review-20261127/REVIEW.md) và [ma trận hiện hành](README.md). Các câu “chưa chạy/chưa có môi trường thật” bên dưới không phải kết luận hiện tại.
+
 Đây là báo cáo **trước khi ghép A/B**. Xem [ABC-integration.md](ABC-integration.md) cho trạng thái mới; JSON/screenshot mock được tạo lại khi kiểm tra bản ghép và có thể mang đường dẫn checkout tích hợp.
 
 Ngày 27/11/2026, chạy tại `D:\project\WEB\block-11\web`. Node dùng cho build/test **22.23.3**, npm **10.7.0**, Google Chrome **158.0.8127.38**, Windows. Nhánh `codex/block11-c`.

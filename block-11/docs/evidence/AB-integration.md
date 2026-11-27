@@ -1,5 +1,7 @@
 # Ghép A+B sau pull GitHub — 27/11/2026
 
+> **SNAPSHOT LỊCH SỬ:** báo cáo/bàn giao này giữ kết quả tại thời điểm lập. Trạng thái tích hợp và môi trường thật mới nhất xem [báo cáo chạy thật](review-20261127/REVIEW.md) và [ma trận hiện hành](README.md). Các câu “chưa chạy/chưa có môi trường thật” bên dưới không phải kết luận hiện tại.
+
 Đã fetch `origin`, fast-forward `main` từ `5ef7427` tới **`0bee219`** (`feat(block11): implement role A photo storage and media`). Khôi phục thay đổi cục bộ từ stash và giữ stash dự phòng. Phần B cùng bản ghép A+B được đưa vào commit riêng của Block 11 theo yêu cầu người dùng.
 
 ## Điểm ghép đã hoàn tất

@@ -1,5 +1,7 @@
 # Ghép A + B + C — 27/11/2026
 
+> **SNAPSHOT LỊCH SỬ:** báo cáo/bàn giao này giữ kết quả tại thời điểm lập. Trạng thái tích hợp và môi trường thật mới nhất xem [báo cáo chạy thật](review-20261127/REVIEW.md) và [ma trận hiện hành](README.md). Các câu “chưa chạy/chưa có môi trường thật” bên dưới không phải kết luận hiện tại.
+
 Nền GitHub main: `223c6e9` (B tích hợp A tại `0bee219`). C được ghép vào bản nền này trong checkout riêng, giữ lịch sử A/B và các thay đổi chưa commit ở block khác. Contract giữ nguyên SHA-256 `A372866885DDB50EC70B556E97AB79D01E75AB8E38DD8DB4E6CC1066DC8CF6F1`.
 
 ## Kết nối đã hoàn thành

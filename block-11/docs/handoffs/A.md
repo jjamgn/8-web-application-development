@@ -1,5 +1,7 @@
 # Bàn giao A — Database, SeaweedFS, mảnh dữ liệu và media
 
+> **SNAPSHOT LỊCH SỬ:** báo cáo/bàn giao này giữ kết quả tại thời điểm lập. Trạng thái tích hợp và môi trường thật mới nhất xem [báo cáo chạy thật](../evidence/review-20261127/REVIEW.md) và [ma trận hiện hành](../evidence/README.md). Các câu “chưa chạy/chưa có môi trường thật” bên dưới không phải kết luận hiện tại.
+
 Ngày thực hiện: **27/11/2026**. Phạm vi theo [contract Block 11](../../BLOCK11_CONTRACT.md), mục 5–10 và các phần nghiệm thu của A.
 
 ## 1. Đã triển khai

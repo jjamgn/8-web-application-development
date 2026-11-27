@@ -26,7 +26,7 @@ npm run test:role-a
 npm run test:role-b
 ```
 
-`npm test` chạy 70 test: 29 của A, 38 của B, 2 điểm ghép A+B và 1 kiểm tra đường dẫn React build khi chạy source/output đã compile. Script tự đặt cwd về root repo để test migration A tìm đúng SQL; dùng node_modules chính thức của API, không cần toolchain A riêng. `test:role-b` gồm 41 test. Bản ghép A+B+C đã kiểm tra thêm bằng Node 22.23.3; xem [báo cáo tích hợp](../docs/evidence/ABC-integration.md).
+`npm test` hiện chạy **71 test**: 29 của A, 38 của B, 2 điểm ghép A+B và 2 kiểm tra build (đường dẫn React và import native Node ESM của server/contracts đã compile). Script đặt cwd về root repo để test migration A tìm đúng SQL; dùng node_modules chính thức của API, không cần toolchain A riêng. `test:role-b` gồm 42 test. Lượt mới nhất trên Node 26.13.0 đạt toàn bộ; xem [báo cáo chạy thật](../docs/evidence/review-20261127/REVIEW.md). Báo cáo [ABC-integration.md](../docs/evidence/ABC-integration.md) giữ lịch sử bàn giao trước lượt này.
 
 Test dùng sharp và HTTP server thật. Kiểm thử điểm ghép dùng PhotoService/chunker/media router thật của A, còn DB và object storage là test double; test migration dùng PostgreSQL nhúng PGlite. Không cần `.env`, PostgreSQL server hoặc SeaweedFS để chạy bộ test này. `db:generate` chỉ sinh Prisma Client, không migrate/ghi DB. Không coi kết quả đó là nghiệm thu DB/storage thật. Native sharp cần executor cho phép tải native module trên sandbox Windows đang dùng.
 
@@ -64,7 +64,11 @@ $env:APP_ORIGIN = 'http://localhost:5173'
 npm run test:live
 ```
 
-Test tạo một tài khoản riêng, đăng nhập, upload PNG + file giả, đọc media công khai, kiểm tra owner, xóa ảnh và logout. Tài khoản test còn lại vì contract không có endpoint xóa tài khoản; không chạy vào DB chứa dữ liệu thật. Test yêu cầu xóa hoàn tất 204, 202 sẽ làm test thất bại để người nghiệm thu xử lý cleanup. Test live **chưa chạy** tại thời điểm bàn giao B.
+Test tạo một tài khoản riêng, đăng nhập, upload PNG + file giả, đọc media công khai, kiểm tra owner, xóa ảnh và logout. Tài khoản test còn lại vì contract không có endpoint xóa tài khoản; dùng môi trường nghiệm thu được phép ghi dữ liệu thử. Test yêu cầu xóa hoàn tất 204, 202 làm test thất bại để người nghiệm thu xử lý cleanup. **Đã đạt với Supabase project mới và SeaweedFS Windows thật ngày 27/11/2026**; trạng thái “chưa chạy” trong tài liệu B ban đầu là lịch sử, không còn là trạng thái hiện tại.
+
+PhotoRepository dùng interactive transaction `maxWait=10s`, `timeout=30s` để tránh P2028 do giới hạn mặc định 5s trên Session pooler; không bỏ transaction/rollback. `contracts/package.json` xác định ESM để output TypeScript có thể chạy bằng `npm start`, không chỉ qua tsx.
+
+Schema Prisma chỉ có User, Session, Photo, PhotoVariant, PhotoChunk, StorageCleanupTask. DB mới có thêm bảng legacy không được API truy vấn; xem [rà soát DB](../docs/database/OUT_OF_SCOPE_REVIEW.md). Không dùng `prisma db push`, reset hoặc xóa `_prisma_migrations` để làm sạch các bảng này.
 
 ## Gọi API từ C
 

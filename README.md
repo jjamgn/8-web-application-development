@@ -238,6 +238,6 @@ Khi làm việc với coding agent, nhóm thống nhất:
 | Block 07 | To be updated | Not started |
 | Block 08 | To be updated | Not started |
 | Block 09 | To be updated | Not started |
-| Block 11 | To be updated | Not started |
+| Block 11 | Photo Gallery CSR — React, Express, Supabase, SeaweedFS | Đã tích hợp A+B+C, đã chạy live |
 
 Thông tin yêu cầu, phân công và trạng thái từng bài tập sẽ được cập nhật trong thư mục Block tương ứng.

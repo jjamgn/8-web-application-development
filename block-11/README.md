@@ -9,7 +9,10 @@ Tài liệu: [API](api/README.md), [SeaweedFS](infra/seaweedfs/README.md), [bàn
 - Có gallery công khai, phân trang 12 ảnh theo API, chi tiết, đăng ký/đăng nhập/đăng xuất, upload nhiều ảnh với preview và metadata riêng, xóa có xác nhận và chỉ hiện cho chủ ảnh.
 - Có Playwright mock cho UI, kiểm thử browser qua Express/sharp/PhotoService/media thật với DB/S3 test double, và live suite riêng cho PostgreSQL/SeaweedFS. Ứng dụng production không có API giả hoặc fallback dữ liệu demo.
 - Bằng chứng và giới hạn kiểm tra: [docs/evidence/README.md](docs/evidence/README.md). Điểm ghép: [docs/handoffs/C.md](docs/handoffs/C.md).
-- Chưa nghiệm thu E01–E20 trên PostgreSQL/SeaweedFS thật. Build/test web không thay thế các kiểm tra này.
+- Đã chạy thực tế trên Windows/Node 26.13.0, Supabase project mới qua Session pooler và SeaweedFS 4.55 Windows: build API/web đạt, **71/71 backend**, **28/28 UI mock**, **1/1 controlled browser**, HTTP live, browser live hai tài khoản và smoke chia/ghép/hash/xóa mảnh đều đạt. Xem [báo cáo chạy thật](docs/evidence/review-20261127/REVIEW.md).
+- Chưa ký đạt toàn bộ E01–E20: restart có ảnh tồn tại, fault matrix trên cloud, Docker và HTTPS/multi-instance vẫn cần minh chứng riêng. Xem [ma trận bằng chứng hiện tại](docs/evidence/README.md).
+- [Hướng dẫn local thống nhất](docs/LOCAL_SETUP.md) phân biệt source chính `block-11/` với worktree kiểm tra `.block11-review/block-11/`; không còn dùng README thời điểm chỉ có Role A để kết luận chưa tích hợp.
+- [Rà soát bảng ngoài phạm vi](docs/database/OUT_OF_SCOPE_REVIEW.md): Chef/Dish/Ingredient có dữ liệu, không được app dùng; chưa xóa/chuyển bảng. Bản SQL lưu trữ chỉ là phương án chờ quyết định, không phải migration đã chạy.
 
 ## Nền và phiên bản
 
@@ -17,6 +20,7 @@ Tài liệu: [API](api/README.md), [SeaweedFS](infra/seaweedfs/README.md), [bàn
 - Đã tham chiếu `block-07/web/package.json`, `vite.config.ts` và cấu hình Playwright của Block 9; dựng bộ khung gọn, không sao chép nghiệp vụ Restaurant App. Không sửa source block trước.
 - Node **22.23.3**, npm **10.7.0**, Chrome **158.0.8127.38** đã dùng để kiểm tra. Node mặc định 20.14 trên máy này quá cũ để chạy Vite 7. Dùng Node 22.12+ hoặc Node 20.19+; `.nvmrc` ghi phiên bản đã kiểm chứng. Yêu cầu Node của Vite 7: [tài liệu chính thức](https://v7.vite.dev/guide/migration).
 - Để chạy cả API và web, dùng **Node 22.12+** theo engines của API.
+- Lượt kiểm chứng mới nhất dùng Node **26.13.0**, npm **11.20.0**; đã sửa module boundary ESM của `contracts/`, timeout transaction Supabase và watcher Vite Windows. Kết quả Node 22 bên trên là lịch sử bàn giao C, không phải phiên bản Node duy nhất được hỗ trợ.
 - Dependency trực tiếp khóa phiên bản trong `web/package.json`; `web/package-lock.json` dùng cho `npm ci`. Giữ các major đã chốt trong contract.
 
 ## Chạy web
@@ -78,7 +82,7 @@ $env:LIVE_RUN_MUTATIONS = '1'
 npm run test:e2e:live
 ```
 
-Đây là bài kiểm tra thật, không intercept request: tạo hai tài khoản test `@example.test`, tạo JPEG/PNG từ canvas 1200×800, upload qua UI, kiểm tra variants, khách đọc ảnh, MIME/cache, khách xóa 401, người khác xóa 403, chủ ảnh hủy/xác nhận xóa, reload và logout. Test cố gắng dọn ảnh của nó trong `finally`; 202 nghĩa cần A chạy cleanup. Tài khoản test vẫn còn vì baseline không có xóa tài khoản. Trace live tắt để không lưu mật khẩu/cookie/CSRF. Không bật trace/HAR thô chứa bí mật để làm bằng chứng.
+Đây là bài kiểm tra thật, không intercept request: tạo hai tài khoản test `@example.test`, tạo JPEG/PNG từ canvas 1200×800, upload qua UI, kiểm tra variants, khách đọc ảnh, MIME/cache, khách xóa 401, người khác xóa 403, chủ ảnh hủy/xác nhận xóa, reload và logout. **Luồng này đã đạt trên môi trường thật**; lượt cloud có expect timeout 20 giây, timeout tổng 240 giây và chờ logout 204 trước khi điều hướng. Test cố gắng dọn ảnh của nó trong `finally`; 202 nghĩa cần A chạy cleanup. Tài khoản test vẫn còn vì baseline không có xóa tài khoản. Trace live tắt để không lưu mật khẩu/cookie/CSRF. Không bật trace/HAR thô chứa bí mật để làm bằng chứng.
 
 Nếu không đặt `LIVE_RUN_MUTATIONS=1`, test live bị **skip**, không được báo pass tích hợp. Test này không tự restart dịch vụ, fault injection hay kiểm kê DB/S3; các phần đó cần bằng chứng A/B và quy trình bên dưới.
 

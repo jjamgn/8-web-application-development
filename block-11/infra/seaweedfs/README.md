@@ -1,5 +1,7 @@
 # SeaweedFS cho Block 11 — phần A
 
+**Trạng thái hiện tại 27/11/2026:** SeaweedFS 4.55 Windows native đã chạy và qua S3 probe/live smoke/browser với Supabase thật; Docker không bắt buộc để demo trên máy này. Xem [hướng dẫn local](../../docs/LOCAL_SETUP.md) để dùng đúng binary/data directory đang chứa ảnh. Phần Compose dưới đây là lựa chọn khác, chưa được nghiệm thu Docker trên máy này và không tự dùng chung data native.
+
 SeaweedFS chạy độc lập với Express. Image được khóa `chrislusf/seaweedfs:4.55`, dùng `weed mini`; gateway S3 ở localhost:8333. Chỉ port S3 được publish, không publish Filer/Master/Admin UI. Volume `block11-storage_seaweed-data` giữ dữ liệu qua restart/recreate. Phiên bản và câu lệnh theo [release 4.55](https://github.com/seaweedfs/seaweedfs/releases/tag/4.55) và [quick start](https://github.com/seaweedfs/seaweedfs/wiki/Quick-Start-with-weed-mini); Docker thực tế cần được nghiệm thu trên máy có Docker.
 
 ## Khởi động và cấu hình

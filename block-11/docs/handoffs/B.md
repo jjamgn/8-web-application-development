@@ -1,5 +1,7 @@
 # B — Multipart, xử lý ảnh và tích hợp API
 
+> **SNAPSHOT LỊCH SỬ:** báo cáo/bàn giao này giữ kết quả tại thời điểm lập. Trạng thái tích hợp và môi trường thật mới nhất xem [báo cáo chạy thật](../evidence/review-20261127/REVIEW.md) và [ma trận hiện hành](../evidence/README.md). Các câu “chưa chạy/chưa có môi trường thật” bên dưới không phải kết luận hiện tại.
+
 Ngày bàn giao: 27/11/2026. Phạm vi: **role B** theo BLOCK11_CONTRACT.md. Không thay baseline, không triển khai schema/S3/media của A hoặc giao diện của C.
 
 Cập nhật tích hợp: đã kéo GitHub main tới **`0bee219`** và ghép phần A với B. **Build đạt, 69/69 test đạt**. Tài liệu dưới đây mô tả interface đang dùng sau khi ghép; [AB-integration.md](../evidence/AB-integration.md) ghi chi tiết kết quả và giới hạn.
