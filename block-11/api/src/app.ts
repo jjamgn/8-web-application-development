@@ -29,7 +29,10 @@ export function createApp(config: Config, dependencies: Dependencies, options: {
     const index = path.join(options.webDist, 'index.html');
     if (!existsSync(index)) throw new Error('React build is missing. Build role C web/ before production startup.');
     app.use(express.static(options.webDist));
-    app.get('/{*path}', (_req, res) => { res.set('Cache-Control', 'no-cache').sendFile(index); });
+    app.get('/{*path}', (_req, res) => {
+      // Resolve relative to the build root; ancestor dot-directories are not URL dotfiles.
+      res.set('Cache-Control', 'no-cache').sendFile('index.html', { root: options.webDist });
+    });
   }
   app.use((_req, _res, next) => next(notFound()));
   const errorHandler: ErrorRequestHandler = (error: unknown, _req, res, next) => {

@@ -129,7 +129,7 @@ test('register rate limit, production Secure cookie and password 72-byte boundar
 
 test('production deep links serve the web build while API/media misses remain JSON 404',async t=>{
   const ctx=await testContext();t.after(ctx.dispose);
-  const webDist=path.join(ctx.tempRoot,'web-dist');await mkdir(webDist);
+  const webDist=path.join(ctx.tempRoot,'.private','web-dist');await mkdir(webDist,{recursive:true});
   await writeFile(path.join(webDist,'index.html'),'<!doctype html><title>Gallery test build</title><div id="root"></div>');
   const app=createApp(ctx.config,ctx,{webDist});
   for(const route of ['/','/photos','/photos/upload','/photos/123','/login','/register'])

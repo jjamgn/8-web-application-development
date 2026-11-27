@@ -1,0 +1,434 @@
+
+> block11-gallery-api@1.0.0 test
+> node scripts/run-tests.mjs
+
+TAP version 13
+# Subtest: public gallery/media and unknown API: no login and no session cookie
+ok 1 - public gallery/media and unknown API: no login and no session cookie
+  ---
+  duration_ms: 194.8373
+  type: 'test'
+  ...
+# Subtest: register → login rotation → me → restart → logout; user data stays private
+ok 2 - register → login rotation → me → restart → logout; user data stays private
+  ---
+  duration_ms: 2081.8963
+  type: 'test'
+  ...
+# Subtest: auth/CSRF reject before staging; origin, missing token and invalid token
+ok 3 - auth/CSRF reject before staging; origin, missing token and invalid token
+  ---
+  duration_ms: 76.3477
+  type: 'test'
+  ...
+# Subtest: registration validation: strict keys, Unicode, password confirmation/UTF-8 byte limit and JSON size
+ok 4 - registration validation: strict keys, Unicode, password confirmation/UTF-8 byte limit and JSON size
+  ---
+  duration_ms: 156.8963
+  type: 'test'
+  ...
+# Subtest: session store enforces absolute expiry and cannot resurrect a logged-out row
+ok 5 - session store enforces absolute expiry and cannot resurrect a logged-out row
+  ---
+  duration_ms: 18.6951
+  type: 'test'
+  ...
+# Subtest: wrong email/password share INVALID_CREDENTIALS; failed login limit has Retry-After
+ok 6 - wrong email/password share INVALID_CREDENTIALS; failed login limit has Retry-After
+  ---
+  duration_ms: 6123.965
+  type: 'test'
+  ...
+# Subtest: register rate limit, production Secure cookie and password 72-byte boundary
+ok 7 - register rate limit, production Secure cookie and password 72-byte boundary
+  ---
+  duration_ms: 568.8583
+  type: 'test'
+  ...
+# Subtest: production deep links serve the web build while API/media misses remain JSON 404
+ok 8 - production deep links serve the web build while API/media misses remain JSON 404
+  ---
+  duration_ms: 75.2309
+  type: 'test'
+  ...
+# Subtest: variant widths use the contract formula at all size boundaries
+ok 9 - variant widths use the contract formula at all size boundaries
+  ---
+  duration_ms: 5.1003
+  type: 'test'
+  ...
+# Subtest: decode JPEG 200px → real WebP dimensions, quality pipeline and stripped metadata
+ok 10 - decode JPEG 200px → real WebP dimensions, quality pipeline and stripped metadata
+  ---
+  duration_ms: 182.0205
+  type: 'test'
+  ...
+# Subtest: decode JPEG 800px → real WebP dimensions, quality pipeline and stripped metadata
+ok 11 - decode JPEG 800px → real WebP dimensions, quality pipeline and stripped metadata
+  ---
+  duration_ms: 169.2127
+  type: 'test'
+  ...
+# Subtest: decode JPEG 1200px → real WebP dimensions, quality pipeline and stripped metadata
+ok 12 - decode JPEG 1200px → real WebP dimensions, quality pipeline and stripped metadata
+  ---
+  duration_ms: 245.0608
+  type: 'test'
+  ...
+# Subtest: decode JPEG 2400px → real WebP dimensions, quality pipeline and stripped metadata
+ok 13 - decode JPEG 2400px → real WebP dimensions, quality pipeline and stripped metadata
+  ---
+  duration_ms: 287.7472
+  type: 'test'
+  ...
+# Subtest: PNG alpha survives and outputs are never enlarged
+ok 14 - PNG alpha survives and outputs are never enlarged
+  ---
+  duration_ms: 93.5974
+  type: 'test'
+  ...
+# Subtest: EXIF orientation 2 including flips matches the normalized pixels; GPS removed
+ok 15 - EXIF orientation 2 including flips matches the normalized pixels; GPS removed
+  ---
+  duration_ms: 140.0878
+  type: 'test'
+  ...
+# Subtest: EXIF orientation 3 including flips matches the normalized pixels; GPS removed
+ok 16 - EXIF orientation 3 including flips matches the normalized pixels; GPS removed
+  ---
+  duration_ms: 154.36
+  type: 'test'
+  ...
+# Subtest: EXIF orientation 5 including flips matches the normalized pixels; GPS removed
+ok 17 - EXIF orientation 5 including flips matches the normalized pixels; GPS removed
+  ---
+  duration_ms: 148.0781
+  type: 'test'
+  ...
+# Subtest: EXIF orientation 6 including flips matches the normalized pixels; GPS removed
+ok 18 - EXIF orientation 6 including flips matches the normalized pixels; GPS removed
+  ---
+  duration_ms: 159.2529
+  type: 'test'
+  ...
+# Subtest: EXIF orientation 7 including flips matches the normalized pixels; GPS removed
+ok 19 - EXIF orientation 7 including flips matches the normalized pixels; GPS removed
+  ---
+  duration_ms: 150.3909
+  type: 'test'
+  ...
+# Subtest: EXIF orientation 8 including flips matches the normalized pixels; GPS removed
+ok 20 - EXIF orientation 8 including flips matches the normalized pixels; GPS removed
+  ---
+  duration_ms: 138.6989
+  type: 'test'
+  ...
+# Subtest: text renamed JPEG and truncated JPEG/PNG are rejected with no output files
+ok 21 - text renamed JPEG and truncated JPEG/PNG are rejected with no output files
+  ---
+  duration_ms: 57.6348
+  type: 'test'
+  ...
+# Subtest: exact 40 million pixels accepted; over the boundary rejected before full decode
+ok 22 - exact 40 million pixels accepted; over the boundary rejected before full decode
+  ---
+  duration_ms: 2096.3155
+  type: 'test'
+  ...
+# Subtest: exact 10 MiB fixture is a decodable JPEG (COM segments, no arbitrary corrupt padding)
+ok 23 - exact 10 MiB fixture is a decodable JPEG (COM segments, no arbitrary corrupt padding)
+  ---
+  duration_ms: 98.1511
+  type: 'test'
+  ...
+# Subtest: APNG animation is explicitly rejected even when the PNG decoder exposes only the first frame
+ok 24 - APNG animation is explicitly rejected even when the PNG decoder exposes only the first frame
+  ---
+  duration_ms: 12.9978
+  type: 'test'
+  ...
+# Subtest: A+B HTTP: multipart → WebP → multi-part manifest → public verified media → owner-only delete
+ok 25 - A+B HTTP: multipart → WebP → multi-part manifest → public verified media → owner-only delete
+  ---
+  duration_ms: 5418.6034
+  type: 'test'
+  ...
+# Subtest: A Prisma repository adapters preserve absolute expiry, JSON cookie data and logout tombstone behavior
+ok 26 - A Prisma repository adapters preserve absolute expiry, JSON cookie data and logout tombstone behavior
+  ---
+  duration_ms: 2.0495
+  type: 'test'
+  ...
+# Subtest: migration executes on embedded PostgreSQL, enforces FK/unique/hash/chunk constraints and transaction rollback
+ok 27 - migration executes on embedded PostgreSQL, enforces FK/unique/hash/chunk constraints and transaction rollback
+  ---
+  duration_ms: 4573.5593
+  type: 'test'
+  ...
+# Subtest: session repository never extends absolute expiry or resurrects a SID removed by logout
+ok 28 - session repository never extends absolute expiry or resurrects a SID removed by logout
+  ---
+  duration_ms: 4.2773
+  type: 'test'
+  ...
+# Subtest: user repository normalizes login/create email and exposes no passwordHash from public lookup
+ok 29 - user repository normalizes login/create email and exposes no passwordHash from public lookup
+  ---
+  duration_ms: 2.6668
+  type: 'test'
+  ...
+# Subtest: S3 adapter uses octet-stream and exact ContentLength; keys and chunk bounds are enforced
+ok 30 - S3 adapter uses octet-stream and exact ContentLength; keys and chunk bounds are enforced
+  ---
+  duration_ms: 7.0705
+  type: 'test'
+  ...
+# Subtest: S3 listing consumes every continuation page and rejects a repeated token
+ok 31 - S3 listing consumes every continuation page and rejects a repeated token
+  ---
+  duration_ms: 2.3024
+  type: 'test'
+  ...
+# Subtest: S3 missing part is integrity error; oversized body is bounded; timeout maps to 503
+ok 32 - S3 missing part is integrity error; oversized body is bounded; timeout maps to 503
+  ---
+  duration_ms: 5.4509
+  type: 'test'
+  ...
+# Subtest: S3 bucket check rejects Enabled/Suspended versioning and delete verifies absence
+ok 33 - S3 bucket check rejects Enabled/Suspended versioning and delete verifies absence
+  ---
+  duration_ms: 2.8307
+  type: 'test'
+  ...
+# Subtest: environment config rejects remote cleartext, credential URL and bad forcePathStyle
+ok 34 - environment config rejects remote cleartext, credential URL and bad forcePathStyle
+  ---
+  duration_ms: 1.6194
+  type: 'test'
+  ...
+# Subtest: chunker exact boundary 1 bytes
+ok 35 - chunker exact boundary 1 bytes
+  ---
+  duration_ms: 98.488
+  type: 'test'
+  ...
+# Subtest: chunker exact boundary 1048576 bytes
+ok 36 - chunker exact boundary 1048576 bytes
+  ---
+  duration_ms: 158.1217
+  type: 'test'
+  ...
+# Subtest: chunker exact boundary 1048577 bytes
+ok 37 - chunker exact boundary 1048577 bytes
+  ---
+  duration_ms: 121.0558
+  type: 'test'
+  ...
+# Subtest: chunker exact boundary 2097152 bytes
+ok 38 - chunker exact boundary 2097152 bytes
+  ---
+  duration_ms: 108.931
+  type: 'test'
+  ...
+# Subtest: publish records actor, hides internal manifest and cleans input; assembly produces a decodable >1MiB WebP
+ok 39 - publish records actor, hides internal manifest and cleans input; assembly produces a decodable >1MiB WebP
+  ---
+  duration_ms: 1621.8552
+  type: 'test'
+  ...
+# Subtest: PUT failure rolls back every planned key and retains no Photo
+ok 40 - PUT failure rolls back every planned key and retains no Photo
+  ---
+  duration_ms: 55.9652
+  type: 'test'
+  ...
+# Subtest: journal failure prevents any S3 writes
+ok 41 - journal failure prevents any S3 writes
+  ---
+  duration_ms: 22.3778
+  type: 'test'
+  ...
+# Subtest: validation failure releases every safe staged variant before handing failure back to B
+ok 42 - validation failure releases every safe staged variant before handing failure back to B
+  ---
+  duration_ms: 10.9788
+  type: 'test'
+  ...
+# Subtest: DB commit failure removes objects; lost response after successful commit preserves published data
+ok 43 - DB commit failure removes objects; lost response after successful commit preserves published data
+  ---
+  duration_ms: 30.9803
+  type: 'test'
+  ...
+# Subtest: unknown DB outcome keeps objects and pending journal for maintenance
+ok 44 - unknown DB outcome keeps objects and pending journal for maintenance
+  ---
+  duration_ms: 18.4553
+  type: 'test'
+  ...
+# Subtest: failed rollback records pending retry; cleanup later removes all objects
+ok 45 - failed rollback records pending retry; cleanup later removes all objects
+  ---
+  duration_ms: 18.2206
+  type: 'test'
+  ...
+# Subtest: owner-only delete, deferred deletion hidden from reads, maintenance completes it
+ok 46 - owner-only delete, deferred deletion hidden from reads, maintenance completes it
+  ---
+  duration_ms: 17.9522
+  type: 'test'
+  ...
+# Subtest: media route public success returns complete bytes/cache, ignores Range, and cleans assembled file
+ok 47 - media route public success returns complete bytes/cache, ignores Range, and cleans assembled file
+  ---
+  duration_ms: 124.4531
+  type: 'test'
+  ...
+# Subtest: media missing returns no-store before success headers
+ok 48 - media missing returns no-store before success headers
+  ---
+  duration_ms: 75.4199
+  type: 'test'
+  ...
+# Subtest: media corrupt returns no-store before success headers
+ok 49 - media corrupt returns no-store before success headers
+  ---
+  duration_ms: 107.9374
+  type: 'test'
+  ...
+# Subtest: media reordered returns no-store before success headers
+ok 50 - media reordered returns no-store before success headers
+  ---
+  duration_ms: 66.8205
+  type: 'test'
+  ...
+# Subtest: media full-hash returns no-store before success headers
+ok 51 - media full-hash returns no-store before success headers
+  ---
+  duration_ms: 80.0674
+  type: 'test'
+  ...
+# Subtest: media outage returns no-store before success headers
+ok 52 - media outage returns no-store before success headers
+  ---
+  duration_ms: 60.1072
+  type: 'test'
+  ...
+# Subtest: aborted media assembly removes its partial staging directory
+ok 53 - aborted media assembly removes its partial staging directory
+  ---
+  duration_ms: 25.2484
+  type: 'test'
+  ...
+# Subtest: cleanup retains published keys/recent orphans, removes old orphans and only old temp files
+ok 54 - cleanup retains published keys/recent orphans, removes old orphans and only old temp files
+  ---
+  duration_ms: 31.1757
+  type: 'test'
+  ...
+# Subtest: malicious temp path is not read or deleted; unknown variant and malformed id are 404
+ok 55 - malicious temp path is not read or deleted; unknown variant and malformed id are 404
+  ---
+  duration_ms: 68.4754
+  type: 'test'
+  ...
+# Subtest: production web build resolves from both source and emitted server, independently of cwd
+ok 56 - production web build resolves from both source and emitted server, independently of cwd
+  ---
+  duration_ms: 1.9812
+  type: 'test'
+  ...
+# Subtest: mixed JPEG/PNG/fake/truncated: ordered per-file outcomes; metadata may arrive after files
+ok 57 - mixed JPEG/PNG/fake/truncated: ordered per-file outcomes; metadata may arrive after files
+  ---
+  duration_ms: 2622.2836
+  type: 'test'
+  ...
+# Subtest: exact 10 MiB JPEG succeeds; 10 MiB+1 fails individually, next valid file still publishes
+ok 58 - exact 10 MiB JPEG succeeds; 10 MiB+1 fails individually, next valid file still publishes
+  ---
+  duration_ms: 1844.5781
+  type: 'test'
+  ...
+# Subtest: structural failures never invoke publisher and always remove staging
+ok 59 - structural failures never invoke publisher and always remove staging
+  ---
+  duration_ms: 1748.2981
+  type: 'test'
+  ...
+# Subtest: Unicode limits count code points; metadata is capped inclusively at 16 KiB
+ok 60 - Unicode limits count code points; metadata is capped inclusively at 16 KiB
+  ---
+  duration_ms: 1239.5816
+  type: 'test'
+  ...
+# Subtest: auth recheck after multipart rejects logout/expiry before publishing; CSRF guard precedes disk
+ok 61 - auth recheck after multipart rejects logout/expiry before publishing; CSRF guard precedes disk
+  ---
+  duration_ms: 1004.2857
+  type: 'test'
+  ...
+# Subtest: service failure is a file result and does not prevent later publishing; all-invalid response is still 200
+ok 62 - service failure is a file result and does not prevent later publishing; all-invalid response is still 200
+  ---
+  duration_ms: 1193.0285
+  type: 'test'
+  ...
+# Subtest: list query/UUID/status contract and authenticated owner deletion delegated to A
+ok 63 - list query/UUID/status contract and authenticated owner deletion delegated to A
+  ---
+  duration_ms: 1810.7754
+  type: 'test'
+  ...
+# Subtest: body byte counter includes exact 55 MiB and rejects 55 MiB+1
+ok 64 - body byte counter includes exact 55 MiB and rejects 55 MiB+1
+  ---
+  duration_ms: 0.6253
+  type: 'test'
+  ...
+# Subtest: five files are accepted without truncation
+ok 65 - five files are accepted without truncation
+  ---
+  duration_ms: 1150.1806
+  type: 'test'
+  ...
+# Subtest: client abort during multipart cannot publish and removes partial staging
+ok 66 - client abort during multipart cannot publish and removes partial staging
+  ---
+  duration_ms: 43.3046
+  type: 'test'
+  ...
+# Subtest: real streaming multipart 55 MiB (chunked)
+ok 67 - real streaming multipart 55 MiB (chunked)
+  ---
+  duration_ms: 276.4403
+  type: 'test'
+  ...
+# Subtest: real streaming multipart 55 MiB+1 (chunked)
+ok 68 - real streaming multipart 55 MiB+1 (chunked)
+  ---
+  duration_ms: 247.0902
+  type: 'test'
+  ...
+# Subtest: real streaming multipart 55 MiB (Content-Length)
+ok 69 - real streaming multipart 55 MiB (Content-Length)
+  ---
+  duration_ms: 199.1056
+  type: 'test'
+  ...
+# Subtest: real streaming multipart 55 MiB+1 (Content-Length)
+ok 70 - real streaming multipart 55 MiB+1 (Content-Length)
+  ---
+  duration_ms: 10.3689
+  type: 'test'
+  ...
+1..70
+# tests 70
+# suites 0
+# pass 70
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 16074.95

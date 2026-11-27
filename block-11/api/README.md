@@ -26,7 +26,7 @@ npm run test:role-a
 npm run test:role-b
 ```
 
-`npm test` chạy 69 test: 29 của A, 38 của B và 2 điểm ghép. Script tự đặt cwd về root repo để test migration A tìm đúng SQL; dùng node_modules chính thức của API, không cần toolchain A riêng. `test:role-b` gồm 40 test (38 B và 2 điểm ghép).
+`npm test` chạy 70 test: 29 của A, 38 của B, 2 điểm ghép A+B và 1 kiểm tra đường dẫn React build khi chạy source/output đã compile. Script tự đặt cwd về root repo để test migration A tìm đúng SQL; dùng node_modules chính thức của API, không cần toolchain A riêng. `test:role-b` gồm 41 test. Bản ghép A+B+C đã kiểm tra thêm bằng Node 22.23.3; xem [báo cáo tích hợp](../docs/evidence/ABC-integration.md).
 
 Test dùng sharp và HTTP server thật. Kiểm thử điểm ghép dùng PhotoService/chunker/media router thật của A, còn DB và object storage là test double; test migration dùng PostgreSQL nhúng PGlite. Không cần `.env`, PostgreSQL server hoặc SeaweedFS để chạy bộ test này. `db:generate` chỉ sinh Prisma Client, không migrate/ghi DB. Không coi kết quả đó là nghiệm thu DB/storage thật. Native sharp cần executor cho phép tải native module trên sandbox Windows đang dùng.
 
@@ -49,6 +49,8 @@ npm run dev
 Dev backend ở `http://localhost:3000`. C cần proxy `/api` và `/media` từ Vite. `APP_ORIGIN` phải khớp origin trên thanh địa chỉ, ví dụ `http://localhost:5173`; `localhost` và `127.0.0.1` là hai origin khác nhau. Frontend dùng URL tương đối, cookie same-origin và không đặt `Content-Type` khi gửi FormData.
 
 Production: C build `block-11/web/dist/`, B build API, đặt `NODE_ENV=production`, `APP_ORIGIN` là origin HTTPS, cấu hình `TRUST_PROXY_HOPS` đúng reverse proxy, rồi `npm start` từ `api/`. Backend bind loopback, TLS kết thúc ở reverse proxy. Cần chạy `npm run build` sau khi ghép source A để output chứa cả module A.
+
+Đường dẫn React build được tính theo module server, không theo cwd; SPA fallback dùng build root để hoạt động cả khi checkout nằm trong thư mục có dấu chấm. Chạy `npm run test:e2e:integration` từ `web/` để khởi động `tests/browser-server.ts` chỉ cho kiểm thử: Express/auth/upload/sharp/PhotoService/media thật, DB/S3 test double. Runtime production không import test harness này.
 
 Để cleanup, **dừng mọi API instance và chờ hết request** rồi đặt `$env:BLOCK11_API_STOPPED = 'yes'` và chạy `npm run storage:cleanup`. Script đã trỏ đúng `scripts/role-a-cleanup.ts --maintenance` và nạp `.env`. Không chạy sweep khi còn publisher/media request hoạt động.
 

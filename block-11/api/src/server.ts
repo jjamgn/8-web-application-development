@@ -1,9 +1,17 @@
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadConfig } from './config/env.js';
 import { createApp } from './app.js';
 import { createDependencies } from './config/dependencies.js';
 import { mkdir } from 'node:fs/promises';
+
+export function resolveWebDist(moduleUrl: string | URL = import.meta.url) {
+  const modulePath = fileURLToPath(moduleUrl);
+  // TypeScript emits src/server.ts to dist/api/src/server.js.
+  const compiled = modulePath.endsWith(path.join('dist', 'api', 'src', 'server.js'));
+  const apiRoot = path.resolve(path.dirname(modulePath), compiled ? '../../..' : '..');
+  return path.resolve(apiRoot, '../web/dist');
+}
 
 export async function start(config = loadConfig()) {
   const runtime = createDependencies(config);
@@ -11,7 +19,7 @@ export async function start(config = loadConfig()) {
   try {
     await runtime.ready();
     await mkdir(config.UPLOAD_TMP_DIR, { recursive: true });
-    app = createApp(config, runtime.dependencies, config.NODE_ENV === 'production' ? { webDist: path.resolve('../web/dist') } : {});
+    app = createApp(config, runtime.dependencies, config.NODE_ENV === 'production' ? { webDist: resolveWebDist() } : {});
   } catch {
     await runtime.close();
     throw new Error('API startup failed. Check the dedicated Block 11 database/migrations, private SeaweedFS bucket and production web build.');

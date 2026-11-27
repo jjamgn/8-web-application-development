@@ -1,0 +1,118 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\Technical Support\\.codex\\visualizations\\2026\\11\\27\\01a21ad4-8dba-7621-9c81-3f3cda99d763\\block11-integration\\block-11\\web\\playwright.integration.config.ts",
+    "rootDir": "C:/Users/Technical Support/.codex/visualizations/2026/11/27/01a21ad4-8dba-7621-9c81-3f3cda99d763/block11-integration/block-11/web/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../docs/evidence/abc-browser-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/Users/Technical Support/.codex/visualizations/2026/11/27/01a21ad4-8dba-7621-9c81-3f3cda99d763/block11-integration/block-11/web/test-results/integration",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/Technical Support/.codex/visualizations/2026/11/27/01a21ad4-8dba-7621-9c81-3f3cda99d763/block11-integration/block-11/web/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.live.spec.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.1",
+    "workers": 1,
+    "webServer": {
+      "command": "node --import tsx tests/browser-server.ts",
+      "cwd": "../api",
+      "url": "http://localhost:3000/api/photos",
+      "reuseExistingServer": false,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "gallery.live.spec.ts",
+      "file": "gallery.live.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "CONTROLLED A+B+C: hai tài khoản, upload JPEG/PNG, owner-only delete, media và reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8699,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-27T03:11:39.131Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fb3728b5918f32b5e283-dabf76adc372c15c07b5",
+          "file": "gallery.live.spec.ts",
+          "line": 32,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-27T03:11:36.034Z",
+    "duration": 12892.201000000001,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
