@@ -16,11 +16,12 @@ export const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAA
 export type MockState = {
   user: User | null; photos: PhotoDto[]; total: number;
   meError?: boolean; listError?: boolean; uploadMode?: 'mixed' | 'all-failed' | 'request-error' | 'network-error' | 'expired';
+  favorites: string[]; following: string[]; collections: { id: string; title: string; count: number; photoIds: string[] }[]; bio: string; avatarUrl: string | null;
   deleteStatus: 204 | 202 | 403;
   writes: Request[]; csrf: string; uploadDelay: number;
 };
 export async function mockApi(page: Page, options: Partial<MockState> = {}) {
-  const state: MockState = { user: null, photos: [photo(1), photo(2), photo(3)], total: 3, deleteStatus: 204, writes: [], csrf: 'pre-login-csrf', uploadDelay: 0, ...options };
+  const state: MockState = { user: null, photos: [photo(1), photo(2), photo(3)], total: 3, favorites: [], following: [], collections: [], bio: '', avatarUrl: null, deleteStatus: 204, writes: [], csrf: 'pre-login-csrf', uploadDelay: 0, ...options };
   await page.route('https://fonts.googleapis.com/**', route => route.abort());
   await page.route('**/media/photos/**', route => {
     const index = Number(new URL(route.request().url()).pathname.split('/')[3].slice(-2));
@@ -43,13 +44,39 @@ export async function mockApi(page: Page, options: Partial<MockState> = {}) {
     if (path === '/api/auth/login') { state.user = owner; state.csrf = 'rotated-csrf'; return ok({ user: owner, csrfToken: state.csrf }); }
     if (path === '/api/auth/register') return ok({ user: owner }, 201);
     if (path === '/api/auth/logout') { state.user = null; state.csrf = 'after-logout-csrf'; return route.fulfill({ status: 204 }); }
+    if (path.startsWith('/api/users/')) {
+      const id = path.split('/')[3], target = id === owner.id ? { ...owner, ...(state.user?.id === id ? {name:state.user.name} : {}) } : id === other.id ? other : null;
+      if (!target) return fail(404, 'NOT_FOUND');
+      if (path.endsWith('/follow')) { state.following = method === 'DELETE' ? state.following.filter(v => v !== id) : [...new Set([...state.following,id])]; return route.fulfill({status:204}); }
+      return ok({ ...target, bio: state.bio, avatarUrl: state.avatarUrl, photoCount: state.photos.filter(p=>p.uploader.id===id).length, followers: state.following.includes(id) ? 1 : 0, following: 0, isFollowing: state.following.includes(id) });
+    }
+    if (path === '/api/me/profile') { const data = req.postDataJSON(); if(state.user) state.user.name=data.name;state.bio=data.bio;return ok({ ...state.user,bio:state.bio,avatarUrl:state.avatarUrl }); }
+    if (path === '/api/me/avatar') { state.avatarUrl=photo(1).variants[0].url;return ok({ ...state.user,bio:state.bio,avatarUrl:state.avatarUrl }); }
+    if (/^\/api\/photos\/[^/]+\/activity$/.test(path)) { const id=path.split('/')[3];return ok({liked:state.favorites.includes(id),likes:state.favorites.includes(id)?1:0}); }
+    if (path.endsWith('/favorite')) {const id=path.split('/')[3];state.favorites=method==='DELETE'?state.favorites.filter(v=>v!==id):[...new Set([...state.favorites,id])];return route.fulfill({status:204});}
+    if (path.startsWith('/api/me/collections')) {
+      const parts=path.split('/'), id=parts[4], photoId=parts[6];
+      if (!id && method==='GET')return ok({items:state.collections});
+      if (!id && method==='POST'){const c={id:'33333333-3333-4333-8333-'+String(state.collections.length+1).padStart(12,'0'),title:req.postDataJSON().title,count:0,photoIds:[] as string[]};state.collections.push(c);return ok(c,201);}
+      const c=state.collections.find(c=>c.id===id);if(!c)return fail(404,'NOT_FOUND');
+      if(photoId){c.photoIds=method==='DELETE'?c.photoIds.filter(v=>v!==photoId):[...new Set([...c.photoIds,photoId])];c.count=c.photoIds.length;}
+      else if(method==='PATCH')c.title=req.postDataJSON().title;
+      else if(method==='DELETE')state.collections=state.collections.filter(c=>c.id!==id);
+      return route.fulfill({status:204});
+    }
     if (path === '/api/photos' && method === 'GET') {
       if (state.listError) return fail(503, 'INTERNAL_ERROR', 'Không tải được thư viện.');
       const current = Number(url.searchParams.get('page') ?? 1);
       const mine = url.searchParams.get('mine') === 'true';
       if (mine && !state.user) return fail(401, 'AUTH_REQUIRED');
-      const filtered = mine ? state.photos.filter(p => p.uploader.id === state.user!.id) : state.photos;
-      return ok({ items: filtered.slice((current - 1) * 12, current * 12), page: current, pageSize: 12, total: mine ? filtered.length : state.total, totalPages: Math.ceil((mine ? filtered.length : state.total) / 12) });
+      let filtered = mine ? state.photos.filter(p => p.uploader.id === state.user!.id) : state.photos;
+      if (url.searchParams.has('user')) filtered = filtered.filter(p => p.uploader.id === url.searchParams.get('user'));
+      if (url.searchParams.has('q')) { const q = url.searchParams.get('q')!.toLowerCase(); filtered = filtered.filter(p => [p.title,p.alt,p.uploader.name].join(' ').toLowerCase().includes(q)); }
+      if (url.searchParams.has('favorites')) filtered = filtered.filter(p => state.favorites.includes(p.id));
+      if (url.searchParams.has('following')) filtered = filtered.filter(p => state.following.includes(p.uploader.id));
+      if (url.searchParams.has('collection')) filtered = filtered.filter(p => state.collections.find(c => c.id === url.searchParams.get('collection'))?.photoIds.includes(p.id));
+      const subset = mine || ['user','q','favorites','following','collection'].some(key => url.searchParams.has(key));
+      return ok({ items: filtered.slice((current - 1) * 12, current * 12), page: current, pageSize: 12, total: subset ? filtered.length : state.total, totalPages: Math.ceil((subset ? filtered.length : state.total) / 12) });
     }
     if (path === '/api/photos' && method === 'POST') {
       if (state.uploadDelay) await new Promise(resolve => setTimeout(resolve, state.uploadDelay));

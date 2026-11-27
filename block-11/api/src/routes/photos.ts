@@ -15,13 +15,17 @@ export function photosRouter(config: Config, dependencies: Dependencies) {
   const router = Router();
   const { photos, sessions } = dependencies;
   router.get('/', async (req, res) => {
-    const raw = req.query.page ?? '1';
-    if (Object.keys(req.query).some(key => key !== 'page' && key !== 'mine') || typeof raw !== 'string' || !/^[1-9]\d*$/.test(raw) || !Number.isSafeInteger(Number(raw)))
-      throw new AppError('INVALID_QUERY', 400, 'Số trang không hợp lệ.');
-    if (req.query.mine !== undefined && req.query.mine !== 'true') throw new AppError('INVALID_QUERY', 400, 'Bộ lọc không hợp lệ.');
-    const uploaderId = req.query.mine === 'true' ? await assertActiveSession(req, sessions) : undefined;
-    if (uploaderId) res.set('Cache-Control', 'no-store');
-    res.json({ ok: true, data: await photos.listPhotos({ page: Number(raw), ...(uploaderId ? { uploaderId } : {}) }) });
+    const query = z.object({ page: z.string().regex(/^[1-9]\d*$/).default('1'), mine: z.literal('true').optional(), q: z.string().trim().max(120).optional(), user: z.uuid().optional(), favorites: z.literal('true').optional(), following: z.literal('true').optional(), collection: z.uuid().optional() }).strict().safeParse(req.query);
+    if (!query.success || !Number.isSafeInteger(Number(query.data.page))) throw new AppError('INVALID_QUERY', 400, 'Số trang hoặc bộ lọc không hợp lệ.');
+    const v = query.data;
+    const privateFeed = v.mine || v.favorites || v.following || v.collection;
+    const viewerId = privateFeed ? await assertActiveSession(req, sessions) : undefined;
+    if (privateFeed) res.set('Cache-Control', 'no-store');
+    if (v.mine && v.user) throw new AppError('INVALID_QUERY', 400, 'Chỉ chọn một tác giả.');
+    res.json({ ok: true, data: await photos.listPhotos({ page: Number(v.page),
+      ...(v.mine ? { uploaderId: viewerId! } : v.user ? { uploaderId: v.user } : {}),
+      ...(v.q ? { q: v.q } : {}), ...(v.favorites ? { favoritesBy: viewerId! } : {}),
+      ...(v.following ? { followingBy: viewerId! } : {}), ...(v.collection ? { collectionId: v.collection, viewerId: viewerId! } : {}) }) });
   });
   router.get('/:id', async (req, res) => {
     if (!uuid.safeParse(req.params.id).success) throw notFound();

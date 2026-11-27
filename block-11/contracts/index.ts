@@ -11,3 +11,7 @@ export type UploadData = { results: UploadResult[]; succeeded: number; failed: n
 export type GalleryData = { items: PhotoDto[]; page: number; pageSize: 12; total: number; totalPages: number };
 export const LIMITS = { files: 5, fileBytes: 10_485_760, bodyBytes: 57_671_680, metadataBytes: 16_384, pixels: 40_000_000, chunkBytes: 1_048_576 } as const;
 export const codePoints = (value: string) => Array.from(value).length;
+
+export type PublicProfile = { id: string; name: string; bio: string; avatarUrl: string | null; photoCount: number; followers: number; following: number; isFollowing: boolean };
+export type CollectionDto = { id: string; title: string; count: number };
+export type ProfileIdentity = Pick<PublicProfile, 'id' | 'name' | 'bio' | 'avatarUrl'>;

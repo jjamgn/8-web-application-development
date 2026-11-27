@@ -23,18 +23,18 @@ test('skeleton lần đầu, tải thêm lỗi không mất ảnh và có thể 
 test('hồ sơ lấy đúng ảnh của người dùng và khách được chuyển đăng nhập', async ({ page }) => {
   await mockApi(page, { user: owner });
   await page.goto('/photos');
-  await page.getByRole('link', { name: owner.name, exact: true }).click();
+  await page.getByRole('navigation', { name: 'Điều hướng chính' }).getByRole('link', { name: owner.name, exact: true }).click();
   await expect(page).toHaveURL(/\/profile$/);
   await expect(page.getByRole('heading', { name: owner.name, exact: true })).toBeVisible();
   await expect(page.locator('.photo-card')).toHaveCount(2);
   await mkdir('../docs/evidence/feed-upload-profile', { recursive: true });
   await page.screenshot({ path: '../docs/evidence/feed-upload-profile/profile.png', fullPage: true });
   await page.locator('.photo-link').first().click();
-  await page.getByRole('link', { name: 'Về hồ sơ' }).click();
+  await page.getByRole('button', { name: 'Về hồ sơ' }).click();
   await expect(page.locator('.photo-card')).toHaveCount(2);
   await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
   await page.goto('/profile');
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/login(?:\?|$)/);
 });
 
 test('kéo thả giữ file gốc, nhập metadata và chặn quá 5 ảnh', async ({ page }) => {

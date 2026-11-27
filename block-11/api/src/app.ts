@@ -24,6 +24,7 @@ export function createApp(config: Config, dependencies: Dependencies, options: {
   app.use('/api', sessionMiddleware(config, dependencies.sessions));
   app.use('/api/auth', authRouter(config, dependencies.users, dependencies.sessions));
   app.use('/api/photos', photosRouter(config, dependencies));
+  if (dependencies.socialRouter) app.use('/api', dependencies.socialRouter);
   app.use('/api', (_req, _res, next) => next(notFound()));
   if (options.webDist) {
     const index = path.join(options.webDist, 'index.html');

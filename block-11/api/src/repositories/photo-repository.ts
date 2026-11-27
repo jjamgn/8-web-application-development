@@ -1,5 +1,5 @@
 import { Prisma, type PrismaClient } from '@prisma/client';
-import type { NewPhoto, PhotoRepository, StoredPhoto, CleanupTask } from '../storage/types.js';
+import type { NewPhoto, PhotoFilter, PhotoRepository, StoredPhoto, CleanupTask } from '../storage/types.js';
 import { notFound, PhotoError, integrityError } from '../storage/errors.js';
 
 const includePhoto = {
@@ -36,9 +36,18 @@ export class PrismaPhotoRepository implements PhotoRepository {
     const row = await this.db.photo.findUnique({ where: { id }, include: includePhoto });
     return row ? map(row) : null;
   }
-  async list(page: number, uploaderId?: string): Promise<{ items: StoredPhoto[]; total: number }> {
+  async list(page: number, uploaderId?: string, filter: PhotoFilter = {}): Promise<{ items: StoredPhoto[]; total: number }> {
     return this.db.$transaction(async tx => {
-      const where = { status: 'PUBLISHED' as const, ...(uploaderId ? { uploaderId } : {}) };
+      if (filter.collectionId && !await tx.collection.findFirst({ where: { id: filter.collectionId, ownerId: filter.viewerId ?? '' } })) throw notFound();
+      const where: Prisma.PhotoWhereInput = {
+        status: 'PUBLISHED', kind: 'PHOTO', ...(uploaderId ? { uploaderId } : {}),
+        ...(filter.q ? { OR: [{ title: { contains: filter.q, mode: 'insensitive' } }, { alt: { contains: filter.q, mode: 'insensitive' } }, { uploader: { name: { contains: filter.q, mode: 'insensitive' } } }] } : {}),
+        ...(filter.favoritesBy ? { favorites: { some: { userId: filter.favoritesBy } } } : {}),
+        ...(filter.followingBy ? { uploader: { followers: { some: { followerId: filter.followingBy } } } } : {}),
+        ...(filter.collectionId ? { collectionItems: { some: { collectionId: filter.collectionId, collection: { ownerId: filter.viewerId } } } } : {}),
+      };
+      // Search by author and following can be combined without overwriting either predicate.
+      if (filter.followingBy && filter.q) where.AND = [{ uploader: { followers: { some: { followerId: filter.followingBy } } } }];
       const total = await tx.photo.count({ where });
       const rows = await tx.photo.findMany({ where, skip: (page - 1) * 12, take: 12, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], include: includePhoto });
       return { total, items: rows.map(map) };
@@ -69,6 +78,7 @@ export class PrismaPhotoRepository implements PhotoRepository {
     }
   }
   async *deletingPhotos(): AsyncIterable<StoredPhoto> {
+    await this.db.photo.updateMany({ where: { kind: 'AVATAR', status: 'PUBLISHED', createdAt: { lt: new Date(Date.now() - 86_400_000) }, avatarFor: { none: {} } }, data: { status: 'DELETING' } });
     let cursor: string | undefined;
     for (;;) {
       const rows = await this.db.photo.findMany({ where: { status: 'DELETING', ...(cursor ? { id: { gt: cursor } } : {}) }, include: includePhoto, take: 100, orderBy: { id: 'asc' } });

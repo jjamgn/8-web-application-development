@@ -16,8 +16,23 @@
 - Cache danh sách và scroll chỉ trong bộ nhớ của tab; quay từ chi tiết bằng “Về thư viện”/“Về hồ sơ” hoặc Back phục hồi danh sách/cuộn. Reload hoặc mở tab mới bắt đầu lại. Upload thành công, xóa và logout làm mất hiệu lực cache. Dữ liệu người khác thay đổi chỉ phản ánh sau lần lấy mới; reload để làm mới từ đầu. Query page hợp lệ từ link cũ vẫn bắt đầu feed tại trang 1; page sai bị báo lỗi.
 - Skeleton trong lúc lấy dữ liệu, có nhãn cho trình đọc màn hình và tôn trọng prefers-reduced-motion. Giữ grid responsive 1/2/3 cột.
 - Upload có vùng kéo thả và nút chọn file tương đương. Mỗi lần chọn/thả thay danh sách hiện tại; tối đa 5 file/lượt, giữ file gốc, không upload trước khi submit metadata. Không đổi pipeline EXIF/WebP/SeaweedFS. Fieldset khóa chọn/thả khi đang gửi hoặc lượt đã gửi; dùng “Tạo lượt gửi mới” để tiếp tục.
-- Bấm tên ở header mở /profile; hiển thị chữ cái tên làm avatar và ảnh đã đăng của chính tài khoản, có tải thêm và trạng thái rỗng. Chưa có sửa hồ sơ/avatar, bio hoặc hồ sơ công khai của người khác. Khách chuyển đến đăng nhập.
+- Bấm tên ở header mở /profile; hiển thị chữ cái tên làm avatar và ảnh đã đăng của chính tài khoản, có tải thêm và trạng thái rỗng. Giới hạn ban đầu này được thay thế bởi mục mở rộng hồ sơ công khai/avatar đã duyệt bên dưới. Khách chuyển đến đăng nhập.
 - Hạn mức ngày **chưa được chốt và chưa triển khai**; đề xuất 50 ảnh công bố thành công/tài khoản/ngày khi mở rộng. Nếu chốt: lưu bộ đếm giao dịch PostgreSQL theo ngày Asia/Ho_Chi_Minh, xử lý đồng thời và rollback khi lỗi, không hoàn lượt khi xóa ảnh; phản hồi hạn mức rõ ràng, không đếm file hỏng và cần thêm giới hạn tốc độ upload riêng. Limiter login/register hiện có không phải hạn mức upload.
+
+## Mở rộng đã duyệt: khám phá và hồ sơ — 27/11/2026
+
+Người dùng đồng ý tìm kiếm, modal chi tiết gắn URL, slug, download WebP, yêu thích, bộ sưu tập riêng tư, hồ sơ công khai và follow; bổ sung cập nhật avatar.
+
+- Tìm trên backend theo title/alt/tên tác giả, không phân biệt hoa thường; các feed đều 12 ảnh/lần, giữ danh sách/cuộn theo bộ lọc. Không triển khai tag hoặc tìm bằng nội dung ảnh.
+- URL chuẩn /photos/:slug/:id; UUID vẫn là khóa thật. Link cũ /photos/:id được giữ. Click từ feed mở modal có URL, Esc/đóng/Back về đúng feed; truy cập link trực tiếp mở trang chi tiết đầy đủ. Các nút tương tác không lồng trong link ảnh.
+- Download công khai chỉ các variant WebP thực có, có Content-Disposition attachment, không cung cấp file gốc hoặc URL S3. File phải qua ghép/kiểm hash trước khi phục vụ như media.
+- Yêu thích và follow yêu cầu đăng nhập, CSRF/Origin, idempotent; không tự follow. Feed đang theo dõi chỉ lấy ảnh PHOTO từ những tác giả đã follow. Không có notification.
+- Bộ sưu tập thuộc chính chủ, riêng tư, tạo/đổi tên/xóa và thêm/gỡ ảnh. Một ảnh có thể thuộc nhiều bộ; không sao chép object, xóa bộ không xóa ảnh gốc. Không lộ bộ riêng của người khác.
+- Hồ sơ công khai chỉ trả id, tên, bio, avatar, số ảnh/follower/following và trạng thái follow của người xem; không trả email/hash/session. Chính chủ sửa tên/bio và avatar. Không gian cá nhân có tab ảnh, yêu thích, bộ sưu tập.
+- Avatar nhận đúng 1 JPEG/PNG tĩnh, áp cùng kiểm tra ảnh 10 MiB/40M pixels, tự xoay EXIF, crop vuông tối đa 512px, chuyển WebP và loại metadata. Lưu qua pipeline chia mảnh SeaweedFS, mục đích AVATAR riêng, không xuất hiện trong gallery/search/favorites/collection. Thay avatar cập nhật tham chiếu trước rồi dọn avatar cũ bằng cơ chế cleanup; không đổi object tại URL cũ.
+- Migration bổ sung bảng/field, giữ nguyên ảnh, session, ID và link cũ. Hạn mức 50 ảnh/ngày vẫn chỉ là đề xuất chưa duyệt; không tự bật trong phạm vi này.
+
+API, migration, privacy và cách demo phần mở rộng: [social-profile/README.md](docs/evidence/social-profile/README.md). Đây là phụ lục contract cho phần mở rộng được duyệt.
 
 ## 1. Các quyết định đã chốt
 
@@ -32,7 +47,7 @@
 | D07 | Database | Database riêng cho Block 11; có thể dùng PostgreSQL trên Supabase. Schema và migration riêng; không chạy migration/seed/reset vào DB Restaurant App. |
 | D08 | Storage | SeaweedFS object storage qua S3 API; backend dùng `@aws-sdk/client-s3` v3, bucket riêng có xác thực. Không có local storage adapter/fallback cho ảnh công bố. SeaweedFS là dịch vụ, không phải thư viện upload Node.js. |
 | D09 | Quyền | Xem gallery/detail/media công khai; upload cần đăng nhập, lưu uploaderId từ session. Chỉ chủ ảnh được xóa. Dùng express-session + PostgreSQL session store, bcryptjs; không JWT/RBAC/MFA. |
-| D10 | Phạm vi giao diện | Đăng ký/đăng nhập/đăng xuất, danh sách, upload, chi tiết và xác nhận xóa; API phân trang 12 ảnh/lần, UI nối thêm bằng nút “Xem thêm ảnh”, mới nhất trước; hiển thị “Đã hiển thị N/T ảnh”. Skeleton khi tải, giữ danh sách và vị trí cuộn khi từ chi tiết quay về bằng nút hoặc lịch sử trình duyệt. Có hồ sơ riêng của tài khoản đang đăng nhập và upload kéo thả. Không thêm album, tag, tìm kiếm hoặc sửa mô tả sau upload. |
+| D10 | Phạm vi giao diện | Đăng ký/đăng nhập/đăng xuất, danh sách, upload, chi tiết và xác nhận xóa; API phân trang 12 ảnh/lần, UI nối thêm bằng nút “Xem thêm ảnh”, mới nhất trước; hiển thị “Đã hiển thị N/T ảnh”. Skeleton khi tải, giữ danh sách và vị trí cuộn khi từ chi tiết quay về bằng nút hoặc lịch sử trình duyệt. Có hồ sơ riêng của tài khoản đang đăng nhập và upload kéo thả. Phạm vi mở rộng được duyệt ngày 27/11/2026 ở mục bên dưới; chưa hỗ trợ sửa mô tả ảnh sau upload. |
 | D11 | Variant | WebP quality 80, giữ tỉ lệ/alpha, không phóng lớn, tối đa ba chiều rộng khác nhau; loại EXIF/GPS. Không giữ bản gốc. |
 | D12 | Lỗi | Lỗi cấu trúc/toàn request không công bố ảnh nào; lỗi từng file giữ kết quả các file hợp lệ. Mỗi ảnh có transaction và rollback riêng. |
 | D13 | Triển khai | Dev dùng Vite proxy `/api`, `/media`; production Express phục vụ React build, API và media cùng origin. |

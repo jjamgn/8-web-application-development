@@ -1,5 +1,7 @@
 # Đã xóa bảng Restaurant khỏi project Block 11
 
+**Mở rộng đã duyệt 27/11/2026:** tìm kiếm, modal có slug/URL, download WebP, yêu thích, bộ sưu tập riêng tư, hồ sơ công khai, follow và sửa avatar đã tích hợp. Avatar dùng SeaweedFS qua PhotoKind AVATAR và không xuất hiện trong gallery. Các bảng xã hội mới thuộc Block 11. Migration bổ sung `202611270003_social_profiles`; không cần đổi env hoặc cài thư viện frontend mới. Xem [API, cách dùng và kiểm chứng](../evidence/social-profile/README.md). Các kết quả cũ trong tài liệu này là lịch sử trước mở rộng.
+
 Ngày thực hiện: **27/11/2026**, theo yêu cầu người dùng xóa hẳn các bảng không thuộc Block 11 trên Supabase project **swuswowkpsffkrvvyblo**.
 
 ## Thay đổi đã thực hiện

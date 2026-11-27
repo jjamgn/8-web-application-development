@@ -3,7 +3,7 @@ import { unlink } from 'node:fs/promises';
 import { assembleVariant, planVariant, trustedTempPath, uploadVariant, type AssembledMedia } from '../storage/chunks.js';
 import { PhotoError, invalidPrepared, notFound, safeErrorCode } from '../storage/errors.js';
 import { UUID_PATTERN, assertStorageKey } from '../storage/keys.js';
-import type { Actor, NewPhoto, ObjectStorage, PhotoDto, PhotoRepository, PreparedPhoto, StoredPhoto, VariantManifest } from '../storage/types.js';
+import type { Actor, PhotoFilter, NewPhoto, ObjectStorage, PhotoDto, PhotoRepository, PreparedPhoto, StoredPhoto, VariantManifest } from '../storage/types.js';
 import { sweepTemporaryFiles } from '../storage/temp-cleanup.js';
 
 function dto(photo: StoredPhoto): PhotoDto {
@@ -56,7 +56,7 @@ export class PhotoService {
       for (const variant of input.variants) {
         manifests.push(await planVariant(photoId, variant, this.options.tempRoot));
       }
-      const photo: NewPhoto = { id: photoId, uploaderId: actor.userId, title: input.title, alt: input.alt, width: input.width, height: input.height, variants: manifests };
+      const photo: NewPhoto = { id: photoId, uploaderId: actor.userId, kind: actor.purpose ?? 'PHOTO', title: input.title, alt: input.alt, width: input.width, height: input.height, variants: manifests };
       await this.repository.journal(manifests.flatMap(v => v.chunks.map(c => c.storageKey)));
       journaled = true;
       for (const [index, variant] of input.variants.entries()) {
@@ -89,9 +89,9 @@ export class PhotoService {
     }
   }
 
-  async listPhotos({ page, uploaderId }: { page: number; uploaderId?: string }) {
+  async listPhotos({ page, uploaderId, ...filter }: { page: number; uploaderId?: string } & PhotoFilter) {
     if (!Number.isSafeInteger(page) || page < 1 || (page - 1) * 12 > 2_147_483_647) throw new PhotoError('INVALID_QUERY', 400, 'Trang không hợp lệ.');
-    const result = await this.repository.list(page, uploaderId);
+    const result = await this.repository.list(page, uploaderId, filter);
     return { items: result.items.map(dto), page, pageSize: 12 as const, total: result.total, totalPages: Math.ceil(result.total / 12) };
   }
   async getPhoto(id: string): Promise<PhotoDto> { return dto(await this.published(id)); }

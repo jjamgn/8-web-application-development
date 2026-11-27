@@ -38,7 +38,7 @@ test('gallery rỗng, xem thêm 12 ảnh và giữ ảnh/cuộn khi trở về',
   const scroll = await page.evaluate(() => window.scrollY);
   await page.locator('.photo-link').nth(18).click();
   await expect(page.locator('.detail-image')).toBeVisible();
-  await page.getByRole('link', { name: 'Về thư viện', exact: true }).click();
+  await page.getByRole('button', { name: 'Về thư viện', exact: true }).click();
   await expect(page.locator('.photo-card')).toHaveCount(24);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeCloseTo(scroll, -1);
   await page.locator('.photo-link').nth(18).click();

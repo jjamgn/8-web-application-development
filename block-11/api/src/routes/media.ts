@@ -18,6 +18,10 @@ export function createMediaRouter(service: Pick<PhotoService, 'assembleMedia'>):
       if (!match || !Number.isSafeInteger(Number(match[1]))) throw notFound();
       assembled = await service.assembleMedia(req.params.photoId, Number(match[1]), abort.signal);
       abort.signal.throwIfAborted();
+      if (req.query.download !== undefined) {
+        if (req.query.download !== '1') throw notFound();
+        res.set('Content-Disposition', 'attachment; filename="photo-' + req.params.photoId + '-' + match[1] + '.webp"');
+      }
       res.set({ 'Content-Type': 'image/webp', 'Content-Length': String(assembled.bytes), 'Cache-Control': 'public, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff' });
       // Range is intentionally ignored: always a verified, complete 200 representation.
       await pipeline(createReadStream(assembled.filename), res, { signal: abort.signal });

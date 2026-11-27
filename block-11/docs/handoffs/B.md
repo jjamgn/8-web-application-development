@@ -1,5 +1,7 @@
 # B — Multipart, xử lý ảnh và tích hợp API
 
+**Mở rộng đã duyệt 27/11/2026:** tìm kiếm, modal có slug/URL, download WebP, yêu thích, bộ sưu tập riêng tư, hồ sơ công khai, follow và sửa avatar đã tích hợp. Avatar dùng SeaweedFS qua PhotoKind AVATAR và không xuất hiện trong gallery. Các bảng xã hội mới thuộc Block 11. Migration bổ sung `202611270003_social_profiles`; không cần đổi env hoặc cài thư viện frontend mới. Xem [API, cách dùng và kiểm chứng](../evidence/social-profile/README.md). Các kết quả cũ trong tài liệu này là lịch sử trước mở rộng.
+
 > **SNAPSHOT LỊCH SỬ:** báo cáo/bàn giao này giữ kết quả tại thời điểm lập. Trạng thái tích hợp và môi trường thật mới nhất xem [báo cáo chạy thật](../evidence/review-20261127/REVIEW.md) và [ma trận hiện hành](../evidence/README.md). Các câu “chưa chạy/chưa có môi trường thật” bên dưới không phải kết luận hiện tại.
 
 Ngày bàn giao: 27/11/2026. Phạm vi: **role B** theo BLOCK11_CONTRACT.md. Không thay baseline, không triển khai schema/S3/media của A hoặc giao diện của C.

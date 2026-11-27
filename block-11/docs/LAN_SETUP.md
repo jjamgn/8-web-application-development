@@ -1,5 +1,7 @@
 # LAN đã cấu hình trên máy người dùng
 
+**Mở rộng đã duyệt 27/11/2026:** tìm kiếm, modal có slug/URL, download WebP, yêu thích, bộ sưu tập riêng tư, hồ sơ công khai, follow và sửa avatar đã tích hợp. Avatar dùng SeaweedFS qua PhotoKind AVATAR và không xuất hiện trong gallery. Các bảng xã hội mới thuộc Block 11. Migration bổ sung `202611270003_social_profiles`; không cần đổi env hoặc cài thư viện frontend mới. Xem [API, cách dùng và kiểm chứng](evidence/social-profile/README.md). Các kết quả cũ trong tài liệu này là lịch sử trước mở rộng.
+
 Ngày 27/11/2026. IP Wi-Fi tại lúc cấu hình: **192.168.100.154**, gateway 192.168.100.1. Link dùng chung: **http://192.168.100.154:5173/photos**.
 
 ## Đã thực hiện

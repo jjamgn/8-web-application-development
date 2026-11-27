@@ -1,5 +1,7 @@
 # Block 11 — API A+B, tích hợp bởi role B
 
+**Mở rộng đã duyệt 27/11/2026:** tìm kiếm, modal có slug/URL, download WebP, yêu thích, bộ sưu tập riêng tư, hồ sơ công khai, follow và sửa avatar đã tích hợp. Avatar dùng SeaweedFS qua PhotoKind AVATAR và không xuất hiện trong gallery. Các bảng xã hội mới thuộc Block 11. Migration bổ sung `202611270003_social_profiles`; không cần đổi env hoặc cài thư viện frontend mới. Xem [API, cách dùng và kiểm chứng](../docs/evidence/social-profile/README.md). Các kết quả cũ trong tài liệu này là lịch sử trước mở rộng.
+
 **Cập nhật UX 27/11/2026:** thư viện “Xem thêm ảnh” 12 ảnh/lần, giữ danh sách/cuộn khi quay từ chi tiết, skeleton, upload kéo thả và hồ sơ cá nhân. API hỗ trợ `mine=true` từ session; chưa áp hạn mức ngày. Xem [chi tiết và kiểm chứng](../docs/evidence/feed-upload-profile/README.md).
 
 Triển khai theo `../BLOCK11_CONTRACT.md`, mục 3, 4, 7 và 10. Phần A đã kéo từ GitHub main `0bee219`; B nối repository Prisma, PhotoService và media router trong `src/config/dependencies.ts`. Không thay baseline contract.

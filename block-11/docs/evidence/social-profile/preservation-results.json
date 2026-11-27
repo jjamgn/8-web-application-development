@@ -1,0 +1,14 @@
+{
+  "originalPhotos": 14,
+  "currentPhotos": 14,
+  "photoManifestUnchanged": true,
+  "originalUsers": 8,
+  "currentUsers": 8,
+  "userNamesUnchanged": true,
+  "newTables": [
+    "Favorite",
+    "Follow",
+    "Collection",
+    "CollectionItem"
+  ]
+}

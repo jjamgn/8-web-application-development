@@ -1,6 +1,7 @@
 /** A-owned integration types; B can re-export the public DTOs from contracts/. */
 export const CHUNK_SIZE = 1_048_576;
-export type Actor = { userId: string };
+export type Actor = { userId: string; purpose?: 'AVATAR' };
+export type PhotoFilter = { q?: string; favoritesBy?: string; followingBy?: string; collectionId?: string; viewerId?: string };
 export type VariantDto = { width: number; height: number; mime: 'image/webp'; bytes: number; url: string };
 export type PhotoDto = {
   id: string; title: string; alt: string; uploader: { id: string; name: string };
@@ -16,7 +17,7 @@ export type VariantManifest = {
 export type StoredPhoto = {
   id: string; uploaderId: string; uploader: { id: string; name: string };
   title: string; alt: string; width: number; height: number;
-  status: 'PUBLISHED' | 'DELETING'; createdAt: Date; variants: VariantManifest[];
+  kind?: 'PHOTO' | 'AVATAR'; status: 'PUBLISHED' | 'DELETING'; createdAt: Date; variants: VariantManifest[];
 };
 export type NewPhoto = Omit<StoredPhoto, 'uploader' | 'createdAt' | 'status'>;
 export type CleanupTask = { storageKey: string; createdAt: Date };
@@ -35,7 +36,7 @@ export interface PhotoRepository {
   journal(keys: string[]): Promise<void>;
   commit(photo: NewPhoto): Promise<StoredPhoto>;
   find(id: string): Promise<StoredPhoto | null>;
-  list(page: number, uploaderId?: string): Promise<{ items: StoredPhoto[]; total: number }>;
+  list(page: number, uploaderId?: string, filter?: PhotoFilter): Promise<{ items: StoredPhoto[]; total: number }>;
   markDeleting(id: string, actorId: string): Promise<StoredPhoto>;
   removeDeleting(id: string): Promise<void>;
   referenceStatus(key: string): Promise<'PUBLISHED' | 'DELETING' | null>;

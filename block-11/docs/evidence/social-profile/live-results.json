@@ -1,0 +1,12 @@
+{
+  "runId": "a041cda1-8ef4-47f4-8ec3-c08ce4cd1f0d",
+  "checks": [
+    "public profile and protected private mutations",
+    "search and verified WebP download, EXIF removed",
+    "idempotent favorites/follow and personalized feeds",
+    "private collections, owner checks, delete keeps source photo",
+    "avatar orientation/crop/privacy, invalid input preserves avatar, replacement cleans old parts",
+    "unfavorite and unfollow"
+  ],
+  "cleaned": true
+}

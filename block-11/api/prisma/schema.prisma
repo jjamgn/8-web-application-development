@@ -17,13 +17,25 @@ enum CleanupStatus {
   DONE
 }
 
+enum PhotoKind {
+  PHOTO
+  AVATAR
+}
+
 model User {
   id           String    @id @default(uuid()) @db.Uuid
   name         String    @db.VarChar(120)
   email        String    @unique @db.VarChar(254)
   passwordHash String
   createdAt    DateTime  @default(now())
-  photos       Photo[]
+  bio          String    @default("") @db.VarChar(300)
+  avatarPhotoId String?   @db.Uuid
+  avatarPhoto  Photo?    @relation("AvatarPhoto", fields: [avatarPhotoId], references: [id], onDelete: SetNull)
+  favorites    Favorite[]
+  collections  Collection[]
+  following    Follow[]  @relation("Follower")
+  followers    Follow[]  @relation("Followee")
+  photos       Photo[]   @relation("Uploads")
   sessions     Session[]
 }
 
@@ -48,7 +60,11 @@ model Photo {
   status     PhotoStatus    @default(PUBLISHED)
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
-  uploader   User           @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+  kind       PhotoKind      @default(PHOTO)
+  avatarFor  User[]          @relation("AvatarPhoto")
+  favorites  Favorite[]
+  collectionItems CollectionItem[]
+  uploader   User           @relation("Uploads", fields: [uploaderId], references: [id], onDelete: Restrict)
   variants   PhotoVariant[]
 
   @@index([status, createdAt, id])
@@ -95,4 +111,42 @@ model StorageCleanupTask {
   updatedAt     DateTime      @updatedAt
 
   @@index([status, createdAt])
+}
+
+model Favorite {
+  userId String @db.Uuid
+  photoId String @db.Uuid
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photo Photo @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  @@id([userId, photoId])
+  @@index([photoId])
+}
+model Follow {
+  followerId String @db.Uuid
+  followeeId String @db.Uuid
+  createdAt DateTime @default(now())
+  follower User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followee User @relation("Followee", fields: [followeeId], references: [id], onDelete: Cascade)
+  @@id([followerId, followeeId])
+  @@index([followeeId])
+}
+model Collection {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @db.Uuid
+  title String @db.VarChar(120)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  items CollectionItem[]
+  @@index([ownerId, createdAt])
+}
+model CollectionItem {
+  collectionId String @db.Uuid
+  photoId String @db.Uuid
+  createdAt DateTime @default(now())
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  photo Photo @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  @@id([collectionId, photoId])
+  @@index([photoId])
 }

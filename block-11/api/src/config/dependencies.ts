@@ -4,6 +4,7 @@ import { PrismaPhotoRepository } from '../repositories/photo-repository.js';
 import { PrismaUserRepository, PrismaSessionRepository } from '../repositories/user-session-repository.js';
 import { PhotoService } from '../services/photo-service.js';
 import { S3ObjectStorage, storageConfigFromEnv } from '../storage/s3-storage.js';
+import { socialRouter } from '../routes/social.js';
 import { createMediaRouter } from '../routes/media.js';
 import type { Config } from './env.js';
 import type { Dependencies } from '../integration.js';
@@ -51,6 +52,7 @@ export function createDependencies(config: Config) {
   });
   const auth = adaptAuthRepositories(new PrismaUserRepository(db), new PrismaSessionRepository(db));
   const dependencies: Dependencies = { ...auth, photos, mediaRouter: createMediaRouter(photos) };
+  dependencies.socialRouter = socialRouter(config, dependencies, db);
   return {
     dependencies,
     async ready() { await db.$connect(); await storage.check(); },

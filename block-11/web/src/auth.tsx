@@ -35,5 +35,5 @@ export function useAuth() {
   return value;
 }
 export function safeReturnTo(value: string | null) {
-  return value === '/photos/upload' ? value : '/photos';
+  return value && (['/photos/upload', '/profile', '/following'].includes(value) || /^\/users\/[0-9a-f-]{36}$/.test(value) || /^\/photos\/(?:[a-z0-9-]+\/)?[0-9a-f-]{36}$/.test(value)) ? value : '/photos';
 }
