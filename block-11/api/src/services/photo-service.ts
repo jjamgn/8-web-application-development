@@ -59,7 +59,11 @@ export class PhotoService {
       const photo: NewPhoto = { id: photoId, uploaderId: actor.userId, title: input.title, alt: input.alt, width: input.width, height: input.height, variants: manifests };
       await this.repository.journal(manifests.flatMap(v => v.chunks.map(c => c.storageKey)));
       journaled = true;
-      for (let i = 0; i < input.variants.length; i++) await uploadVariant(this.storage, input.variants[i], manifests[i], this.options.tempRoot);
+      for (const [index, variant] of input.variants.entries()) {
+        const manifest = manifests[index];
+        if (!manifest) throw invalidPrepared();
+        await uploadVariant(this.storage, variant, manifest, this.options.tempRoot);
+      }
       return dto(await this.repository.commit(photo));
     } catch (error) {
       if (journaled && photoId) {

@@ -65,7 +65,7 @@ export class PrismaPhotoRepository implements PhotoRepository {
       const rows = await this.db.storageCleanupTask.findMany({ where: { status: 'PENDING' }, take: 100, orderBy: { id: 'asc' }, ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}) });
       if (!rows.length) return;
       for (const row of rows) yield { storageKey: row.storageKey, createdAt: row.createdAt };
-      cursor = rows[rows.length - 1].id;
+      cursor = rows[rows.length - 1]!.id;
     }
   }
   async *deletingPhotos(): AsyncIterable<StoredPhoto> {
@@ -74,7 +74,7 @@ export class PrismaPhotoRepository implements PhotoRepository {
       const rows = await this.db.photo.findMany({ where: { status: 'DELETING', ...(cursor ? { id: { gt: cursor } } : {}) }, include: includePhoto, take: 100, orderBy: { id: 'asc' } });
       if (!rows.length) return;
       for (const row of rows) yield map(row);
-      cursor = rows[rows.length - 1].id;
+      cursor = rows[rows.length - 1]!.id;
     }
   }
   async taskDone(key: string): Promise<void> {

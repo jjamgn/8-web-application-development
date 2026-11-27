@@ -1,0 +1,3 @@
+
+> block11-gallery-api@1.0.0 build
+> tsc -p tsconfig.json

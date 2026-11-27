@@ -6,3 +6,9 @@
 api/tests/role-a-toolchain/.generated/
 infra/seaweedfs/.env
 *.tsbuildinfo
+**/.env.*
+!**/.env.example
+**/playwright-report/
+**/test-results/
+**/.runtime/
+**/*.log

@@ -1,0 +1,46 @@
+{
+  "name": "block11-gallery-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/api/src/server.js",
+    "build": "tsc -p tsconfig.json",
+    "test": "node scripts/run-tests.mjs",
+    "test:role-a": "node scripts/run-tests.mjs a",
+    "test:role-b": "node scripts/run-tests.mjs b",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "storage:check": "node --import dotenv/config --import tsx scripts/role-a-storage-check.ts",
+    "storage:cleanup": "node --import dotenv/config --import tsx scripts/role-a-cleanup.ts --maintenance",
+    "test:live": "tsx --test tests/live.integration.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.1178.0",
+    "@prisma/client": "6.12.0",
+    "bcryptjs": "3.0.3",
+    "busboy": "1.6.0",
+    "dotenv": "17.4.2",
+    "express": "5.3.0",
+    "express-rate-limit": "8.7.5",
+    "express-session": "1.19.0",
+    "sharp": "0.35.5",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.6.0",
+    "@types/busboy": "1.5.5",
+    "@types/express": "5.0.6",
+    "@types/express-session": "1.19.0",
+    "@types/node": "24.19.4",
+    "@types/supertest": "6.0.3",
+    "prisma": "6.12.0",
+    "supertest": "7.3.2",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  }
+}

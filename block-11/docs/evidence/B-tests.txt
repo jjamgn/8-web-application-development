@@ -1,0 +1,50 @@
+
+> block11-gallery-api@1.0.0 test
+> tsx --test tests/*.test.ts
+
+✔ public gallery/media and unknown API: no login and no session cookie (76.9532ms)
+✔ register → login rotation → me → restart → logout; user data stays private (698.0758ms)
+✔ auth/CSRF reject before staging; origin, missing token and invalid token (94.0481ms)
+✔ registration validation: strict keys, Unicode, password confirmation/UTF-8 byte limit and JSON size (166.5167ms)
+✔ session store enforces absolute expiry and cannot resurrect a logged-out row (51.6404ms)
+✔ wrong email/password share INVALID_CREDENTIALS; failed login limit has Retry-After (2955.847ms)
+✔ register rate limit, production Secure cookie and password 72-byte boundary (318.8349ms)
+✔ production deep links serve the web build while API/media misses remain JSON 404 (52.3329ms)
+✔ variant widths use the contract formula at all size boundaries (2.2686ms)
+✔ decode JPEG 200px → real WebP dimensions, quality pipeline and stripped metadata (49.3898ms)
+✔ decode JPEG 800px → real WebP dimensions, quality pipeline and stripped metadata (70.545ms)
+✔ decode JPEG 1200px → real WebP dimensions, quality pipeline and stripped metadata (94.4365ms)
+✔ decode JPEG 2400px → real WebP dimensions, quality pipeline and stripped metadata (91.3554ms)
+✔ PNG alpha survives and outputs are never enlarged (30.7595ms)
+✔ EXIF orientation 2 including flips matches the normalized pixels; GPS removed (38.5211ms)
+✔ EXIF orientation 3 including flips matches the normalized pixels; GPS removed (39.6539ms)
+✔ EXIF orientation 5 including flips matches the normalized pixels; GPS removed (42.4948ms)
+✔ EXIF orientation 6 including flips matches the normalized pixels; GPS removed (39.3626ms)
+✔ EXIF orientation 7 including flips matches the normalized pixels; GPS removed (37.593ms)
+✔ EXIF orientation 8 including flips matches the normalized pixels; GPS removed (37.0076ms)
+✔ text renamed JPEG and truncated JPEG/PNG are rejected with no output files (18.2641ms)
+✔ exact 40 million pixels accepted; over the boundary rejected before full decode (1361.1751ms)
+✔ exact 10 MiB fixture is a decodable JPEG (COM segments, no arbitrary corrupt padding) (59.8156ms)
+✔ APNG animation is explicitly rejected even when the PNG decoder exposes only the first frame (18.6461ms)
+✔ mixed JPEG/PNG/fake/truncated: ordered per-file outcomes; metadata may arrive after files (885.4361ms)
+✔ exact 10 MiB JPEG succeeds; 10 MiB+1 fails individually, next valid file still publishes (1021.8723ms)
+✔ structural failures never invoke publisher and always remove staging (692.628ms)
+✔ Unicode limits count code points; metadata is capped inclusively at 16 KiB (577.1278ms)
+✔ auth recheck after multipart rejects logout/expiry before publishing; CSRF guard precedes disk (628.1039ms)
+✔ service failure is a file result and does not prevent later publishing; all-invalid response is still 200 (673.6229ms)
+✔ list query/UUID/status contract and authenticated owner deletion delegated to A (1433.9323ms)
+✔ body byte counter includes exact 55 MiB and rejects 55 MiB+1 (1.1221ms)
+✔ five files are accepted without truncation (661.7305ms)
+✔ client abort during multipart cannot publish and removes partial staging (18.5128ms)
+✔ real streaming multipart 55 MiB (chunked) (345.0392ms)
+✔ real streaming multipart 55 MiB+1 (chunked) (445.5136ms)
+✔ real streaming multipart 55 MiB (Content-Length) (347.4769ms)
+✔ real streaming multipart 55 MiB+1 (Content-Length) (17.0424ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8471.4079

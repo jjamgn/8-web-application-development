@@ -66,7 +66,7 @@ export function validateManifest(photoId: string, manifest: VariantManifest): vo
       manifest.storagePrefix !== `photos/${photoId}/${manifest.width}/`) throw integrityError();
   for (let i = 0; i < manifest.chunks.length; i++) {
     const chunk = manifest.chunks[i];
-    if (chunk.partNumber !== i + 1 || chunk.offset !== i * CHUNK_SIZE ||
+    if (!chunk || chunk.partNumber !== i + 1 || chunk.offset !== i * CHUNK_SIZE ||
         chunk.bytes !== Math.min(CHUNK_SIZE, manifest.bytes - chunk.offset) ||
         chunk.storageKey !== chunkKey(photoId, manifest.width, i + 1) || !/^[a-f0-9]{64}$/.test(chunk.sha256)) throw integrityError();
   }
