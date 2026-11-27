@@ -1,4 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import { mkdir } from 'node:fs/promises';
+import path from 'node:path';
 
 // This suite never intercepts API or media requests. Use an isolated Block 11 DB/bucket.
 // The explicit switch prevents creating demo users/photos on an unintended target.
@@ -116,5 +120,52 @@ test(`${controlled ? 'CONTROLLED A+B+C' : 'LIVE'}: hai tài khoản, upload JPEG
         }
       }
     } finally { await otherContext.close(); await guestContext.close(); }
+  }
+});
+
+test(`${controlled ? 'CONTROLLED A+B+C' : 'LIVE'}: EXIF comparison uses raw pixels and real normalized server WebP`, async ({ page }) => {
+  test.setTimeout(controlled ? 120_000 : 240_000);
+  const run = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const password = `Exif!${run}`;
+  const email = `exif-comparison-${run}@example.test`;
+  let photoId: string | undefined;
+  try {
+    await register(page, email, password, `EXIF demo ${run}`);
+    await login(page, email, password);
+    await page.getByLabel('Chọn ảnh', { exact: true }).setInputFiles(fileURLToPath(new URL('../../docs/demo-assets/exif-gps/test-sideways-orientation6-gps.jpg', import.meta.url)));
+    const comparison = page.getByRole('region', { name: 'So sánh ảnh test-sideways-orientation6-gps.jpg' });
+    const before = comparison.getByAltText('Xem trước test-sideways-orientation6-gps.jpg');
+    await expect(before).toHaveJSProperty('naturalWidth', 600);
+    await expect(before).toHaveJSProperty('naturalHeight', 1000);
+    await expect(comparison).toContainText('Có EXIF · Có GPS');
+    await expect(comparison.locator('.comparison-ready')).toHaveCount(0);
+    await page.getByLabel('Tiêu đề ảnh 1', { exact: true }).fill(`EXIF comparison ${run}`);
+    await page.getByLabel('Mô tả thay thế ảnh 1', { exact: true }).fill('Mũi tên hướng lên sau khi áp dụng Orientation 6');
+    const uploaded = page.waitForResponse(r => new URL(r.url()).pathname === '/api/photos' && r.request().method() === 'POST');
+    await page.getByRole('button', { name: 'Đăng 1 ảnh', exact: true }).click();
+    const response = await uploaded;
+    expect(response.status()).toBe(200);
+    const data = (await response.json()).data;
+    for (const item of data.results) if (item.ok) photoId = item.photo.id;
+    expect(data.succeeded).toBe(1);
+    const photo = data.results[0].photo;
+    expect(photo.width).toBe(1000); expect(photo.height).toBe(600);
+    const largest = photo.variants.at(-1);
+    const after = comparison.getByAltText('Ảnh đã chuẩn hóa test-sideways-orientation6-gps.jpg');
+    await expect(after).toHaveAttribute('src', largest.url);
+    await expect(after).toHaveJSProperty('naturalWidth', 1000);
+    await expect(after).toHaveJSProperty('naturalHeight', 600);
+    const media = await page.request.get(largest.url);
+    expect(media.status()).toBe(200);
+    const requireApi = createRequire(new URL('../../api/package.json', import.meta.url));
+    const sharp = requireApi('sharp') as typeof import('../../api/node_modules/sharp/lib/index.js');
+    const metadata = await sharp(await media.body()).metadata();
+    expect(metadata.format).toBe('webp'); expect(metadata.exif).toBeUndefined(); expect(metadata.orientation).toBeUndefined();
+    if (controlled) {
+      const folder = path.resolve('../docs/evidence/exif-comparison'); await mkdir(folder, { recursive: true });
+      await comparison.screenshot({ path: path.join(folder, 'before-after-controlled-api.png') });
+    }
+  } finally {
+    if (photoId) expect([204, 202, 404]).toContain(await guardedDelete(page, photoId));
   }
 });

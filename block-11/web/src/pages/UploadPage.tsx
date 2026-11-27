@@ -1,16 +1,12 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { api, errorMessage, RequestError } from '../api';
 import { Notice } from '../components';
 import type { UploadData } from '../types';
 import { LIMITS, codePoints } from '../types';
+import { UploadComparison } from '../UploadComparison';
 
 type Entry = { file: File; title: string; alt: string };
-function FilePreview({ file }: { file: File }) {
-  const [url, setUrl] = useState('');
-  useEffect(() => { const next = URL.createObjectURL(file); setUrl(next); return () => URL.revokeObjectURL(next); }, [file]);
-  return <img src={url || undefined} alt={`Xem trước ${file.name}`} className="upload-preview" />;
-}
 
 export function UploadPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -60,13 +56,15 @@ export function UploadPage() {
     <form onSubmit={submit}>
       <fieldset disabled={busy || attempted}>
         <label className="file-picker"><span aria-hidden="true" className="empty-icon">▧</span><strong>Chọn ảnh từ thiết bị</strong><span>Bạn có thể chọn nhiều ảnh cùng lúc.</span><input ref={input} type="file" accept="image/jpeg,image/png" multiple aria-describedby="upload-help" aria-label="Chọn ảnh" onChange={e => select(e.target.files)} /></label>
-        <div className="upload-entries">{entries.map((entry, i) => <article className="upload-entry" key={`${i}-${entry.file.name}`}>
-          <FilePreview file={entry.file} />
-          <div><h2>Ảnh {i + 1}</h2><p className="file-name">{entry.file.name} · {(entry.file.size / 1_048_576).toFixed(2)} MiB</p>
+        <div className="upload-entries">{entries.map((entry, i) => {
+          const uploaded = result?.results.find(item => item.index === i);
+          return <article className="upload-entry" key={`${i}-${entry.file.name}`}>
+          <div className="upload-fields"><h2>Ảnh {i + 1}</h2><p className="file-name">{entry.file.name} · {(entry.file.size / 1_048_576).toFixed(2)} MiB</p>
             <label htmlFor={`title-${i}`}>Tiêu đề ảnh {i + 1}<input id={`title-${i}`} value={entry.title} onChange={e => update(i, 'title', e.target.value)} required aria-describedby={`title-count-${i}`} /></label><p className="field-help" id={`title-count-${i}`}>{[...entry.title.trim()].length}/120 ký tự</p>
             <label htmlFor={`alt-${i}`}>Mô tả thay thế ảnh {i + 1}<textarea id={`alt-${i}`} rows={3} value={entry.alt} onChange={e => update(i, 'alt', e.target.value)} required aria-describedby={`alt-count-${i}`} /></label><p className="field-help" id={`alt-count-${i}`}>{[...entry.alt.trim()].length}/300 ký tự · Mô tả nội dung ảnh cho người dùng trình đọc màn hình.</p>
           </div>
-        </article>)}</div>
+          <UploadComparison file={entry.file} photo={uploaded?.ok ? uploaded.photo : undefined} />
+        </article>; })}</div>
         <button className="button" disabled={!entries.length} type="submit">{busy ? 'Đang gửi và xử lý ảnh…' : `Đăng ${entries.length || ''} ảnh`}</button>
       </fieldset>
     </form>

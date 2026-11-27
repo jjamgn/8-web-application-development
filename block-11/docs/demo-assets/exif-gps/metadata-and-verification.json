@@ -1,0 +1,24 @@
+{
+  "file": "test-sideways-orientation6-gps.jpg",
+  "input": {
+    "width": 600,
+    "height": 1000,
+    "orientation": 6,
+    "gps": {
+      "simulated": true,
+      "latitude": "1 deg 2 min 3 sec N",
+      "longitude": "4 deg 5 min 6 sec E",
+      "altitudeMeters": 12
+    },
+    "camera": "BLOCK11 DEMO / TEST CAMERA",
+    "simulatedDateTime": "2026:01:01 12:00:00"
+  },
+  "expectedOutput": {
+    "width": 1000,
+    "height": 600,
+    "format": "webp",
+    "orientationRemoved": true,
+    "allExifIncludingGpsRemoved": true
+  },
+  "verifiedThrough": "actual prepareImage pipeline; original fixture not uploaded to a user account"
+}
