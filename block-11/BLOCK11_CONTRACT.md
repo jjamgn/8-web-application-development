@@ -34,6 +34,10 @@ Người dùng đồng ý tìm kiếm, modal chi tiết gắn URL, slug, downloa
 
 API, migration, privacy và cách demo phần mở rộng: [social-profile/README.md](docs/evidence/social-profile/README.md). Đây là phụ lục contract cho phần mở rộng được duyệt.
 
+## Bổ sung bố cục hover/modal — 27/11/2026
+
+Theo yêu cầu người dùng: tim/lưu SVG và Tải WebP nằm trên ảnh, hiện khi hover/focus, luôn thao tác được trên thiết bị cảm ứng; không đặt ba nút dưới caption. Trong chi tiết, tim/lưu bên trái, chọn size/tải bên phải, không có mũi tên xuống. Modal chia vùng tối toàn viewport và panel trắng bo bốn góc, chỉ nội dung panel cuộn; × trên nền tối trái trên, chevron hai bên ở giữa viewport, có nhãn truy cập và vô hiệu hóa ở đầu/cuối danh sách đã tải. Không đổi API/schema hoặc cơ chế bộ sưu tập riêng tư. Quy cách và kiểm chứng: [hover-modal/README.md](docs/evidence/hover-modal/README.md).
+
 ## 1. Các quyết định đã chốt
 
 | Mã | Hạng mục | Quyết định |

@@ -1,5 +1,7 @@
 # Khám phá ảnh và hồ sơ công khai — 27/11/2026
 
+**Cập nhật bố cục 27/11/2026:** tim/lưu/tải chỉ hiện trên ảnh khi hover hoặc focus (cảm ứng vẫn hiện); modal có panel bo góc, nút ×/chevron ở nền tối, nhóm size/tải căn phải và bỏ mũi tên tải xuống. Web build và 42 UI tests đạt. Xem [chi tiết và bằng chứng](../hover-modal/README.md).
+
 Phạm vi đã được người dùng duyệt trong [contract](../../../BLOCK11_CONTRACT.md): tìm kiếm, modal chi tiết gắn URL, slug, download WebP, yêu thích, bộ sưu tập riêng tư, hồ sơ công khai, follow và cập nhật avatar. Không bật hạn mức upload ngày.
 
 ## Dùng thử

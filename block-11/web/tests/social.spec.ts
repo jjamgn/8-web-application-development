@@ -44,10 +44,12 @@ test('public author profile, follow/unfollow and following feed', async ({ page 
 test('favorite persists into private profile tab and can be removed', async ({ page }) => {
   const state = await mockApi(page, { user: owner });
   await page.goto('/photos');
+  await page.locator('.photo-frame').first().hover();
   await page.locator('.photo-card').first().getByRole('button', { name: 'Yêu thích', exact: true }).click();
   await expect(page.locator('.photo-card').first().getByRole('button', { name: 'Bỏ yêu thích', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await page.goto('/profile?tab=favorites');
   await expect(page.locator('.photo-card')).toHaveCount(1);
+  await page.locator('.photo-frame').hover();
   await page.locator('.photo-card').getByRole('button', { name: 'Bỏ yêu thích', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Bạn chưa yêu thích ảnh nào' })).toBeVisible();
   expect(state.favorites).toHaveLength(0);
@@ -56,6 +58,7 @@ test('favorite persists into private profile tab and can be removed', async ({ p
 test('create collection in save dialog, rename, remove item and delete collection', async ({ page }) => {
   const state = await mockApi(page, { user: owner });
   await page.goto('/photos');
+  await page.locator('.photo-frame').first().hover();
   await page.locator('.photo-card').first().getByRole('button', { name: 'Lưu', exact: false }).click();
   const dialog = page.getByRole('dialog', { name: 'Lưu vào bộ sưu tập', exact: true });
   await dialog.getByLabel('Tên bộ sưu tập mới').fill('Ý tưởng');
@@ -68,6 +71,7 @@ test('create collection in save dialog, rename, remove item and delete collectio
   await page.getByRole('button', { name: 'Lưu tên' }).click();
   await page.getByRole('link', { name: 'Cảm hứng', exact: true }).click();
   await expect(page.locator('.photo-card')).toHaveCount(1);
+  await page.locator('.photo-frame').hover();
   await page.getByRole('button', { name: 'Gỡ khỏi bộ' }).click();
   await expect(page.locator('.photo-card')).toHaveCount(0);
   await page.getByRole('link', { name: 'Bộ sưu tập', exact: true }).click();

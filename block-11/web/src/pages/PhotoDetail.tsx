@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { PhotoActions } from '../PhotoActions';
 import { photoUrl, refreshSocialFeed } from '../lib/photo-url';
-import { feeds } from '../lib/gallery-cache';
 import { invalidateFeeds } from '../lib/gallery-cache';
 import { api, errorMessage, RequestError } from '../api';
 import { useAuth } from '../auth';
@@ -58,11 +57,6 @@ export function PhotoDetail({ modal = false }: { modal?: boolean }) {
       {user?.id === photo.uploader.id && <button className="button danger-outline" onClick={() => { setDeleteError(''); dialog.current?.showModal(); }}>Xóa ảnh</button>}
     </div>
     <PhotoActions photo={photo} detail />
-    {modal && (() => {
-      const items = feeds.get(location.state?.feedKey)?.items ?? [];
-      const index = items.findIndex(item => item.id === photo.id);
-      return <nav className="modal-photo-nav" aria-label="Chuyển ảnh">{index > 0 && <button className="button secondary" onClick={() => navigate(photoUrl(items[index - 1]), { replace: true, state: location.state })}>← Ảnh trước</button>}{index >= 0 && index < items.length - 1 && <button className="button secondary" onClick={() => navigate(photoUrl(items[index + 1]), { replace: true, state: location.state })}>Ảnh tiếp →</button>}</nav>;
-    })()}
     <div className="detail-image"><PhotoImage photo={photo} detail /></div>
     <p className="image-description">{photo.alt}</p>
     <dialog ref={dialog} onCancel={e => { if (lock.current) e.preventDefault(); }} aria-labelledby="delete-title" aria-describedby="delete-description">

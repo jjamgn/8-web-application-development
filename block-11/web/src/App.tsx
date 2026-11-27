@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate, type Location } from 'react-router';
+import { Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate, useParams, type Location } from 'react-router';
 import { api, errorMessage, RequestError } from './api';
+import { feeds } from './lib/gallery-cache';
+import { photoUrl } from './lib/photo-url';
 import { useAuth } from './auth';
 import { Loading, NotFound, Notice } from './components';
 import { AuthPage } from './pages/AuthPage';
@@ -33,6 +35,8 @@ function HeaderIdentity({ id, name }: { id: string; name: string }) {
   return <NavLink to="/profile" className="current-user">{avatar && <img className="header-avatar" src={avatar} alt="" />}{name}</NavLink>;
 }
 function PhotoOverlay() {
+  const { id } = useParams();
+  const content = useRef<HTMLDivElement>(null);
   const ref = useRef<HTMLDialogElement>(null), navigate = useNavigate(), location = useLocation();
   useEffect(() => {
     const previous = document.body.style.overflow; document.body.style.overflow = 'hidden';
@@ -40,9 +44,17 @@ function PhotoOverlay() {
     dialog?.showModal();
     return () => { dialog?.close(); document.body.style.overflow = previous; if (opener instanceof HTMLElement && opener.isConnected) opener.focus({ preventScroll: true }); };
   }, []);
+  const items = feeds.get(location.state?.feedKey)?.items ?? [];
+  const index = items.findIndex(item => item.id === id);
+  const move = (step: number) => { const next = items[index + step]; if (index >= 0 && next) navigate(photoUrl(next), { replace: true, state: location.state }); };
+  useEffect(() => { content.current?.scrollTo(0, 0); }, [location.pathname]);
   return <dialog ref={ref} className="photo-modal" aria-label="Chi tiết ảnh" onCancel={e => { if (e.target !== e.currentTarget) return; e.preventDefault(); navigate(-1); }}>
-    <button className="modal-close button secondary" aria-label="Đóng chi tiết ảnh" onClick={() => navigate(-1)}>×</button>
-    <PhotoDetail modal key={location.pathname} />
+    <button className="modal-close modal-control" aria-label="Đóng chi tiết ảnh" onClick={() => navigate(-1)}><svg aria-hidden="true" width="25" height="25" viewBox="0 0 24 24" fill="none"><path d="m5 5 14 14M19 5 5 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg></button>
+    {items.length > 1 && <nav className="modal-photo-nav" aria-label="Chuyển ảnh">
+      <button className="modal-previous modal-control" aria-label="Ảnh trước" disabled={index <= 0} onClick={() => move(-1)}><svg aria-hidden="true" width="28" height="36" viewBox="0 0 24 32" fill="none"><path d="M17 4 5 16l12 12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
+      <button className="modal-next modal-control" aria-label="Ảnh tiếp" disabled={index < 0 || index >= items.length - 1} onClick={() => move(1)}><svg aria-hidden="true" width="28" height="36" viewBox="0 0 24 32" fill="none"><path d="m7 4 12 12L7 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
+    </nav>}
+    <div className="photo-modal-panel"><div className="photo-modal-content" ref={content}><PhotoDetail modal key={location.pathname} /></div></div>
   </dialog>;
 }
 

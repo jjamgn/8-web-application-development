@@ -51,13 +51,17 @@ export function PhotoActions({ photo, detail = false, collectionId }: { photo: P
     if (!authenticated()) return;
     await action(async () => { setCollections(await api.collections()); dialog.current?.showModal(); });
   }
-  return <div className={'photo-actions' + (detail ? ' detail-actions' : '')}>
+  return <div className={'photo-actions' + (detail ? ' detail-actions' : ' card-actions')}>
     <div className="action-buttons">
-      <button className="button secondary action-button" disabled={busy} aria-label={activity?.liked ? 'Bỏ yêu thích' : 'Yêu thích'} aria-pressed={activity?.liked ?? false} onClick={() => void like()}>{activity?.liked ? '♥' : '♡'}{detail && <span> {activity?.likes ?? 'Yêu thích'}</span>}</button>
-      <button className="button secondary action-button" disabled={busy} onClick={() => void save()}><svg aria-hidden="true" width="16" height="18" viewBox="0 0 16 18" fill="none"><path d="M3 2h10v14l-5-3-5 3V2Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" /></svg><span>Lưu</span></button>
+      <div className="quick-actions">
+      <button className="button secondary action-button" disabled={busy} aria-label={activity?.liked ? 'Bỏ yêu thích' : 'Yêu thích'} aria-pressed={activity?.liked ?? false} onClick={() => void like()}><svg aria-hidden="true" width="21" height="21" viewBox="0 0 24 24" fill={activity?.liked ? "currentColor" : "none"}><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>{detail && <span> {activity?.likes ?? 'Yêu thích'}</span>}</button>
+      <button className="button secondary action-button" disabled={busy} aria-label="Lưu vào bộ sưu tập" title="Lưu vào bộ sưu tập" onClick={() => void save()}><svg aria-hidden="true" width="16" height="18" viewBox="0 0 16 18" fill="none"><path d="M3 2h10v14l-5-3-5 3V2Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" /></svg><span className="sr-only">Lưu</span></button>
+      </div>
+      <div className="download-actions">
       {detail && <label className="download-size"><span className="sr-only">Kích thước tải xuống</span><select aria-label="Kích thước tải xuống" value={width} onChange={e => setWidth(Number(e.target.value))}>{photo.variants.map(v => <option key={v.width} value={v.width}>{v.width} × {v.height}</option>)}</select></label>}
-      <a className="button secondary action-button" href={'/media/photos/' + photo.id + '/' + (detail ? width : Math.max(...photo.variants.map(v => v.width))) + '.webp?download=1'} download>↓ <span>Tải WebP</span></a>
-      {collectionId && <button className="text-button" disabled={busy} onClick={() => void action(async () => { await api.collect(collectionId, photo.id, true); refreshSocialFeed('collection'); })}>Gỡ khỏi bộ</button>}
+      <a className="button secondary action-button" href={'/media/photos/' + photo.id + '/' + (detail ? width : Math.max(...photo.variants.map(v => v.width))) + '.webp?download=1'} download><span>Tải WebP</span></a>
+      </div>
+      {collectionId && <button className="button secondary remove-from-collection" disabled={busy} onClick={() => void action(async () => { await api.collect(collectionId, photo.id, true); refreshSocialFeed('collection'); })}>Gỡ khỏi bộ</button>}
     </div>
     {error && <Notice error>{error}</Notice>}
     {notice && <Notice>{notice}</Notice>}
