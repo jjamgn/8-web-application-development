@@ -24,18 +24,31 @@ test('lỗi me không ngăn khách xem ảnh công khai', async ({ page }) => {
   await expect(page.locator('.photo-card')).toHaveCount(3);
 });
 
-test('gallery rỗng, phân trang và trang vượt cuối', async ({ page }) => {
+test('gallery rỗng, xem thêm 12 ảnh và giữ ảnh/cuộn khi trở về', async ({ page }) => {
   const state = await mockApi(page, { photos: [], total: 0 });
   await page.goto('/photos');
   await expect(page.getByRole('heading', { name: 'Thư viện đang chờ khoảnh khắc đầu tiên' })).toBeVisible();
-  state.photos = Array.from({ length: 12 }, (_, i) => photo(i + 1)); state.total = 13;
+  state.photos = Array.from({ length: 25 }, (_, i) => photo(i + 1)); state.total = 25;
   await page.reload();
   await expect(page.locator('.photo-card')).toHaveCount(12);
-  await page.getByRole('link', { name: 'Trang sau' }).click();
-  await expect(page).toHaveURL(/page=2/);
-  await expect(page.getByRole('heading', { name: 'Trang này chưa có ảnh' })).toBeVisible();
-  await page.getByRole('link', { name: 'Trang trước' }).click();
-  await expect(page.locator('.photo-card')).toHaveCount(12);
+  await expect(page.getByRole('status')).toContainText('Đã hiển thị 12/25 ảnh');
+  await page.getByRole('button', { name: 'Xem thêm ảnh' }).click();
+  await expect(page.locator('.photo-card')).toHaveCount(24);
+  await page.locator('.photo-link').nth(18).scrollIntoViewIfNeeded();
+  const scroll = await page.evaluate(() => window.scrollY);
+  await page.locator('.photo-link').nth(18).click();
+  await expect(page.locator('.detail-image')).toBeVisible();
+  await page.getByRole('link', { name: 'Về thư viện', exact: true }).click();
+  await expect(page.locator('.photo-card')).toHaveCount(24);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeCloseTo(scroll, -1);
+  await page.locator('.photo-link').nth(18).click();
+  await expect(page.locator('.detail-image')).toBeVisible();
+  await page.goBack();
+  await expect(page.locator('.photo-card')).toHaveCount(24);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeCloseTo(scroll, -1);
+  await page.getByRole('button', { name: 'Xem thêm ảnh' }).click();
+  await expect(page.locator('.photo-card')).toHaveCount(25);
+  await expect(page.getByRole('button', { name: 'Xem thêm ảnh' })).toHaveCount(0);
 });
 
 test('lỗi tải có thể thử lại, query sai và 404', async ({ page }) => {

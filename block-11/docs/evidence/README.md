@@ -1,5 +1,7 @@
 # Theo dõi bằng chứng nghiệm thu
 
+**Cập nhật UX 27/11/2026:** thư viện “Xem thêm ảnh” 12 ảnh/lần, giữ danh sách/cuộn khi quay từ chi tiết, skeleton, upload kéo thả và hồ sơ cá nhân. API hỗ trợ `mine=true` từ session; chưa áp hạn mức ngày. Xem [chi tiết và kiểm chứng](feed-upload-profile/README.md).
+
 **Cập nhật ngày 27/11/2026 sau lượt chạy thật.** Bản A+B+C tại main `e5a8492` cộng sửa lỗi local `f3d2172` đã chạy trên Supabase project mới và SeaweedFS Windows 4.55. Build API/web đạt, backend 71/71, UI mock 28/28, controlled browser 1/1, HTTP live và browser live đều đạt. [REVIEW.md](review-20261127/REVIEW.md) là báo cáo mới nhất; [ABC-integration.md](ABC-integration.md) là lịch sử ghép trước lượt live. “Đã thử một phần” không có nghĩa ký đạt toàn bộ hàng nghiệm thu.
 
 | Mã | Chủ trì | Trạng thái / bằng chứng hiện có | Còn cần |

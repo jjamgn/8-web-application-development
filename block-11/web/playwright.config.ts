@@ -1,5 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
+const port = Number(process.env.PLAYWRIGHT_PORT || 5173);
+
 export default defineConfig({
   testDir: './tests',
   outputDir: './test-results/mock',
@@ -13,7 +15,7 @@ export default defineConfig({
     ['json', { outputFile: '../docs/evidence/mock-browser/playwright-results.json' }],
   ],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: `http://localhost:${port}`,
     browserName: 'chromium',
     channel: process.env.PLAYWRIGHT_CHANNEL || 'chrome',
     viewport: { width: 1440, height: 1000 },
@@ -21,8 +23,8 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
+    command: `npm run dev -- --port ${port} --strictPort`,
+    url: `http://localhost:${port}`,
     reuseExistingServer: false,
     timeout: 30_000,
   },

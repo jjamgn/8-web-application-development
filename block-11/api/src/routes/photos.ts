@@ -16,9 +16,12 @@ export function photosRouter(config: Config, dependencies: Dependencies) {
   const { photos, sessions } = dependencies;
   router.get('/', async (req, res) => {
     const raw = req.query.page ?? '1';
-    if (Object.keys(req.query).some(key => key !== 'page') || typeof raw !== 'string' || !/^[1-9]\d*$/.test(raw) || !Number.isSafeInteger(Number(raw)))
+    if (Object.keys(req.query).some(key => key !== 'page' && key !== 'mine') || typeof raw !== 'string' || !/^[1-9]\d*$/.test(raw) || !Number.isSafeInteger(Number(raw)))
       throw new AppError('INVALID_QUERY', 400, 'Số trang không hợp lệ.');
-    res.json({ ok: true, data: await photos.listPhotos({ page: Number(raw) }) });
+    if (req.query.mine !== undefined && req.query.mine !== 'true') throw new AppError('INVALID_QUERY', 400, 'Bộ lọc không hợp lệ.');
+    const uploaderId = req.query.mine === 'true' ? await assertActiveSession(req, sessions) : undefined;
+    if (uploaderId) res.set('Cache-Control', 'no-store');
+    res.json({ ok: true, data: await photos.listPhotos({ page: Number(raw), ...(uploaderId ? { uploaderId } : {}) }) });
   });
   router.get('/:id', async (req, res) => {
     if (!uuid.safeParse(req.params.id).success) throw notFound();

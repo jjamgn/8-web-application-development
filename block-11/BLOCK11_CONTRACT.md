@@ -10,6 +10,15 @@
 
 **Bổ sung demo LAN — 27/11/2026, theo yêu cầu người dùng:** frontend có `npm run dev:lan` để listen `0.0.0.0:5173`; API và SeaweedFS giữ loopback. APP_ORIGIN trùng origin LAN, HTTP LAN dùng NODE_ENV development. Firewall chỉ cho Node.js nhận TCP 5173 từ LocalSubnet trên IP/adapter đã chọn. Không thay đổi API, schema, phân công A/B/C hoặc tiêu chí nghiệm thu. Cấu hình, khởi động và đổi IP: [LAN_SETUP.md](docs/LAN_SETUP.md).
 
+## Bổ sung UX theo yêu cầu người dùng — 27/11/2026
+
+- Thư viện và hồ sơ tải 12 ảnh/lần, nối tiếp bằng “Xem thêm ảnh”, không tự tải vô hạn; hiển thị số ảnh đã tải trên tổng ảnh. Lỗi tải thêm giữ nguyên ảnh cũ, cho thử lại cùng trang, chặn bấm đồng thời và loại ID trùng khi nối.
+- Cache danh sách và scroll chỉ trong bộ nhớ của tab; quay từ chi tiết bằng “Về thư viện”/“Về hồ sơ” hoặc Back phục hồi danh sách/cuộn. Reload hoặc mở tab mới bắt đầu lại. Upload thành công, xóa và logout làm mất hiệu lực cache. Dữ liệu người khác thay đổi chỉ phản ánh sau lần lấy mới; reload để làm mới từ đầu. Query page hợp lệ từ link cũ vẫn bắt đầu feed tại trang 1; page sai bị báo lỗi.
+- Skeleton trong lúc lấy dữ liệu, có nhãn cho trình đọc màn hình và tôn trọng prefers-reduced-motion. Giữ grid responsive 1/2/3 cột.
+- Upload có vùng kéo thả và nút chọn file tương đương. Mỗi lần chọn/thả thay danh sách hiện tại; tối đa 5 file/lượt, giữ file gốc, không upload trước khi submit metadata. Không đổi pipeline EXIF/WebP/SeaweedFS. Fieldset khóa chọn/thả khi đang gửi hoặc lượt đã gửi; dùng “Tạo lượt gửi mới” để tiếp tục.
+- Bấm tên ở header mở /profile; hiển thị chữ cái tên làm avatar và ảnh đã đăng của chính tài khoản, có tải thêm và trạng thái rỗng. Chưa có sửa hồ sơ/avatar, bio hoặc hồ sơ công khai của người khác. Khách chuyển đến đăng nhập.
+- Hạn mức ngày **chưa được chốt và chưa triển khai**; đề xuất 50 ảnh công bố thành công/tài khoản/ngày khi mở rộng. Nếu chốt: lưu bộ đếm giao dịch PostgreSQL theo ngày Asia/Ho_Chi_Minh, xử lý đồng thời và rollback khi lỗi, không hoàn lượt khi xóa ảnh; phản hồi hạn mức rõ ràng, không đếm file hỏng và cần thêm giới hạn tốc độ upload riêng. Limiter login/register hiện có không phải hạn mức upload.
+
 ## 1. Các quyết định đã chốt
 
 | Mã | Hạng mục | Quyết định |
@@ -23,7 +32,7 @@
 | D07 | Database | Database riêng cho Block 11; có thể dùng PostgreSQL trên Supabase. Schema và migration riêng; không chạy migration/seed/reset vào DB Restaurant App. |
 | D08 | Storage | SeaweedFS object storage qua S3 API; backend dùng `@aws-sdk/client-s3` v3, bucket riêng có xác thực. Không có local storage adapter/fallback cho ảnh công bố. SeaweedFS là dịch vụ, không phải thư viện upload Node.js. |
 | D09 | Quyền | Xem gallery/detail/media công khai; upload cần đăng nhập, lưu uploaderId từ session. Chỉ chủ ảnh được xóa. Dùng express-session + PostgreSQL session store, bcryptjs; không JWT/RBAC/MFA. |
-| D10 | Phạm vi giao diện | Đăng ký/đăng nhập/đăng xuất, danh sách, upload, chi tiết và xác nhận xóa; phân trang 12 ảnh/trang, mới nhất trước. Không thêm album, tag, tìm kiếm hoặc sửa mô tả sau upload. |
+| D10 | Phạm vi giao diện | Đăng ký/đăng nhập/đăng xuất, danh sách, upload, chi tiết và xác nhận xóa; API phân trang 12 ảnh/lần, UI nối thêm bằng nút “Xem thêm ảnh”, mới nhất trước; hiển thị “Đã hiển thị N/T ảnh”. Skeleton khi tải, giữ danh sách và vị trí cuộn khi từ chi tiết quay về bằng nút hoặc lịch sử trình duyệt. Có hồ sơ riêng của tài khoản đang đăng nhập và upload kéo thả. Không thêm album, tag, tìm kiếm hoặc sửa mô tả sau upload. |
 | D11 | Variant | WebP quality 80, giữ tỉ lệ/alpha, không phóng lớn, tối đa ba chiều rộng khác nhau; loại EXIF/GPS. Không giữ bản gốc. |
 | D12 | Lỗi | Lỗi cấu trúc/toàn request không công bố ảnh nào; lỗi từng file giữ kết quả các file hợp lệ. Mỗi ảnh có transaction và rollback riêng. |
 | D13 | Triển khai | Dev dùng Vite proxy `/api`, `/media`; production Express phục vụ React build, API và media cùng origin. |
@@ -286,6 +295,7 @@ Envelope `ok:true` của upload nghĩa request đã được xử lý và có k�
 | `POST /api/auth/logout` | Session + Origin + CSRF; destroy phiên DB, clear cookie, 204. |
 | `POST /api/photos` | Session + Origin + CSRF trước parser; multipart mục 3. HTTP 200 khi xử lý xong kể cả mọi file bị từ chối. Data `{results,succeeded,failed}`. Server gán uploaderId. |
 | `GET /api/photos?page=1` | HTTP 200, data `{items, page, pageSize:12, total, totalPages}`; chỉ PUBLISHED, `createdAt DESC, id DESC`. Page nguyên dương, mặc định 1; trang vượt cuối trả items rỗng. Không nhận pageSize tùy ý. |
+| `GET /api/photos?page=1&mine=true` | Yêu cầu phiên còn hiệu lực; lọc uploaderId từ session, cùng DTO/pageSize 12 và total tính trên ảnh của người dùng. Không nhận uploaderId từ client. Cache-Control no-store; khách 401, mine khác true/trùng hoặc query lạ 400. |
 | `GET /api/photos/:id` | HTTP 200, data là PhotoDto; sai UUID/không có/DELETING trả 404. |
 | `DELETE /api/photos/:id` | Session + Origin + CSRF + đúng chủ ảnh; 204 khi dọn xong; 202 với `{ok:true,data:{id,status:"DELETING"}}` khi chờ dọn; không đúng chủ 403; sai UUID/không có 404. |
 | `GET /media/photos/:photoId/:filename` | Public; filename `<width>.webp` khớp variant PUBLISHED; ghép mảnh theo manifest, kiểm tra rồi trả WebP hoàn chỉnh. Không expose key mảnh, directory listing hay tmp/cleanup. |

@@ -15,6 +15,13 @@ function ProtectedUpload() {
   return auth.user ? <UploadPage /> : <Navigate to="/login?returnTo=/photos/upload" replace />;
 }
 
+function Profile() {
+  const auth = useAuth();
+  if (auth.loading) return <Loading />;
+  if (auth.error) return <Notice error>{auth.error} <button onClick={() => void auth.refresh()}>Thử lại</button></Notice>;
+  return auth.user ? <Gallery key={auth.user.id} profile={auth.user} /> : <Navigate to="/login" replace />;
+}
+
 export default function App() {
   const { user, setUser, loading } = useAuth();
   const navigate = useNavigate();
@@ -36,7 +43,7 @@ export default function App() {
       <nav aria-label="Điều hướng chính">
         <NavLink to="/photos" end>Thư viện</NavLink>
         <NavLink to="/photos/upload" className="nav-upload">Đăng ảnh</NavLink>
-        {user ? <><span className="current-user">{user.name}</span><button className="text-button" disabled={busy} onClick={() => void logout()}>{busy ? 'Đang thoát…' : 'Đăng xuất'}</button></>
+        {user ? <><NavLink to="/profile" className="current-user">{user.name}</NavLink><button className="text-button" disabled={busy} onClick={() => void logout()}>{busy ? 'Đang thoát…' : 'Đăng xuất'}</button></>
           : !loading && <NavLink to="/login">Đăng nhập</NavLink>}
       </nav>
     </div></header>
@@ -45,6 +52,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/photos" replace />} />
         <Route path="/photos" element={<Gallery />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/photos/upload" element={<ProtectedUpload />} />
         <Route path="/photos/:id" element={<PhotoDetail />} />
         <Route path="/login" element={<AuthPage />} />

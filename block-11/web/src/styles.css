@@ -744,3 +744,28 @@ textarea {
     transition: none !important;
   }
 }
+
+/* Gallery feed, loading placeholders and upload drop zone. */
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.skeleton-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; margin:24px 0; }
+.skeleton { background:linear-gradient(100deg,#e2e9e4 25%,#f1f5f2 45%,#e2e9e4 65%); background-size:220% 100%; animation:shimmer 1.6s infinite linear; border-radius:8px; }
+.skeleton-image { aspect-ratio:3/2; width:100%; }
+.skeleton-title { height:22px; width:65%; margin:18px 0 10px; }
+.skeleton-author { height:15px; width:30%; }
+.loading-skeleton { padding:32px 0; max-width:100%; }
+.load-more { text-align:center; padding:40px 0 20px; color:var(--muted,#62726c); }
+.load-more p { margin:0 0 18px; }
+.profile-heading { display:flex; align-items:center; flex-wrap:wrap; gap:28px; padding:64px 0; border-bottom:1px solid #dce5df; }
+.profile-heading h1 { margin:0; overflow-wrap:anywhere; }
+.profile-heading .button { margin-left:auto; }
+.profile-avatar { display:grid; place-items:center; width:96px; height:96px; border-radius:50%; background:#235e49; color:white; font-size:42px; flex-shrink:0; }
+.drop-zone.file-picker { position:relative; min-height:370px; padding:48px 24px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:16px; text-align:center; border:2px dashed #bdcfc3; background:#fff; border-radius:20px; transition:background .2s,border-color .2s; }
+.drop-zone.is-dragging { border-color:#235e49; background:#eaf4ee; }
+.drop-zone h2 { font-size:clamp(24px,4vw,36px); margin:0; }
+.drop-zone p { margin:0; color:#62726c; }
+.drop-count { position:absolute; top:20px; right:24px; color:#62726c; }
+.drop-illustration { width:180px; height:110px; color:#4a9871; }
+@keyframes shimmer { to { background-position:-220% 0; } }
+@media(max-width:1023px) { .skeleton-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:599px) { .skeleton-grid { grid-template-columns:1fr; } .profile-heading { padding:36px 0; } .profile-heading .button { margin-left:0; } .drop-zone.file-picker { min-height:330px; padding:48px 18px 28px; } }
+@media(prefers-reduced-motion:reduce) { .skeleton { animation:none; } }

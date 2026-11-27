@@ -1,5 +1,7 @@
 # Bàn giao C — React và kiểm chứng trình duyệt
 
+**Cập nhật UX 27/11/2026:** thư viện “Xem thêm ảnh” 12 ảnh/lần, giữ danh sách/cuộn khi quay từ chi tiết, skeleton, upload kéo thả và hồ sơ cá nhân. API hỗ trợ `mine=true` từ session; chưa áp hạn mức ngày. Xem [chi tiết và kiểm chứng](../evidence/feed-upload-profile/README.md).
+
 > **SNAPSHOT LỊCH SỬ:** báo cáo/bàn giao này giữ kết quả tại thời điểm lập. Trạng thái tích hợp và môi trường thật mới nhất xem [báo cáo chạy thật](../evidence/review-20261127/REVIEW.md) và [ma trận hiện hành](../evidence/README.md). Các câu “chưa chạy/chưa có môi trường thật” bên dưới không phải kết luận hiện tại.
 
 Ngày: 27/11/2026. C dựng ban đầu trên `codex/block11-c`; đã ghép vào `main` từ nền A+B `223c6e9`. Source tại `web/**`, README và bằng chứng tại `docs/evidence/**`. Contract giữ nguyên byte; SHA-256 `A372866885DDB50EC70B556E97AB79D01E75AB8E38DD8DB4E6CC1066DC8CF6F1`. Báo cáo hiện tại: [ABC-integration.md](../evidence/ABC-integration.md).

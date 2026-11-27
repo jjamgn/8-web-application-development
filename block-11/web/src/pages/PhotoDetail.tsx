@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
+import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { invalidateFeeds } from '../lib/gallery-cache';
 import { api, errorMessage, RequestError } from '../api';
 import { useAuth } from '../auth';
 import { Loading, NotFound, Notice, PhotoImage } from '../components';
@@ -8,6 +9,8 @@ import type { PhotoDto } from '../types';
 export function PhotoDetail() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const back = location.state?.from === '/profile' ? '/profile' : '/photos';
   const { user, setUser } = useAuth();
   const [photo, setPhoto] = useState<PhotoDto | null>(null);
   const [error, setError] = useState('');
@@ -18,6 +21,7 @@ export function PhotoDetail() {
   const dialog = useRef<HTMLDialogElement>(null);
   const lock = useRef(false);
   useEffect(() => {
+    window.scrollTo(0, 0);
     setPhoto(null); setError(''); setMissing(false); setDeleteError('');
     const controller = new AbortController();
     api.photo(id, controller.signal).then(setPhoto).catch(e => {
@@ -31,6 +35,7 @@ export function PhotoDetail() {
     lock.current = true; setBusy(true); setDeleteError('');
     try {
       const { status } = await api.remove(id);
+      invalidateFeeds();
       dialog.current?.close();
       navigate('/photos', { replace: true, state: { deletion: status === 202 ? 'pending' : 'done' } });
     } catch (e) {
@@ -42,7 +47,7 @@ export function PhotoDetail() {
   if (error) return <Notice error>{error} <button onClick={() => setRetry(v => v + 1)}>Thử lại</button></Notice>;
   if (!photo) return <Loading />;
   return <article className="detail">
-    <Link className="back-link" to="/photos">Về thư viện</Link>
+    <Link className="back-link" to={back}>{back === "/profile" ? "Về hồ sơ" : "Về thư viện"}</Link>
     <div className="detail-heading"><div><p className="eyebrow">MỘT KHOẢNH KHẮC ĐƯỢC LƯU GIỮ</p><h1>{photo.title}</h1><p className="muted">Ảnh của <strong>{photo.uploader.name}</strong> · <time dateTime={photo.createdAt}>{new Date(photo.createdAt).toLocaleDateString('vi-VN')}</time></p></div>
       {user?.id === photo.uploader.id && <button className="button danger-outline" onClick={() => { setDeleteError(''); dialog.current?.showModal(); }}>Xóa ảnh</button>}
     </div>

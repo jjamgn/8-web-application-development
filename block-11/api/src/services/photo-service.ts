@@ -89,9 +89,9 @@ export class PhotoService {
     }
   }
 
-  async listPhotos({ page }: { page: number }) {
+  async listPhotos({ page, uploaderId }: { page: number; uploaderId?: string }) {
     if (!Number.isSafeInteger(page) || page < 1 || (page - 1) * 12 > 2_147_483_647) throw new PhotoError('INVALID_QUERY', 400, 'Trang không hợp lệ.');
-    const result = await this.repository.list(page);
+    const result = await this.repository.list(page, uploaderId);
     return { items: result.items.map(dto), page, pageSize: 12 as const, total: result.total, totalPages: Math.ceil(result.total / 12) };
   }
   async getPhoto(id: string): Promise<PhotoDto> { return dto(await this.published(id)); }

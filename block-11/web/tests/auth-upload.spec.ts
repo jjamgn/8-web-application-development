@@ -38,7 +38,7 @@ test('returnTo bên ngoài bị loại', async ({ page }) => {
   await page.getByLabel('Email', { exact: true }).fill('linh@example.test');
   await page.getByLabel('Mật khẩu', { exact: true }).fill('Password!123');
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  await expect(page).toHaveURL('http://localhost:5173/photos');
+  await expect(page).toHaveURL(/\/photos$/);
 });
 
 test('me trả 401 muộn không ghi đè phiên login mới', async ({ page }) => {

@@ -1,5 +1,7 @@
 # Block 11 — Khoảnh khắc / Photo Gallery
 
+**Cập nhật UX 27/11/2026:** thư viện “Xem thêm ảnh” 12 ảnh/lần, giữ danh sách/cuộn khi quay từ chi tiết, skeleton, upload kéo thả và hồ sơ cá nhân. API hỗ trợ `mine=true` từ session; chưa áp hạn mức ngày. Xem [chi tiết và kiểm chứng](docs/evidence/feed-upload-profile/README.md).
+
 Bản ghép **A + B + C**, theo [BLOCK11_CONTRACT.md](BLOCK11_CONTRACT.md): React 19 + Vite 7 + React Router 7, Express 5/TypeScript, Prisma 6.12.0/PostgreSQL và SeaweedFS S3. Phần A/B được kéo từ GitHub main `223c6e9`; C nối trực tiếp DTO/limits trong `contracts/`.
 
 Tài liệu: [API](api/README.md), [SeaweedFS](infra/seaweedfs/README.md), [bàn giao A](docs/handoffs/A.md), [B](docs/handoffs/B.md), [C](docs/handoffs/C.md), [báo cáo ghép A+B+C](docs/evidence/ABC-integration.md), [đề bài](<docs/Upload, xử lý, lưu trữ và.html>).

@@ -1,3 +1,4 @@
+import { invalidateFeeds } from './lib/gallery-cache';
 import type { GalleryData, PhotoDto, UploadData, User } from './types';
 
 export class RequestError extends Error {
@@ -51,8 +52,8 @@ export const api = {
   },
   register: (data: { name: string; email: string; password: string; confirmPassword: string }) =>
     write<{ user: User }>('/api/auth/register', 'POST', data),
-  logout: async () => { await write('/api/auth/logout', 'POST'); csrfToken = undefined; },
-  list: (page: number, signal?: AbortSignal) => request<GalleryData>(`/api/photos?page=${page}`, { signal }).then(r => r.data),
+  logout: async () => { await write('/api/auth/logout', 'POST'); csrfToken = undefined; invalidateFeeds(); },
+  list: (page: number, signal?: AbortSignal, mine = false) => request<GalleryData>(`/api/photos?page=${page}${mine ? "&mine=true" : ""}`, { signal }).then(r => r.data),
   photo: (id: string, signal?: AbortSignal) => request<PhotoDto>(`/api/photos/${encodeURIComponent(id)}`, { signal }).then(r => r.data),
   upload: (body: FormData) => write<UploadData>('/api/photos', 'POST', body).then(r => r.data),
   remove: (id: string) => write<{ id: string; status: 'DELETING' }>(`/api/photos/${encodeURIComponent(id)}`, 'DELETE'),

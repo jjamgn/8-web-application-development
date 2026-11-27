@@ -1,5 +1,7 @@
 # Block 11 — API A+B, tích hợp bởi role B
 
+**Cập nhật UX 27/11/2026:** thư viện “Xem thêm ảnh” 12 ảnh/lần, giữ danh sách/cuộn khi quay từ chi tiết, skeleton, upload kéo thả và hồ sơ cá nhân. API hỗ trợ `mine=true` từ session; chưa áp hạn mức ngày. Xem [chi tiết và kiểm chứng](../docs/evidence/feed-upload-profile/README.md).
+
 Triển khai theo `../BLOCK11_CONTRACT.md`, mục 3, 4, 7 và 10. Phần A đã kéo từ GitHub main `0bee219`; B nối repository Prisma, PhotoService và media router trong `src/config/dependencies.ts`. Không thay baseline contract.
 
 **Demo LAN hiện tại:** API vẫn bind `127.0.0.1:3000`; Vite nhận LAN ở cổng 5173 rồi proxy API/media. API đặt `APP_ORIGIN=http://192.168.100.154:5173`, `NODE_ENV=development`; restart API sau khi đổi env. Cả máy chủ và máy khác dùng URL LAN khi đăng nhập/upload. Các ví dụ localhost dưới đây cần APP_ORIGIN tương ứng. Xem [LAN_SETUP.md](../docs/LAN_SETUP.md).

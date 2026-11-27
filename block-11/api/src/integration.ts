@@ -6,7 +6,7 @@ import type { UserRepository, SessionRepository } from './auth/ports.js';
 // Internal seam for A/B. No storage, Prisma, or filesystem code enters contracts/.
 export interface PhotoService {
   publishPhoto(input: PreparedPhoto, actor: Actor): Promise<PhotoDto>;
-  listPhotos(input: { page: number }): Promise<GalleryData>;
+  listPhotos(input: { page: number; uploaderId?: string }): Promise<GalleryData>;
   getPhoto(id: string): Promise<PhotoDto>;
   deletePhoto(id: string, actor: Actor): Promise<'DELETED' | 'DELETING'>;
 }

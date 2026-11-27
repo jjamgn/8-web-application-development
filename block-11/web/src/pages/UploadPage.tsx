@@ -4,6 +4,7 @@ import { api, errorMessage, RequestError } from '../api';
 import { Notice } from '../components';
 import type { UploadData } from '../types';
 import { LIMITS, codePoints } from '../types';
+import { invalidateFeeds } from '../lib/gallery-cache';
 import { UploadComparison } from '../UploadComparison';
 
 type Entry = { file: File; title: string; alt: string };
@@ -13,12 +14,13 @@ export function UploadPage() {
   const [error, setError] = useState('');
   const [expired, setExpired] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [attempted, setAttempted] = useState(false);
   const [result, setResult] = useState<UploadData | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const lock = useRef(false);
   function select(files: FileList | null) {
-    if (!files || busy) return;
+    if (!files || busy || attempted) return;
     setResult(null); setError(''); setAttempted(false); setExpired(false);
     const selected = Array.from(files);
     if (selected.length < 1 || selected.length > LIMITS.files) { setEntries([]); setError('Mỗi lượt chọn từ 1 đến 5 ảnh.'); return; }
@@ -43,7 +45,7 @@ export function UploadPage() {
     entries.forEach(entry => body.append('photos', entry.file));
     body.append('metadata', JSON.stringify(entries.map(({ title, alt }) => ({ title: title.trim(), alt: alt.trim() }))));
     lock.current = true; setBusy(true); setAttempted(true);
-    try { setResult(await api.upload(body)); }
+    try { const uploaded = await api.upload(body); setResult(uploaded); if (uploaded.succeeded) invalidateFeeds(); }
     catch (e) { setError(errorMessage(e)); setExpired(e instanceof RequestError && e.status === 401); }
     finally { lock.current = false; setBusy(false); }
   }
@@ -55,7 +57,17 @@ export function UploadPage() {
     {expired && <Notice>Phiên đăng nhập đã hết hạn. <Link to="/login?returnTo=/photos/upload">Đăng nhập lại</Link> để tạo lượt gửi mới.</Notice>}
     <form onSubmit={submit}>
       <fieldset disabled={busy || attempted}>
-        <label className="file-picker"><span aria-hidden="true" className="empty-icon">▧</span><strong>Chọn ảnh từ thiết bị</strong><span>Bạn có thể chọn nhiều ảnh cùng lúc.</span><input ref={input} type="file" accept="image/jpeg,image/png" multiple aria-describedby="upload-help" aria-label="Chọn ảnh" onChange={e => select(e.target.files)} /></label>
+        <div className={'file-picker drop-zone' + (dragging ? ' is-dragging' : '')} data-testid="upload-dropzone"
+          onDragOver={e => { e.preventDefault(); if (!busy && !attempted) { e.dataTransfer.dropEffect = 'copy'; setDragging(true); } }}
+          onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragging(false); }}
+          onDrop={e => { e.preventDefault(); setDragging(false); select(e.dataTransfer.files); }}>
+          <span className="drop-count">{entries.length}/5 ảnh</span>
+          <svg className="drop-illustration" viewBox="0 0 200 110" fill="none" aria-hidden="true"><rect x="16" y="28" width="65" height="65" rx="14" transform="rotate(-15 16 28)" fill="#e8f2ec" stroke="currentColor" strokeWidth="4"/><rect x="122" y="12" width="65" height="65" rx="14" transform="rotate(15 122 12)" fill="#e8f2ec" stroke="currentColor" strokeWidth="4"/><rect x="60" y="6" width="80" height="94" rx="20" fill="#e8f2ec" stroke="currentColor" strokeWidth="4"/><circle cx="114" cy="31" r="8" fill="currentColor"/><path d="M74 78l20-33 16 22 9-13 11 24H74z" fill="currentColor"/></svg>
+          <h2>{dragging ? 'Thả ảnh vào đây' : 'Kéo thả ảnh để bắt đầu'}</h2><p>Chia sẻ một khoảnh khắc đáng nhớ của bạn.</p>
+          <button className="button" type="button" onClick={() => input.current?.click()}>Chọn ảnh từ thiết bị</button>
+          <input className="sr-only" ref={input} type="file" accept="image/jpeg,image/png" multiple aria-describedby="upload-help" aria-label="Chọn ảnh" onClick={e => { e.currentTarget.value = ''; }} onChange={e => select(e.target.files)} />
+          <span className="field-help">JPEG hoặc PNG · Tối đa 5 ảnh mỗi lượt, 10 MiB mỗi ảnh</span>
+        </div>
         <div className="upload-entries">{entries.map((entry, i) => {
           const uploaded = result?.results.find(item => item.index === i);
           return <article className="upload-entry" key={`${i}-${entry.file.name}`}>

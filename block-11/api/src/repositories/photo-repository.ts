@@ -36,9 +36,9 @@ export class PrismaPhotoRepository implements PhotoRepository {
     const row = await this.db.photo.findUnique({ where: { id }, include: includePhoto });
     return row ? map(row) : null;
   }
-  async list(page: number): Promise<{ items: StoredPhoto[]; total: number }> {
+  async list(page: number, uploaderId?: string): Promise<{ items: StoredPhoto[]; total: number }> {
     return this.db.$transaction(async tx => {
-      const where = { status: 'PUBLISHED' as const };
+      const where = { status: 'PUBLISHED' as const, ...(uploaderId ? { uploaderId } : {}) };
       const total = await tx.photo.count({ where });
       const rows = await tx.photo.findMany({ where, skip: (page - 1) * 12, take: 12, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], include: includePhoto });
       return { total, items: rows.map(map) };

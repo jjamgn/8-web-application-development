@@ -46,7 +46,10 @@ export async function mockApi(page: Page, options: Partial<MockState> = {}) {
     if (path === '/api/photos' && method === 'GET') {
       if (state.listError) return fail(503, 'INTERNAL_ERROR', 'Không tải được thư viện.');
       const current = Number(url.searchParams.get('page') ?? 1);
-      return ok({ items: current === 1 ? state.photos : [], page: current, pageSize: 12, total: state.total, totalPages: Math.ceil(state.total / 12) });
+      const mine = url.searchParams.get('mine') === 'true';
+      if (mine && !state.user) return fail(401, 'AUTH_REQUIRED');
+      const filtered = mine ? state.photos.filter(p => p.uploader.id === state.user!.id) : state.photos;
+      return ok({ items: filtered.slice((current - 1) * 12, current * 12), page: current, pageSize: 12, total: mine ? filtered.length : state.total, totalPages: Math.ceil((mine ? filtered.length : state.total) / 12) });
     }
     if (path === '/api/photos' && method === 'POST') {
       if (state.uploadDelay) await new Promise(resolve => setTimeout(resolve, state.uploadDelay));

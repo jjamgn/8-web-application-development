@@ -35,7 +35,7 @@ export interface PhotoRepository {
   journal(keys: string[]): Promise<void>;
   commit(photo: NewPhoto): Promise<StoredPhoto>;
   find(id: string): Promise<StoredPhoto | null>;
-  list(page: number): Promise<{ items: StoredPhoto[]; total: number }>;
+  list(page: number, uploaderId?: string): Promise<{ items: StoredPhoto[]; total: number }>;
   markDeleting(id: string, actorId: string): Promise<StoredPhoto>;
   removeDeleting(id: string): Promise<void>;
   referenceStatus(key: string): Promise<'PUBLISHED' | 'DELETING' | null>;

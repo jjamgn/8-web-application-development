@@ -44,8 +44,8 @@ export class MemoryRepository implements PhotoRepository {
     return row;
   }
   async find(id: string) { if (this.failFind) throw new Error('DB connection lost'); return this.photos.get(id) ?? null; }
-  async list(page: number) {
-    const all = [...this.photos.values()].filter(p => p.status === 'PUBLISHED').sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || b.id.localeCompare(a.id));
+  async list(page: number, uploaderId?: string) {
+    const all = [...this.photos.values()].filter(p => p.status === 'PUBLISHED' && (!uploaderId || p.uploaderId === uploaderId)).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || b.id.localeCompare(a.id));
     return { items: all.slice((page - 1) * 12, page * 12), total: all.length };
   }
   async markDeleting(id: string, actor: string) {

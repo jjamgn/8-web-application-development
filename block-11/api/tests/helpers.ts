@@ -55,8 +55,8 @@ export class TestPhotos implements PhotoService {
     await Promise.all(input.variants.map(v => rm(v.tempPath, { force: true })));
     return photo;
   }
-  async listPhotos({ page }: { page: number }) {
-    const all = [...this.rows.values()].sort((a,b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
+  async listPhotos({ page, uploaderId }: { page: number; uploaderId?: string }) {
+    const all = [...this.rows.values()].filter(p => !uploaderId || p.uploader.id === uploaderId).sort((a,b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
     return { items: all.slice((page - 1) * 12, page * 12), page, pageSize: 12 as const, total: all.length, totalPages: Math.ceil(all.length / 12) };
   }
   async getPhoto(id: string) { const photo = this.rows.get(id); if (!photo) throw notFound(); return photo; }
